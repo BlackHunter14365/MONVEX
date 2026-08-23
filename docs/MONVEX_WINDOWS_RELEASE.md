@@ -71,35 +71,59 @@ npx.cmd tauri build
 
 ---
 
-## 4. Generated Release Artifacts & Specifications
+## 4. Verified Release Artifacts & Specifications
 
-| Property | Value |
+| Property | Actual Verified Value |
 | :--- | :--- |
 | **Product Name** | MONVEX |
 | **Release Version** | `2.0.0` |
+| **Git Tag** | `v2.0.0` (Pushed to `refs/tags/v2.0.0`) |
 | **Target OS / Architecture** | Windows 10 / Windows 11 (64-bit `x64` / `x86_64`) |
-| **Primary Installer** | NSIS Standalone Setup Executable (`.exe`) |
-| **Secondary Installer** | Windows Installer Package (`.msi`) |
-| **Output Path** | `desktop/src-tauri/target/release/bundle/nsis/` |
-| **Installer Filename** | `MONVEX_2.0.0_x64-setup.exe` (Published as `MONVEX-Setup.exe`) |
-| **Exact File Size** | `1,654,330 bytes` (~1.58 MB) |
+| **Primary NSIS Installer** | `MONVEX_2.0.0_x64-setup.exe` (Copy: `MONVEX-Setup.exe`) |
+| **Output Directory** | `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\` |
+| **Exact File Size** | `1,654,330 bytes` (~1.58 MB / 1.65 MB) |
 | **SHA-256 Checksum** | `8603D83380481AFF21D3900558817DAD98263B45733F3CD98F9424A1037CA6AA` |
 | **Standalone Executable** | `MONVEX.exe` (`6,571,008 bytes` / ~6.27 MB) |
 | **MSI Package** | `MONVEX_2.0.0_x64_en-US.msi` (`2,973,696 bytes` / ~2.84 MB) |
 
 ---
 
-## 5. Public Distribution & GitHub Release Strategy
+## 5. GitHub Release & Publication Status
 
-Large executable binaries are distributed publicly via **GitHub Releases** over secure HTTPS rather than bloating normal Git repository history.
+| Property | Status |
+| :--- | :--- |
+| **Release Status** | **NOT PUBLISHED** (Git tag `v2.0.0` pushed; waiting for GitHub Release UI attachment) |
+| **GitHub Tag** | `v2.0.0` (Verified on remote origin: `237be4298cac05775d704f2fe1dbb9d900a69853`) |
+| **Target Release URL** | `https://github.com/BlackHunter14365/MONVEX/releases/tag/v2.0.0` |
+| **Target Download URL** | `https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe` |
 
-- **GitHub Repository**: `https://github.com/BlackHunter14365/MONVEX`
-- **Release Tag**: `v2.0.0`
-- **Release Title**: `MONVEX Desktop v2.0.0 (Windows x64)`
-- **Public Download URL**:
-  ```
-  https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe
-  ```
+### Step-by-Step Manual Release Publication:
+Since GitHub CLI (`gh`) and automated GitHub API authentication tokens are not configured in this terminal environment, publish the release in 1 minute via the GitHub Web Interface:
+
+1. Open your browser and navigate to:
+   ```
+   https://github.com/BlackHunter14365/MONVEX/releases/new
+   ```
+2. Click **"Choose a tag"** and select the existing tag: **`v2.0.0`**.
+3. Set the **Release title**:
+   ```
+   MONVEX Desktop v2.0.0
+   ```
+4. In the release notes description, paste:
+   ```markdown
+   # MONVEX Desktop v2.0.0 (Windows x64)
+
+   Official production native Windows desktop application for MONVEX Financial Intelligence.
+
+   - **Platform**: Windows 10 / Windows 11 (64-bit x64)
+   - **Installer**: NSIS Standalone Setup (`MONVEX-Setup.exe`)
+   - **Size**: 1.58 MB (1,654,330 bytes)
+   - **SHA-256**: `8603D83380481AFF21D3900558817DAD98263B45733F3CD98F9424A1037CA6AA`
+   - **Cloud Services**: Connected to `https://monvex-backend.onrender.com`
+   ```
+5. Drag and drop the installer file into the **"Attach binaries by dropping them here or selecting them"** box:
+   - File location: `d:\MONVEX\desktop\MONVEX-Setup.exe` (or `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\MONVEX_2.0.0_x64-setup.exe` renamed to `MONVEX-Setup.exe`)
+6. Click **"Publish release"**.
 
 ---
 
@@ -125,16 +149,3 @@ The desktop client was subjected to a rigorous security audit:
 - **Server-Side AI Grounding**: All Gemini calls and financial telemetry queries are executed strictly by the Django backend on Render.
 - **Strict Multi-Tenant Query Scoping**: All database requests are authenticated via JWT Bearer tokens and scoped to `request.user`.
 - **Custom Protocol & Sandbox**: Tauri file system access is constrained strictly to user-level document/download scopes.
-
----
-
-## 8. Verification & QA Matrix
-
-| Verification Item | Scope | Status | Notes |
-| :--- | :--- | :--- | :--- |
-| **Tauri Windows Build** | `desktop/` | **PASSED** | NSIS & MSI bundles generated with zero errors |
-| **Installer Integrity** | `MONVEX-Setup.exe` | **PASSED** | Valid 1.65 MB NSIS installer, SHA-256 verified |
-| **Production Cloud Binding** | Webview & API | **PASSED** | Points to `monvex-web.onrender.com` & `monvex-backend.onrender.com` |
-| **Landing Page Build** | Next.js (`npm run build`) | **PASSED** | 24/24 static pages prerendered successfully |
-| **TypeScript Validation** | `npx tsc --noEmit` | **PASSED** | 0 type errors across web & components |
-| **Mobile Responsiveness** | Landing Page (`360px - 768px`) | **PASSED** | Responsive grid, zero horizontal overflow |

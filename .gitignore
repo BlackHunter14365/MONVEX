@@ -51,6 +51,10 @@ yarn-error.log*
 # Tauri & Rust Desktop
 desktop/src-tauri/target/
 desktop/src-tauri/target/*
+desktop/*.exe
+desktop/*.msi
+web/public/downloads/*.exe
+web/public/downloads/*.msi
 
 # Flutter & Android
 mobile/.dart_tool/

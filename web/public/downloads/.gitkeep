@@ -1,0 +1,4 @@
+# Downloads Directory
+This directory serves static release binaries if hosted locally.
+Production downloads are distributed via GitHub Releases:
+https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe

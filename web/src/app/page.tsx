@@ -35,6 +35,7 @@ import {
   Menu,
   X,
   FileSpreadsheet,
+  Download,
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -43,6 +44,10 @@ import { ContactModal } from '@/components/landing/ContactModal';
 import { AboutSection } from '@/components/landing/AboutSection';
 
 export default function LandingPage() {
+  const windowsDownloadUrl =
+    process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL ||
+    'https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe';
+
   // Contact Modal State
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -196,8 +201,8 @@ export default function LandingPage() {
             <a href="#intelligence" className="hover:text-[#172033] transition-colors whitespace-nowrap">
               Intelligence System
             </a>
-            <a href="#workspace" className="hover:text-[#172033] transition-colors whitespace-nowrap">
-              Workspace
+            <a href="#desktop" className="hover:text-[#172033] transition-colors whitespace-nowrap">
+              Windows App
             </a>
             <a href="#about" className="hover:text-[#172033] transition-colors whitespace-nowrap">
               About
@@ -266,11 +271,11 @@ export default function LandingPage() {
               Intelligence System
             </a>
             <a
-              href="#workspace"
+              href="#desktop"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-xs font-bold text-[#172033] py-1.5"
             >
-              Workspace Showcase
+              Windows Desktop App
             </a>
             <a
               href="#about"
@@ -343,10 +348,18 @@ export default function LandingPage() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <a
-                href="#intelligence"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all"
+                href={windowsDownloadUrl}
+                download="MONVEX-Setup.exe"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all active:translate-y-[1px]"
               >
-                <span>Explore Intelligence</span>
+                <Download className="h-4 w-4 text-[#2563EB]" />
+                <span>Download for Windows</span>
+              </a>
+              <a
+                href="#desktop"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-3.5 text-xs font-bold text-[#5F6878] hover:text-[#172033] transition-colors"
+              >
+                <span>Desktop Specs</span>
                 <ChevronRight className="h-3.5 w-3.5 text-[#858D9A]" />
               </a>
             </div>
@@ -1065,6 +1078,51 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── WINDOWS DESKTOP APP SECTION ─────────────────────────────────── */}
+      <section id="desktop" className="py-16 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full">
+        <div className="rounded-3xl border border-[#E5E7EB] bg-gradient-to-br from-white via-white to-[#F7F7F4] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="space-y-4 max-w-2xl text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20 text-[#2563EB]">
+              <Cpu className="h-3.5 w-3.5" />
+              <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
+                Native Desktop Platform
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#172033]">
+              MONVEX for Windows
+            </h2>
+            <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
+              Experience MONVEX as a native Windows desktop application. Includes instant global Command Center shortcuts (<kbd className="px-1.5 py-0.5 rounded bg-[#E5E7EB] font-mono text-[10px] text-[#172033] font-bold">Ctrl+K</kbd>), system tray quick transaction entry, low-latency performance, and native OS notifications.
+            </p>
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#5F6878] pt-1">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                Windows 10 / 11 (64-bit)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                NSIS Installer (~1.6 MB)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                v2.0.0 Production Release
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+            <a
+              href={windowsDownloadUrl}
+              download="MONVEX-Setup.exe"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
+            >
+              <Download className="h-4 w-4 text-[#38BDF8]" />
+              <span>Download for Windows</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* ─── ABOUT SECTION ──────────────────────────────────────────────── */}
       <AboutSection onOpenContact={() => setIsContactOpen(true)} />
 
@@ -1120,6 +1178,7 @@ export default function LandingPage() {
             <a href="#core-loop" className="hover:text-[#172033] transition-colors">Core Architecture</a>
             <a href="#simulator" className="hover:text-[#172033] transition-colors">What-If Simulator</a>
             <a href="#intelligence" className="hover:text-[#172033] transition-colors">Intelligence System</a>
+            <a href="#desktop" className="hover:text-[#172033] transition-colors">Windows Desktop</a>
             <a href="#about" className="hover:text-[#172033] transition-colors">About</a>
             <button
               type="button"

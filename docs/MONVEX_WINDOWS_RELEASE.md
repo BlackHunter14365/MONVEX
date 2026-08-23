@@ -81,10 +81,12 @@ npx.cmd tauri build
 | **Target OS / Architecture** | Windows 10 / Windows 11 (64-bit `x64` / `x86_64`) |
 | **Primary NSIS Installer** | `MONVEX_2.0.1_x64-setup.exe` (Copy: `MONVEX-Setup.exe`) |
 | **Output Directory** | `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\` |
-| **Exact File Size** | `3,735,758 bytes` (~3.56 MB) |
-| **SHA-256 Checksum** | `378168203DC07F25D92201BD331801C309A4635AD61344F9000FAFE70B9555FA` |
-| **Standalone Executable** | `MONVEX.exe` (`21,262,917 bytes` / ~20.2 MB) |
-| **MSI Package** | `MONVEX_2.0.1_x64_en-US.msi` (`7,086,080 bytes` / ~6.75 MB) |
+| **Exact File Size** | `5,483,113 bytes` (~5.23 MB) |
+| **SHA-256 Checksum** | `96D06F3726617DA57C4182DED3520AD2CE733A10DFEB6A0E3BE31874306A1518` |
+| **WebView2 Loader Dependency** | `WebView2Loader.dll` (`157,632 bytes` bundled directly into `$INSTDIR`) |
+| **WebView2 Provisioning Mode** | `embedBootstrapper` (Embedded Microsoft Evergreen Bootstrapper for 100% offline-ready runtime setup) |
+| **Standalone Executable** | `MONVEX.exe` (`21,263,197 bytes` / ~20.2 MB) |
+| **MSI Package** | `MONVEX_2.0.1_x64_en-US.msi` (`8,122,368 bytes` / ~7.75 MB) |
 
 ---
 
@@ -92,7 +94,7 @@ npx.cmd tauri build
 
 | Property | Status |
 | :--- | :--- |
-| **Release Status** | **READY TO PUBLISH** (Git tag `v2.0.1` ready; waiting for GitHub Release UI attachment) |
+| **Release Status** | **READY TO ATTACH** (Git tag `v2.0.1` ready; waiting for GitHub Release UI attachment) |
 | **GitHub Tag** | `v2.0.1` |
 | **Target Release URL** | `https://github.com/BlackHunter14365/MONVEX/releases/tag/v2.0.1` |
 | **Target Download URL** | `https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.1/MONVEX-Setup.exe` |
@@ -117,11 +119,14 @@ Since GitHub CLI (`gh`) and automated GitHub API authentication tokens are not c
 
    - **Platform**: Windows 10 / Windows 11 (64-bit x64)
    - **Installer**: NSIS Standalone Setup (`MONVEX-Setup.exe`)
-   - **Size**: 3.56 MB (3,735,758 bytes)
-   - **SHA-256**: `378168203DC07F25D92201BD331801C309A4635AD61344F9000FAFE70B9555FA`
+   - **Size**: 5.23 MB (5,483,113 bytes)
+   - **SHA-256**: `96D06F3726617DA57C4182DED3520AD2CE733A10DFEB6A0E3BE31874306A1518`
    - **Cloud Services**: Connected to `https://monvex-backend.onrender.com`
    - **Production Web Entrypoint**: `https://monvex-web.onrender.com`
-   - **Fixes**: Resolved localhost redirect to ensure standalone operation with 0 local server prerequisites.
+   - **WebView2 Support**: Automatic WebView2 Runtime detection & embedded silent bootstrapper provisioning.
+   - **Fixes**:
+     - Bundled `WebView2Loader.dll` alongside executable to resolve missing loader error.
+     - Resolved localhost redirect to ensure standalone operation with 0 local server prerequisites.
    ```
 5. Drag and drop the installer file into the **"Attach binaries by dropping them here or selecting them"** box:
    - File location: `d:\MONVEX\desktop\MONVEX-Setup.exe` (or `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\MONVEX_2.0.1_x64-setup.exe` renamed to `MONVEX-Setup.exe`)

@@ -52,10 +52,16 @@
       "copyright": "© 2026 MONVEX Financial Technologies",
       "identifier": "com.monvex.desktop",
       "shortDescription": "Personal Financial Intelligence & Decision Support Platform",
+      "resources": [
+        "WebView2Loader.dll"
+      ],
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "webviewInstallMode": {
+          "type": "embedBootstrapper"
+        }
       },
       "icon": [
         "icons/32x32.png",

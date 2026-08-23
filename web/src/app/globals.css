@@ -1,0 +1,270 @@
+@import '../styles/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: var(--mx-border);
+  }
+
+  body {
+    color: var(--mx-text-primary);
+    background-color: var(--mx-background);
+    font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--mx-text-primary);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+
+  p {
+    color: var(--mx-text-secondary);
+  }
+
+  /* Accessible Focus Outlines */
+  :focus-visible {
+    outline: 2px solid rgba(23, 32, 51, 0.4);
+    outline-offset: 2px;
+  }
+}
+
+/* =========================================================================
+   1. EDITORIAL SURFACE & CARD SYSTEM
+   ========================================================================= */
+.editorial-card {
+  background-color: var(--mx-surface);
+  border: 1px solid var(--mx-border);
+  border-radius: var(--mx-radius-lg);
+  box-shadow: var(--mx-shadow-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editorial-card:hover {
+  border-color: var(--mx-border-strong);
+  box-shadow: var(--mx-shadow-elevated);
+}
+
+.editorial-panel {
+  background-color: var(--mx-surface);
+  border: 1px solid var(--mx-border);
+  border-radius: var(--mx-radius-lg);
+  box-shadow: var(--mx-shadow-subtle);
+}
+
+.editorial-inset {
+  background-color: var(--mx-surface-subtle);
+  border: 1px solid var(--mx-border);
+  border-radius: var(--mx-radius-md);
+}
+
+/* Legacy Alias Bridge */
+.liquid-card, .ref-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E4E2DC;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px 0 rgba(23, 32, 51, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.liquid-card:hover, .ref-card-hover:hover {
+  box-shadow: 0 4px 12px -2px rgba(23, 32, 51, 0.08);
+  border-color: #D6D4CD;
+  transform: translateY(-1px);
+}
+
+.liquid-glass {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #E4E2DC;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.liquid-glass-sidebar {
+  background-color: #F6F5F1;
+  border-right: 1px solid #E4E2DC;
+}
+
+.liquid-glass-topbar {
+  background-color: rgba(246, 245, 241, 0.92);
+  border-bottom: 1px solid #E4E2DC;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* =========================================================================
+   2. EDITORIAL TYPOGRAPHY & TABULAR DATA ACCENTS
+   ========================================================================= */
+.swiss-header {
+  font-family: var(--font-sans), 'Inter', sans-serif;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  color: #172033;
+}
+
+.swiss-eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #858D9A;
+}
+
+.swiss-metric {
+  font-family: var(--font-sans), 'Inter', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #172033;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.brutalist-tag {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2.5px 6.5px;
+  border-radius: 5px;
+  background: #172033;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.brutalist-tag-emerald {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2.5px 6.5px;
+  border-radius: 5px;
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.brutalist-tag-amber {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2.5px 6.5px;
+  border-radius: 5px;
+  background: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.brutalist-tag-rose {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2.5px 6.5px;
+  border-radius: 5px;
+  background: #FFF1F2;
+  color: #E11D48;
+  border: 1px solid #FECDD3;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* =========================================================================
+   3. EDITORIAL TABLE SPECIFICATIONS
+   ========================================================================= */
+.ref-table,
+.editorial-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.ref-table thead,
+.editorial-table thead {
+  background-color: #FAF9F6;
+  border-bottom: 1px solid #E4E2DC;
+}
+
+.ref-table thead th,
+.editorial-table thead th {
+  padding: 12px 20px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #858D9A;
+  white-space: nowrap;
+}
+
+.ref-table thead th.text-right,
+.editorial-table thead th.text-right {
+  text-align: right;
+}
+
+.ref-table tbody tr,
+.editorial-table tbody tr {
+  border-bottom: 1px solid #F0EFEA;
+  transition: background-color 0.15s ease;
+}
+
+.ref-table tbody tr:last-child,
+.editorial-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ref-table tbody tr:hover,
+.editorial-table tbody tr:hover {
+  background-color: #FAF9F6;
+}
+
+.ref-table tbody td,
+.editorial-table tbody td {
+  padding: 14px 20px;
+  font-size: 12px;
+  vertical-align: middle;
+  color: #172033;
+}
+
+.ref-table tbody td.text-right,
+.editorial-table tbody td.text-right {
+  text-align: right;
+}
+
+/* =========================================================================
+   4. CLEAN CUSTOM SCROLLBARS
+   ========================================================================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D6D4CD;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8B5AB;
+}
+

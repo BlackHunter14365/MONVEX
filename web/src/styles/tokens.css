@@ -1,0 +1,70 @@
+:root {
+  /* ==========================================================================
+     MONVEX REFERENCE EDITORIAL DESIGN SYSTEM TOKENS
+     Reference: Warm Off-White Canvas, Pure White Cards, Rich Dark Navy Typography
+     ========================================================================== */
+
+  /* Canvas & Surface System */
+  --mx-bg: #F6F5F1;
+  --mx-background: #F6F5F1;
+  --mx-sidebar: #F6F5F1;
+  --mx-surface: #FFFFFF;
+  --mx-surface-subtle: #F0EFEA;
+  --mx-surface-muted: #F0EFEA;
+  --mx-surface-raised: #E8E7E1;
+  --mx-surface-overlay: rgba(23, 32, 51, 0.40);
+
+  /* Typography Contrast Hierarchy (CRITICAL WCAG AA COMPLIANCE) */
+  --mx-text-primary: #172033;       /* Dark Navy / Charcoal - Headings, Numbers, Main text */
+  --mx-text-secondary: #5F6878;     /* Slate - Supporting text, category labels, subtext */
+  --mx-text-muted: #858D9A;         /* Muted Gray - Micro-labels, table headers, dates */
+  --mx-text-disabled: #B0B7C3;
+
+  /* Borders & Separation (Delicate warm 1px hairlines) */
+  --mx-border: #E4E2DC;
+  --mx-border-strong: #D6D4CD;
+  --mx-border-interactive: #B8B5AB;
+
+  /* Brand Accents */
+  --mx-accent: #172033;             /* Dark Navy primary brand */
+  --mx-accent-hover: #0F172A;
+  --mx-accent-soft: rgba(23, 32, 51, 0.06);
+  --mx-brand-blue: #2563EB;         /* Clean interactive blue for links */
+  --mx-brand-blue-soft: #EFF6FF;
+
+  /* Semantic Financial Colors */
+  --mx-success: #059669;            /* Financial Emerald Green */
+  --mx-success-soft: #ECFDF5;
+  --mx-success-border: #A7F3D0;
+
+  --mx-warning: #D97706;            /* Warm Amber */
+  --mx-warning-soft: #FFFBEB;
+  --mx-warning-border: #FDE68A;
+
+  --mx-danger: #E11D48;             /* Coral / Crimson Red */
+  --mx-danger-soft: #FFF1F2;
+  --mx-danger-border: #FECDD3;
+
+  /* Category Palette Tints */
+  --mx-cat-food: #DCFCE7;
+  --mx-cat-food-text: #15803D;
+  --mx-cat-shop: #FEF3C7;
+  --mx-cat-shop-text: #B45309;
+  --mx-cat-bills: #E0F2FE;
+  --mx-cat-bills-text: #0369A1;
+  --mx-cat-trans: #F3E8FF;
+  --mx-cat-trans-text: #7E22CE;
+
+  /* Radius Scale */
+  --mx-radius-sm: 6px;
+  --mx-radius-md: 10px;
+  --mx-radius-lg: 14px;
+  --mx-radius-xl: 18px;
+  --mx-radius-full: 9999px;
+
+  /* Elevation Shadows */
+  --mx-shadow-subtle: 0 1px 2px 0 rgba(23, 32, 51, 0.04);
+  --mx-shadow-card: 0 1px 3px 0 rgba(23, 32, 51, 0.05), 0 1px 2px -1px rgba(23, 32, 51, 0.04);
+  --mx-shadow-elevated: 0 4px 6px -1px rgba(23, 32, 51, 0.06), 0 2px 4px -2px rgba(23, 32, 51, 0.04);
+  --mx-shadow-modal: 0 20px 25px -5px rgba(23, 32, 51, 0.12), 0 8px 10px -6px rgba(23, 32, 51, 0.08);
+}

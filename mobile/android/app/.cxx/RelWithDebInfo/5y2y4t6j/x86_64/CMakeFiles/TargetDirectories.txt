@@ -1,0 +1,2 @@
+D:/MONVEX/mobile/android/app/.cxx/RelWithDebInfo/5y2y4t6j/x86_64/CMakeFiles/edit_cache.dir
+D:/MONVEX/mobile/android/app/.cxx/RelWithDebInfo/5y2y4t6j/x86_64/CMakeFiles/rebuild_cache.dir

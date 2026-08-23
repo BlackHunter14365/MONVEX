@@ -1,0 +1,80 @@
+# Render Infrastructure Blueprint for MONVEX Financial Intelligence Platform
+# Documentation: https://render.com/docs/infrastructure-as-code
+
+services:
+  # =========================================================================
+  # 1. MONVEX BACKEND (Django REST Framework + Gunicorn + WhiteNoise)
+  # =========================================================================
+  - type: web
+    name: monvex-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate"
+    startCommand: "gunicorn monvex.wsgi:application --bind 0.0.0.0:$PORT"
+    healthCheckPath: /health/
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: DJANGO_SETTINGS_MODULE
+        value: monvex.settings
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: monvex-db
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.console.EmailBackend"
+      - key: OTP_PROVIDER
+        value: "console"
+
+  # =========================================================================
+  # 2. MONVEX WEB (Next.js 14 Standalone / SSR Application)
+  # =========================================================================
+  - type: web
+    name: monvex-web
+    runtime: node
+    rootDir: web
+    plan: free
+    region: oregon
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.14.0
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+        sync: false
+      - key: BACKEND_INTERNAL_URL
+        fromService:
+          type: web
+          name: monvex-backend
+          property: host
+
+databases:
+  # =========================================================================
+  # 3. MONVEX DATABASE (Render Managed PostgreSQL 16)
+  # =========================================================================
+  - name: monvex-db
+    databaseName: monvex_db
+    user: monvex_user
+    plan: free
+    region: oregon
+    postgresMajorVersion: 16

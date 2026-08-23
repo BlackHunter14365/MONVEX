@@ -83,8 +83,14 @@ export default function AIPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeModel, setActiveModel] = useState('Gemini 2.0 Flash');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'workspace'>('chat');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
   const [openReasoningMap, setOpenReasoningMap] = useState<Record<string, boolean>>({});
   const [likedMap, setLikedMap] = useState<Record<string, 'like' | 'dislike' | null>>({});
   const [speakingId, setSpeakingId] = useState<string | null>(null);
@@ -485,8 +491,10 @@ export default function AIPage() {
             ========================================================================= */}
         <aside
           className={cn(
-            'flex flex-col justify-between shrink-0 bg-[#F7F6F3] border-r border-[#E4E2DC] transition-all duration-300 select-none z-20',
-            isSidebarOpen ? 'w-64 p-3.5' : 'w-0 p-0 overflow-hidden border-r-0'
+            'flex flex-col justify-between shrink-0 bg-[#F7F6F3] border-r border-[#E4E2DC] transition-all duration-300 select-none z-30',
+            isSidebarOpen
+              ? 'absolute md:relative inset-y-0 left-0 w-72 p-3.5 shadow-2xl md:shadow-none'
+              : 'hidden md:flex md:w-0 md:p-0 md:overflow-hidden md:border-r-0'
           )}
         >
           {/* Top Section */}

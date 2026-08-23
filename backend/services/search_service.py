@@ -34,7 +34,7 @@ class SearchService:
             "type": "navigation",
             "title": "Accounts & Net Worth",
             "subtitle": "Bank balances, liquid savings & asset positions",
-            "destination": "/accounts",
+            "destination": "/net-worth",
             "keywords": ["accounts", "wallets", "banks", "cards", "checking", "savings", "balance", "net worth"]
         },
         {
@@ -223,7 +223,7 @@ class SearchService:
                 "subtitle": f"{acc.institution or 'Liquid Asset'} · {acc.asset_type.replace('_', ' ').title()}",
                 "amount": float(acc.value),
                 "badge": acc.asset_type,
-                "destination": "/accounts"
+                "destination": "/net-worth"
             })
 
         # 4. Budgets (User-Scoped)

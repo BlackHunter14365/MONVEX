@@ -393,7 +393,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Password</label>
                 <div className="relative">
@@ -427,14 +427,14 @@ export default function RegisterPage() {
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat"
+                    placeholder="Repeat password"
                     className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
                 <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Primary Currency</label>
                 <select

@@ -61,6 +61,30 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/accounts',
+        destination: '/net-worth',
+        permanent: true,
+      },
+      {
+        source: '/wallets',
+        destination: '/net-worth',
+        permanent: true,
+      },
+      {
+        source: '/cards',
+        destination: '/net-worth',
+        permanent: true,
+      },
+      {
+        source: '/profile',
+        destination: '/settings',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

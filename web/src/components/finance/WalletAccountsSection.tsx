@@ -462,11 +462,11 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       {/* 1. Header with Aggregate Liquidity & Global Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E2DC]/80 pb-5">
         <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#172033] text-white shadow-md">
               <Wallet className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-black text-[#172033] tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-[#172033] tracking-tight">
               Wallets, Bank Accounts & Cards Hub
             </h2>
             <span className="brutalist-tag-emerald text-xs py-0.5 px-2.5">

@@ -449,7 +449,7 @@ export default function DashboardPage() {
             {/* HIGH-TECH SPENDING OVERVIEW CHART CARD */}
             <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-sm font-bold text-[#172033]">
                     Spending overview
                   </h2>
@@ -486,7 +486,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Horizon Selectors */}
-                <div className="flex items-center rounded-lg bg-[#F6F5F1] p-1 border border-[#E4E2DC] self-start sm:self-auto">
+                <div className="flex items-center rounded-lg bg-[#F6F5F1] p-1 border border-[#E4E2DC] self-start sm:self-auto flex-wrap">
                   {(['7D', '30D', '90D', '1Y'] as const).map((h) => (
                     <button
                       key={h}

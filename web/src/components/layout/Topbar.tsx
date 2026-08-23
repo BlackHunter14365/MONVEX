@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
+  Menu,
   Search,
   Plus,
   Bell,
@@ -22,9 +23,13 @@ import { UserProfileModal } from '@/components/profile/UserProfileModal';
 
 interface TopbarProps {
   onOpenAddTransaction?: () => void;
+  onOpenMobileDrawer?: () => void;
 }
 
-export const Topbar: React.FC<TopbarProps> = ({ onOpenAddTransaction }) => {
+export const Topbar: React.FC<TopbarProps> = ({
+  onOpenAddTransaction,
+  onOpenMobileDrawer,
+}) => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -65,10 +70,18 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenAddTransaction }) => {
   const getPageTitle = () => {
     if (pathname.includes('/transactions')) return 'Transactions';
     if (pathname.includes('/budgets')) return 'Budgets';
-    if (pathname.includes('/goals')) return 'Goals';
+    if (pathname.includes('/goals')) return 'Savings Goals';
     if (pathname.includes('/analytics')) return 'Analytics';
-    if (pathname.includes('/forecast')) return 'Forecast Simulator';
-    if (pathname.includes('/ai')) return 'MONVEX Intelligence';
+    if (pathname.includes('/ai')) return 'AI Intelligence';
+    if (pathname.includes('/simulator')) return 'What-If Simulator';
+    if (pathname.includes('/forecast')) return 'Cashflow Forecast';
+    if (pathname.includes('/receipts')) return 'Receipt Vision';
+    if (pathname.includes('/net-worth')) return 'Net Worth';
+    if (pathname.includes('/debt')) return 'Debt & Loans';
+    if (pathname.includes('/subscriptions')) return 'Subscriptions';
+    if (pathname.includes('/reports')) return 'Monthly Reports';
+    if (pathname.includes('/notifications')) return 'Alerts';
+    if (pathname.includes('/security')) return 'Security';
     if (pathname.includes('/settings')) return 'Settings';
     return 'Dashboard';
   };
@@ -87,13 +100,27 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenAddTransaction }) => {
   });
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E2DC] bg-[#F6F5F1]/80 px-4 sm:px-6 lg:px-8 select-none backdrop-blur-md">
-      {/* Title & Live Status */}
-      <div className="flex items-center gap-3">
-        <h1 className="text-base sm:text-lg font-bold text-[#172033] tracking-tight">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E2DC] bg-[#F6F5F1]/80 px-3 sm:px-6 lg:px-8 select-none backdrop-blur-md gap-2 sm:gap-4">
+      {/* Title & Mobile Hamburger */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <button
+          onClick={() => {
+            if (onOpenMobileDrawer) {
+              onOpenMobileDrawer();
+            } else if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('monvex:open-mobile-drawer'));
+            }
+          }}
+          className="lg:hidden p-2 rounded-xl text-[#172033] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+
+        <h1 className="text-sm sm:text-lg font-bold text-[#172033] tracking-tight truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
           {getPageTitle()}
         </h1>
-        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[10px] font-bold">
+        <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[10px] font-bold shrink-0">
           <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
           Live
         </span>
@@ -106,13 +133,13 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenAddTransaction }) => {
             window.dispatchEvent(new Event('monvex:open-command-center'));
           }
         }}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-[#E4E2DC] hover:border-[#D6D4CD] text-xs text-[#858D9A] hover:text-[#172033] transition-all shadow-2xs group max-w-xs w-full sm:w-64"
+        className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white/80 hover:bg-white border border-[#E4E2DC] hover:border-[#D6D4CD] text-xs text-[#858D9A] hover:text-[#172033] transition-all shadow-2xs group max-w-[140px] sm:max-w-xs sm:w-64"
         title="Open Universal Command Center (Ctrl+K / Cmd+K)"
         aria-label="Search MONVEX (Ctrl+K)"
       >
-        <Search className="h-3.5 w-3.5 text-[#858D9A] group-hover:text-[#172033]" />
+        <Search className="h-3.5 w-3.5 text-[#858D9A] group-hover:text-[#172033] shrink-0" />
         <span className="hidden sm:inline font-medium">Search MONVEX...</span>
-        <span className="sm:hidden font-medium">Search...</span>
+        <span className="sm:hidden font-medium text-[11px] truncate">Search...</span>
         <kbd className="ml-auto hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-sm bg-[#F6F5F1] border border-[#E4E2DC] text-[10px] font-mono font-bold text-[#5F6878]">
           ⌘K
         </kbd>
@@ -175,7 +202,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenAddTransaction }) => {
         {onOpenAddTransaction && (
           <button
             onClick={onOpenAddTransaction}
-            className="flex items-center gap-1.5 rounded-lg bg-[#172033] hover:bg-[#0F172A] py-2 px-3.5 text-xs font-bold text-white transition-all shadow-sm active:translate-y-[1px]"
+            className="hidden sm:flex items-center gap-1.5 rounded-lg bg-[#172033] hover:bg-[#0F172A] py-2 px-3.5 text-xs font-bold text-white transition-all shadow-sm active:translate-y-[1px]"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add transaction</span>

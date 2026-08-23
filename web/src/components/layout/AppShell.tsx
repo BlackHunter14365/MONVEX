@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { MobileNav } from './MobileNav';
+import { MobileDrawer } from './MobileDrawer';
 import { AddTransactionModal } from '@/components/finance/AddTransactionModal';
 import { CommandCenter } from '@/components/search/CommandCenter';
 import { useAuth } from '@/context/AuthContext';
@@ -19,6 +20,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { isAuthenticated, isLoading, refreshUser } = useAuth();
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -26,6 +28,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     }
     const handleOpenModal = () => setIsAddTxOpen(true);
     const handleOpenCommandCenter = () => setIsCommandCenterOpen(true);
+    const handleOpenMobileDrawer = () => setIsMobileDrawerOpen(true);
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -36,11 +39,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
     window.addEventListener('monvex:open-add-transaction', handleOpenModal);
     window.addEventListener('monvex:open-command-center', handleOpenCommandCenter);
+    window.addEventListener('monvex:open-mobile-drawer', handleOpenMobileDrawer);
     window.addEventListener('keydown', handleGlobalKeyDown);
 
     return () => {
       window.removeEventListener('monvex:open-add-transaction', handleOpenModal);
       window.removeEventListener('monvex:open-command-center', handleOpenCommandCenter);
+      window.removeEventListener('monvex:open-mobile-drawer', handleOpenMobileDrawer);
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, [isLoading, isAuthenticated, router]);
@@ -66,12 +71,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Main Content Body */}
       <div className="flex-1 flex flex-col min-w-0 pb-16 lg:pb-0">
-        <Topbar onOpenAddTransaction={() => setIsAddTxOpen(true)} />
+        <Topbar
+          onOpenAddTransaction={() => setIsAddTxOpen(true)}
+          onOpenMobileDrawer={() => setIsMobileDrawerOpen(true)}
+        />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-[1720px] mx-auto">
           {children}
         </main>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      <MobileDrawer
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        onOpenAddTransaction={() => setIsAddTxOpen(true)}
+      />
 
       {/* Mobile Navigation */}
       <MobileNav onOpenAddTransaction={() => setIsAddTxOpen(true)} />

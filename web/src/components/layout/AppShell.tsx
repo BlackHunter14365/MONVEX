@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { MobileNav } from './MobileNav';
@@ -10,6 +10,7 @@ import { AddTransactionModal } from '@/components/finance/AddTransactionModal';
 import { CommandCenter } from '@/components/search/CommandCenter';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { cn } from '@/lib/utils';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ export interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAIPage = pathname === '/ai';
   const { isAuthenticated, isLoading, refreshUser } = useAuth();
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
@@ -74,9 +77,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <Topbar
           onOpenAddTransaction={() => setIsAddTxOpen(true)}
           onOpenMobileDrawer={() => setIsMobileDrawerOpen(true)}
+          className={isAIPage ? 'hidden lg:flex' : undefined}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-[1720px] mx-auto">
+        <main
+          className={cn(
+            'flex-1 w-full max-w-[1720px] mx-auto',
+            isAIPage ? 'p-0 lg:p-8' : 'p-4 sm:p-6 lg:p-8'
+          )}
+        >
           {children}
         </main>
       </div>

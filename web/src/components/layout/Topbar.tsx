@@ -24,11 +24,13 @@ import { UserProfileModal } from '@/components/profile/UserProfileModal';
 interface TopbarProps {
   onOpenAddTransaction?: () => void;
   onOpenMobileDrawer?: () => void;
+  className?: string;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
   onOpenAddTransaction,
   onOpenMobileDrawer,
+  className,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -100,7 +102,12 @@ export const Topbar: React.FC<TopbarProps> = ({
   });
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E2DC] bg-[#F6F5F1]/80 px-3 sm:px-6 lg:px-8 select-none backdrop-blur-md gap-2 sm:gap-4">
+    <header
+      className={cn(
+        'sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E2DC] bg-[#F6F5F1]/80 px-3 sm:px-6 lg:px-8 select-none backdrop-blur-md gap-2 sm:gap-4',
+        className
+      )}
+    >
       {/* Title & Mobile Hamburger */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -36,6 +36,7 @@ import {
   X,
   FileSpreadsheet,
   Download,
+  Smartphone,
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -47,6 +48,26 @@ export default function LandingPage() {
   const windowsDownloadUrl =
     process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL ||
     'https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.1/MONVEX-Setup.exe';
+
+  // Platform Detection (SSR safe)
+  const [detectedPlatform, setDetectedPlatform] = useState<'windows' | 'android' | 'other'>('windows');
+  const [selectedPlatformTab, setSelectedPlatformTab] = useState<'windows' | 'android'>('windows');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator) {
+      const ua = navigator.userAgent || navigator.vendor || '';
+      if (/android/i.test(ua)) {
+        setDetectedPlatform('android');
+        setSelectedPlatformTab('android');
+      } else if (/windows/i.test(ua)) {
+        setDetectedPlatform('windows');
+        setSelectedPlatformTab('windows');
+      } else {
+        setDetectedPlatform('other');
+        setSelectedPlatformTab('windows');
+      }
+    }
+  }, []);
 
   // Contact Modal State
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -202,7 +223,7 @@ export default function LandingPage() {
               Intelligence System
             </a>
             <a href="#desktop" className="hover:text-[#172033] transition-colors whitespace-nowrap">
-              Windows App
+              {detectedPlatform === 'android' ? 'Android App' : 'Windows App'}
             </a>
             <a href="#about" className="hover:text-[#172033] transition-colors whitespace-nowrap">
               About
@@ -275,7 +296,7 @@ export default function LandingPage() {
               onClick={() => setMobileMenuOpen(false)}
               className="block text-xs font-bold text-[#172033] py-1.5"
             >
-              Windows Desktop App
+              {detectedPlatform === 'android' ? 'Android App' : 'Windows Desktop App'}
             </a>
             <a
               href="#about"
@@ -347,19 +368,29 @@ export default function LandingPage() {
                 <span>Start with MONVEX</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <a
-                href={windowsDownloadUrl}
-                download="MONVEX-Setup.exe"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all active:translate-y-[1px]"
-              >
-                <Download className="h-4 w-4 text-[#2563EB]" />
-                <span>Download for Windows</span>
-              </a>
+              {detectedPlatform === 'android' ? (
+                <div
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB] px-5 py-3.5 text-xs font-bold text-[#6B7280] shadow-2xs select-none cursor-default"
+                  title="Android application is in closed preview — Public APK release coming soon"
+                >
+                  <Smartphone className="h-4 w-4 text-[#A855F7]" />
+                  <span>Android App — Coming Soon</span>
+                </div>
+              ) : (
+                <a
+                  href={windowsDownloadUrl}
+                  download="MONVEX-Setup.exe"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all active:translate-y-[1px]"
+                >
+                  <Download className="h-4 w-4 text-[#2563EB]" />
+                  <span>Download for Windows</span>
+                </a>
+              )}
               <a
                 href="#desktop"
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-3.5 text-xs font-bold text-[#5F6878] hover:text-[#172033] transition-colors"
               >
-                <span>Desktop Specs</span>
+                <span>{detectedPlatform === 'android' ? 'Platform Details' : 'Desktop Specs'}</span>
                 <ChevronRight className="h-3.5 w-3.5 text-[#858D9A]" />
               </a>
             </div>
@@ -1078,48 +1109,123 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── WINDOWS DESKTOP APP SECTION ─────────────────────────────────── */}
-      <section id="desktop" className="py-16 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full">
-        <div className="rounded-3xl border border-[#E5E7EB] bg-gradient-to-br from-white via-white to-[#F7F7F4] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div className="space-y-4 max-w-2xl text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20 text-[#2563EB]">
-              <Cpu className="h-3.5 w-3.5" />
-              <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
-                Native Desktop Platform
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#172033]">
-              MONVEX for Windows
-            </h2>
-            <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
-              Experience MONVEX as a native Windows desktop application. Includes instant global Command Center shortcuts (<kbd className="px-1.5 py-0.5 rounded bg-[#E5E7EB] font-mono text-[10px] text-[#172033] font-bold">Ctrl+K</kbd>), system tray quick transaction entry, low-latency performance, and native OS notifications.
-            </p>
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#5F6878] pt-1">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                Windows 10 / 11 (64-bit)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                NSIS Installer (~1.6 MB)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                v2.0.1 Production Release
-              </span>
-            </div>
+      {/* ─── PLATFORM APPS SECTION (WINDOWS LIVE / ANDROID FROZEN) ─────────── */}
+      <section id="desktop" className="py-16 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full scroll-mt-20">
+        <div id="apps" className="space-y-4">
+          {/* Platform Toggle Tabs */}
+          <div className="flex items-center justify-center sm:justify-start gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedPlatformTab('windows')}
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                selectedPlatformTab === 'windows'
+                  ? 'bg-[#172033] text-white shadow-xs'
+                  : 'bg-white text-[#5F6878] border border-[#E5E7EB] hover:text-[#172033]'
+              )}
+            >
+              <Cpu className="h-3.5 w-3.5 text-[#38BDF8]" />
+              <span>Windows (v2.0.1 Live)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPlatformTab('android')}
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                selectedPlatformTab === 'android'
+                  ? 'bg-[#172033] text-white shadow-xs'
+                  : 'bg-white text-[#5F6878] border border-[#E5E7EB] hover:text-[#172033]'
+              )}
+            >
+              <Smartphone className="h-3.5 w-3.5 text-[#A855F7]" />
+              <span>Android (Coming Soon)</span>
+            </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
-            <a
-              href={windowsDownloadUrl}
-              download="MONVEX-Setup.exe"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
-            >
-              <Download className="h-4 w-4 text-[#38BDF8]" />
-              <span>Download for Windows</span>
-            </a>
-          </div>
+          {selectedPlatformTab === 'windows' ? (
+            <div className="rounded-3xl border border-[#E5E7EB] bg-gradient-to-br from-white via-white to-[#F7F7F4] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="space-y-4 max-w-2xl text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20 text-[#2563EB]">
+                  <Cpu className="h-3.5 w-3.5" />
+                  <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
+                    Native Desktop Platform
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#172033]">
+                  MONVEX for Windows
+                </h2>
+                <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
+                  Experience MONVEX as a native Windows desktop application. Includes instant global Command Center shortcuts (<kbd className="px-1.5 py-0.5 rounded bg-[#E5E7EB] font-mono text-[10px] text-[#172033] font-bold">Ctrl+K</kbd>), system tray quick transaction entry, low-latency performance, and native OS notifications.
+                </p>
+                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#5F6878] pt-1">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                    Windows 10 / 11 (64-bit)
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                    NSIS Installer (~5.2 MB)
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                    v2.0.1 Production Release
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+                <a
+                  href={windowsDownloadUrl}
+                  download="MONVEX-Setup.exe"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
+                >
+                  <Download className="h-4 w-4 text-[#38BDF8]" />
+                  <span>Download for Windows</span>
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-[#E5E7EB] bg-gradient-to-br from-white via-white to-[#FAF5FF] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="space-y-4 max-w-2xl text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#A855F7]/10 border border-[#A855F7]/20 text-[#7E22CE]">
+                  <Smartphone className="h-3.5 w-3.5" />
+                  <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
+                    Mobile Platform — Closed Preview
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#172033]">
+                  MONVEX for Android
+                </h2>
+                <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
+                  Your financial intelligence on the go. High-speed transaction logging, voice dictation, camera receipt capture, and biometric security — tailored for Android phones.
+                </p>
+                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#5F6878] pt-1">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                    Android 8.0+ (ARM64)
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[#D97706]">
+                    <AlertTriangle className="h-3.5 w-3.5 text-[#D97706]" />
+                    Release Frozen / In Closed Preview
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                    Zero Mock Data
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center sm:items-end gap-2.5 w-full lg:w-auto shrink-0">
+                <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#1E293B] border border-slate-700 text-slate-300 px-8 py-4 text-xs sm:text-sm font-bold shadow-sm select-none cursor-default">
+                  <Smartphone className="h-4 w-4 text-[#A855F7]" />
+                  <span>Android App — Coming Soon</span>
+                </div>
+                <span className="text-[11px] font-medium text-[#64748B] text-center sm:text-right">
+                  Public APK release is currently frozen and not available for download.
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1178,7 +1284,7 @@ export default function LandingPage() {
             <a href="#core-loop" className="hover:text-[#172033] transition-colors">Core Architecture</a>
             <a href="#simulator" className="hover:text-[#172033] transition-colors">What-If Simulator</a>
             <a href="#intelligence" className="hover:text-[#172033] transition-colors">Intelligence System</a>
-            <a href="#desktop" className="hover:text-[#172033] transition-colors">Windows Desktop</a>
+            <a href="#desktop" className="hover:text-[#172033] transition-colors">Apps & Desktop</a>
             <a href="#about" className="hover:text-[#172033] transition-colors">About</a>
             <button
               type="button"

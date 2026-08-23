@@ -62,11 +62,6 @@ services:
         sync: false
       - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
         sync: false
-      - key: BACKEND_INTERNAL_URL
-        fromService:
-          type: web
-          name: monvex-backend
-          property: host
 
 databases:
   # =========================================================================

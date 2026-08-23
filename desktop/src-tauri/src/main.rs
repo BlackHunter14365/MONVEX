@@ -46,7 +46,7 @@ fn send_native_notification(
 /// Returns current desktop application version
 #[tauri::command]
 fn get_desktop_version() -> String {
-    "2.0.0".to_string()
+    "2.0.1".to_string()
 }
 
 fn main() {

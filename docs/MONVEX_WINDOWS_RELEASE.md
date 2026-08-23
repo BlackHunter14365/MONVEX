@@ -76,15 +76,15 @@ npx.cmd tauri build
 | Property | Actual Verified Value |
 | :--- | :--- |
 | **Product Name** | MONVEX |
-| **Release Version** | `2.0.0` |
-| **Git Tag** | `v2.0.0` (Pushed to `refs/tags/v2.0.0`) |
+| **Release Version** | `2.0.1` |
+| **Git Tag** | `v2.0.1` (Pushed to `refs/tags/v2.0.1`) |
 | **Target OS / Architecture** | Windows 10 / Windows 11 (64-bit `x64` / `x86_64`) |
-| **Primary NSIS Installer** | `MONVEX_2.0.0_x64-setup.exe` (Copy: `MONVEX-Setup.exe`) |
+| **Primary NSIS Installer** | `MONVEX_2.0.1_x64-setup.exe` (Copy: `MONVEX-Setup.exe`) |
 | **Output Directory** | `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\` |
-| **Exact File Size** | `1,654,330 bytes` (~1.58 MB / 1.65 MB) |
-| **SHA-256 Checksum** | `8603D83380481AFF21D3900558817DAD98263B45733F3CD98F9424A1037CA6AA` |
-| **Standalone Executable** | `MONVEX.exe` (`6,571,008 bytes` / ~6.27 MB) |
-| **MSI Package** | `MONVEX_2.0.0_x64_en-US.msi` (`2,973,696 bytes` / ~2.84 MB) |
+| **Exact File Size** | `3,735,758 bytes` (~3.56 MB) |
+| **SHA-256 Checksum** | `378168203DC07F25D92201BD331801C309A4635AD61344F9000FAFE70B9555FA` |
+| **Standalone Executable** | `MONVEX.exe` (`21,262,917 bytes` / ~20.2 MB) |
+| **MSI Package** | `MONVEX_2.0.1_x64_en-US.msi` (`7,086,080 bytes` / ~6.75 MB) |
 
 ---
 
@@ -92,10 +92,10 @@ npx.cmd tauri build
 
 | Property | Status |
 | :--- | :--- |
-| **Release Status** | **NOT PUBLISHED** (Git tag `v2.0.0` pushed; waiting for GitHub Release UI attachment) |
-| **GitHub Tag** | `v2.0.0` (Verified on remote origin: `237be4298cac05775d704f2fe1dbb9d900a69853`) |
-| **Target Release URL** | `https://github.com/BlackHunter14365/MONVEX/releases/tag/v2.0.0` |
-| **Target Download URL** | `https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe` |
+| **Release Status** | **READY TO PUBLISH** (Git tag `v2.0.1` ready; waiting for GitHub Release UI attachment) |
+| **GitHub Tag** | `v2.0.1` |
+| **Target Release URL** | `https://github.com/BlackHunter14365/MONVEX/releases/tag/v2.0.1` |
+| **Target Download URL** | `https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.1/MONVEX-Setup.exe` |
 
 ### Step-by-Step Manual Release Publication:
 Since GitHub CLI (`gh`) and automated GitHub API authentication tokens are not configured in this terminal environment, publish the release in 1 minute via the GitHub Web Interface:
@@ -104,25 +104,27 @@ Since GitHub CLI (`gh`) and automated GitHub API authentication tokens are not c
    ```
    https://github.com/BlackHunter14365/MONVEX/releases/new
    ```
-2. Click **"Choose a tag"** and select the existing tag: **`v2.0.0`**.
+2. Click **"Choose a tag"** and select the tag: **`v2.0.1`**.
 3. Set the **Release title**:
    ```
-   MONVEX Desktop v2.0.0
+   MONVEX Desktop v2.0.1
    ```
 4. In the release notes description, paste:
    ```markdown
-   # MONVEX Desktop v2.0.0 (Windows x64)
+   # MONVEX Desktop v2.0.1 (Windows x64)
 
    Official production native Windows desktop application for MONVEX Financial Intelligence.
 
    - **Platform**: Windows 10 / Windows 11 (64-bit x64)
    - **Installer**: NSIS Standalone Setup (`MONVEX-Setup.exe`)
-   - **Size**: 1.58 MB (1,654,330 bytes)
-   - **SHA-256**: `8603D83380481AFF21D3900558817DAD98263B45733F3CD98F9424A1037CA6AA`
+   - **Size**: 3.56 MB (3,735,758 bytes)
+   - **SHA-256**: `378168203DC07F25D92201BD331801C309A4635AD61344F9000FAFE70B9555FA`
    - **Cloud Services**: Connected to `https://monvex-backend.onrender.com`
+   - **Production Web Entrypoint**: `https://monvex-web.onrender.com`
+   - **Fixes**: Resolved localhost redirect to ensure standalone operation with 0 local server prerequisites.
    ```
 5. Drag and drop the installer file into the **"Attach binaries by dropping them here or selecting them"** box:
-   - File location: `d:\MONVEX\desktop\MONVEX-Setup.exe` (or `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\MONVEX_2.0.0_x64-setup.exe` renamed to `MONVEX-Setup.exe`)
+   - File location: `d:\MONVEX\desktop\MONVEX-Setup.exe` (or `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\MONVEX_2.0.1_x64-setup.exe` renamed to `MONVEX-Setup.exe`)
 6. Click **"Publish release"**.
 
 ---

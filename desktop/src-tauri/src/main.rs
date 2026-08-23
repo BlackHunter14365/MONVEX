@@ -68,6 +68,12 @@ fn main() {
     let system_tray = SystemTray::new().with_menu(tray_menu);
 
     tauri::Builder::default()
+        .setup(|app| {
+            if let Some(window) = app.get_window("main") {
+                let _ = window.eval("if (!window.location.href.startsWith('https://monvex-web.onrender.com')) { window.location.href = 'https://monvex-web.onrender.com'; }");
+            }
+            Ok(())
+        })
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::LeftClick { .. } => {

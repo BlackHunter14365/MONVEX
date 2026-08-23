@@ -4,7 +4,7 @@
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
     "devPath": "http://localhost:3000",
-    "distDir": "../dist"
+    "distDir": "https://monvex-web.onrender.com"
   },
   "package": {
     "productName": "MONVEX",
@@ -22,7 +22,11 @@
         "all": false,
         "readFile": true,
         "writeFile": true,
-        "scope": ["$DOWNLOAD/*", "$DOCUMENT/*", "$DESKTOP/*"]
+        "scope": [
+          "$DOWNLOAD/*",
+          "$DOCUMENT/*",
+          "$DESKTOP/*"
+        ]
       },
       "globalShortcut": {
         "all": true
@@ -49,7 +53,7 @@
       "active": true,
       "targets": "all",
       "category": "Finance",
-      "copyright": "© 2026 MONVEX Financial Technologies",
+      "copyright": "\u00a9 2026 MONVEX Financial Technologies",
       "identifier": "com.monvex.desktop",
       "shortDescription": "Personal Financial Intelligence & Decision Support Platform",
       "resources": [
@@ -80,7 +84,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "MONVEX — Financial Intelligence",
+        "title": "MONVEX \u2014 Financial Intelligence",
         "url": "https://monvex-web.onrender.com",
         "width": 1280,
         "height": 860,

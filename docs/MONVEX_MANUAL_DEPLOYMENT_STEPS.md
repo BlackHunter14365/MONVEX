@@ -1,68 +1,93 @@
-# MONVEX Manual Cloud Deployment & Integration Guide
+# MONVEX Step-by-Step Manual Cloud Deployment Guide
 
-This guide provides step-by-step instructions for deploying MONVEX to Render Cloud, connecting Google OAuth 2.0, setting up custom DNS domains, and distributing native binaries.
+Follow these exact steps to deploy MONVEX to Render Cloud and connect Google OAuth 2.0.
 
 ---
 
-## Step 1: Deploying to Render via Blueprint (`render.yaml`)
+## Phase 1: Push Code to Your GitHub Repository
 
-1. **Log in to Render:** Go to [dashboard.render.com](https://dashboard.render.com/).
-2. **Create New Blueprint:**
-   - Click **New +** at the top right of the dashboard.
+1. **Create a GitHub Repository:**
+   - Go to [github.com/new](https://github.com/new).
+   - Name the repository `MONVEX` (Private or Public).
+   - Do **NOT** initialize with README or .gitignore (MONVEX is already configured).
+2. **Add Remote & Push in Terminal:**
+   ```powershell
+   git remote add origin https://github.com/<your-username>/MONVEX.git
+   git branch -M master
+   git push -u origin master
+   ```
+3. **Verify:** Confirm that commit `532c336` is now the `HEAD` of `master` on GitHub.
+
+---
+
+## Phase 2: Deploy to Render via Blueprint (`render.yaml`)
+
+1. **Log in to Render Dashboard:**
+   - Navigate to [dashboard.render.com](https://dashboard.render.com/).
+2. **Launch Blueprint:**
+   - Click the **New +** button in the top navigation bar.
    - Select **Blueprint**.
-3. **Connect Repository:**
-   - Select your GitHub repository containing the MONVEX project.
-   - Render will automatically locate [`render.yaml`](file:///d:/MONVEX/render.yaml) at the repository root.
-4. **Configure Environment Parameters:**
-   - **`SECRET_KEY`**: Click *Generate* (Render generates a 50+ character random key).
-   - **`GEMINI_API_KEY`**: Enter your Google AI Studio API key.
-   - **`GOOGLE_CLIENT_ID`**: Enter your Google Cloud OAuth 2.0 Client ID.
-   - **`GOOGLE_CLIENT_SECRET`**: Enter your Google Cloud OAuth 2.0 Client Secret.
-5. **Click "Apply":** Render will automatically provision:
-   - `monvex-db` (PostgreSQL 16)
-   - `monvex-backend` (Django REST API + Gunicorn + WhiteNoise)
-   - `monvex-web` (Next.js 14 Web Service)
+3. **Connect Your GitHub Repository:**
+   - Select your `MONVEX` repository.
+   - Render will parse [`render.yaml`](file:///d:/MONVEX/render.yaml) and display the 3 services:
+     - `monvex-db` (PostgreSQL 16)
+     - `monvex-backend` (Web Service)
+     - `monvex-web` (Web Service)
+4. **Enter Environment Variables (Server-Only Secrets):**
+   - **`SECRET_KEY`**: Click *Generate* (Render generates a 50-character random key).
+   - **`GEMINI_API_KEY`**: Paste your Google AI Studio API key (from [aistudio.google.com](https://aistudio.google.com/)).
+   - **`GOOGLE_CLIENT_ID`**: Paste your Google OAuth Web Client ID.
+   - **`GOOGLE_CLIENT_SECRET`**: Paste your Google OAuth Web Client Secret.
+   - **`CORS_ALLOWED_ORIGINS`**: Leave blank initially or enter `https://monvex-web.onrender.com`.
+5. **Click "Apply":** Render will build and deploy the database, backend, and frontend automatically.
 
 ---
 
-## Step 2: Google Cloud Console OAuth 2.0 Configuration
+## Phase 3: Post-Deployment Verification & URL Linking
 
-1. **Open Google Cloud Console:** Navigate to [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials).
-2. **Select OAuth 2.0 Client ID:** Select your Web application client.
-3. **Configure Authorized JavaScript Origins:**
-   - Add: `https://monvex-web.onrender.com`
-   - Add: `https://app.monvex.ai` (or your custom domain)
-   - Add: `http://localhost:3000` (for local development)
-4. **Configure Authorized Redirect URIs:**
-   - Add: `https://monvex-web.onrender.com/login`
-   - Add: `https://monvex-web.onrender.com/api/auth/callback/google`
-   - Add: `http://localhost:3000/login`
-5. **Save Changes:** Google Identity Services will now accept sign-ins from your production web application.
-
----
-
-## Step 3: Custom Domain & DNS Mapping (Optional)
-
-| Record Type | Host / Name | Target / Value | Purpose |
-| :--- | :--- | :--- | :--- |
-| **CNAME** | `app` or `@` | `monvex-web.onrender.com` | Web Frontend (`https://monvex.ai`) |
-| **CNAME** | `api` | `monvex-backend.onrender.com` | Backend REST API (`https://api.monvex.ai`) |
-
-After adding DNS records in your domain registrar (Cloudflare, GoDaddy, Namecheap):
-1. In Render Web Service settings, add custom domain `app.monvex.ai`.
-2. In Render Backend Service settings, add custom domain `api.monvex.ai`.
-3. Update backend `CORS_ALLOWED_ORIGINS` to `https://app.monvex.ai`.
-4. Update web `NEXT_PUBLIC_API_URL` to `https://api.monvex.ai/api/v1`.
+1. **Obtain Render URLs:**
+   - **Backend URL:** Copy from Render Dashboard (e.g. `https://monvex-backend-xxxx.onrender.com`).
+   - **Web URL:** Copy from Render Dashboard (e.g. `https://monvex-web-xxxx.onrender.com`).
+2. **Verify Backend Health:**
+   - Open in browser: `https://<your-backend-url>/health/` $\rightarrow$ Expect `HTTP 200 {"status": "healthy"}`
+   - Open in browser: `https://<your-backend-url>/ready/` $\rightarrow$ Expect `HTTP 200 {"status": "ready", "checks": {"database": true}}`
+3. **Update Web Environment Variable:**
+   - Go to `monvex-web` service settings in Render Dashboard $\rightarrow$ **Environment**.
+   - Set `NEXT_PUBLIC_API_URL` to `https://<your-backend-url>/api/v1`.
+   - Click **Save Changes** (Render will trigger a quick redeploy of the web client).
+4. **Update Backend CORS Configuration:**
+   - Go to `monvex-backend` service settings in Render Dashboard $\rightarrow$ **Environment**.
+   - Set `CORS_ALLOWED_ORIGINS` to `https://<your-web-url>,https://<your-custom-domain>`.
+   - Set `CSRF_TRUSTED_ORIGINS` to `https://*.onrender.com,https://<your-web-url>`.
+   - Click **Save Changes**.
 
 ---
 
-## Step 4: Android Release Signing & Distribution
+## Phase 4: Configure Google Cloud OAuth 2.0
 
-1. To generate a signed Android App Bundle (AAB) for Google Play:
+1. Go to [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials).
+2. Click your OAuth 2.0 Client ID for Web.
+3. Under **Authorized JavaScript Origins**, add:
+   - `https://<your-web-url>` (e.g. `https://monvex-web-xxxx.onrender.com`)
+   - `http://localhost:3000` (for local development)
+4. Under **Authorized Redirect URIs**, add:
+   - `https://<your-web-url>/login`
+   - `https://<your-web-url>/api/auth/callback/google`
+5. Click **Save**.
+
+---
+
+## Phase 5: Build Production Native Clients (Windows & Android)
+
+1. **Android Release APK / AAB:**
    ```bash
    cd mobile
-   flutter build appbundle --release --dart-define=API_BASE_URL=https://monvex-backend.onrender.com/api/v1
+   flutter build apk --release --dart-define=API_BASE_URL=https://<your-backend-url>/api/v1
    ```
-2. The output bundle will be located at:
-   `mobile/build/app/outputs/bundle/release/app-release.aab`
-3. Upload `app-release.aab` directly to Google Play Console.
+   Output: `mobile/build/app/outputs/flutter-apk/app-release.apk`
+2. **Windows Tauri Installer:**
+   ```bash
+   cd desktop
+   npm run build
+   ```
+   Output: `desktop/src-tauri/target/release/bundle/nsis/MONVEX-Setup.exe`

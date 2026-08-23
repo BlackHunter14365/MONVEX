@@ -27,8 +27,17 @@ class AnomalyEventSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'score', 'reason']
 
 class ChatInputSerializer(serializers.Serializer):
-    question = serializers.CharField(max_length=2000)
+    question = serializers.CharField(max_length=2000, required=False)
+    prompt = serializers.CharField(max_length=2000, required=False)
+    message = serializers.CharField(max_length=2000, required=False)
     conversation_id = serializers.UUIDField(required=False, allow_null=True)
+
+    def validate(self, attrs):
+        q = attrs.get('question') or attrs.get('prompt') or attrs.get('message')
+        if not q:
+            raise serializers.ValidationError({"question": "Question, prompt, or message is required."})
+        attrs['question'] = q
+        return attrs
 
 class ConversationMessageSerializer(serializers.ModelSerializer):
     class Meta:

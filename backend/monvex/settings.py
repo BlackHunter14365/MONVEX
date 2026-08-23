@@ -104,6 +104,9 @@ elif os.getenv('DB_ENGINE') == 'postgres':
             'PORT': os.getenv('DB_PORT', '5432'),
         }
     }
+elif not DEBUG:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("DATABASE_URL environment variable must be set in production mode (DEBUG=False).")
 else:
     DATABASES = {
         'default': {
@@ -189,6 +192,11 @@ if not DEBUG:
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
     origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,tauri://localhost').split(',') if origin.strip()
+]
+
+# CSRF Trusted Origins for Secure Production Web Requests
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com,https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost').split(',') if origin.strip()
 ]
 
 # Gemini API Config

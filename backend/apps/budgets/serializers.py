@@ -28,12 +28,17 @@ class BudgetSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         ret = super().to_internal_value(data)
 
-        # Map amount -> limit_amount
+        # Map amount / monthly_limit -> limit_amount
         if 'amount' in ret and 'limit_amount' not in ret:
             ret['limit_amount'] = ret.pop('amount')
         elif 'limit_amount' not in ret and 'amount' in data:
             try:
                 ret['limit_amount'] = float(data['amount'])
+            except (ValueError, TypeError):
+                pass
+        elif 'limit_amount' not in ret and 'monthly_limit' in data:
+            try:
+                ret['limit_amount'] = float(data['monthly_limit'])
             except (ValueError, TypeError):
                 pass
 

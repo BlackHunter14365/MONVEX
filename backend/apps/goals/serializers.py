@@ -13,9 +13,8 @@ class GoalContributionSerializer(serializers.ModelSerializer):
 class SavingsGoalSerializer(serializers.ModelSerializer):
     contributions = GoalContributionSerializer(many=True, read_only=True)
     progress_percentage = serializers.SerializerMethodField()
-
-    name = serializers.CharField(required=False, write_only=True)
-    target_date = serializers.DateField(required=False, allow_null=True, write_only=True)
+    name = serializers.CharField(source='title', required=False)
+    target_date = serializers.DateField(source='deadline', required=False, allow_null=True)
 
     class Meta:
         model = SavingsGoal

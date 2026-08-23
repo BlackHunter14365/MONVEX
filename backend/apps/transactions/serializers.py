@@ -17,6 +17,7 @@ class MerchantSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'normalized_name', 'default_category', 'default_category_name']
 
 class TransactionSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='description', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_color = serializers.CharField(source='category.color', read_only=True)
     category_icon = serializers.CharField(source='category.icon', read_only=True)
@@ -25,7 +26,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = [
-            'id', 'amount', 'type', 'date', 'description',
+            'id', 'amount', 'type', 'date', 'description', 'title',
             'category', 'category_name', 'category_color', 'category_icon',
             'merchant', 'merchant_name', 'source', 'confidence',
             'raw_text', 'is_recurring', 'created_at', 'updated_at'
@@ -37,11 +38,17 @@ class CreateTransactionInputSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=['INCOME', 'EXPENSE', 'TRANSFER'], default='EXPENSE')
     date = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     description = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
+    title = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
     category_id = serializers.UUIDField(required=False, allow_null=True)
     category_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
     merchant_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     source = serializers.ChoiceField(choices=['MANUAL', 'VOICE', 'RECEIPT', 'IMPORT', 'AI'], default='MANUAL')
     raw_text = serializers.CharField(required=False, allow_blank=True, default='')
+
+    def validate(self, attrs):
+        if not attrs.get('description') and attrs.get('title'):
+            attrs['description'] = attrs['title']
+        return attrs
 
     def validate_date(self, value):
         if not value:

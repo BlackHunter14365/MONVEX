@@ -5,7 +5,7 @@ Central Orchestrator coordinating Intent Detection, Tool Selection, Gemini Reaso
 import re
 import uuid
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from django.contrib.auth.models import User
 from apps.ai_copilot.models import AIInteraction, ConversationSession, ConversationMessage
 from .gemini_client import GeminiClient

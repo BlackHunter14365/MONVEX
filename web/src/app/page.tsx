@@ -43,28 +43,35 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ContactModal } from '@/components/landing/ContactModal';
 import { AboutSection } from '@/components/landing/AboutSection';
+import { isTauri } from '@/lib/tauriBridge';
 
 export default function LandingPage() {
   const windowsDownloadUrl =
     process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL ||
     'https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe';
 
-  // Platform Detection (SSR safe)
+  // Platform & Native Desktop Detection (SSR safe)
+  const [isNativeDesktop, setIsNativeDesktop] = useState(false);
   const [detectedPlatform, setDetectedPlatform] = useState<'windows' | 'android' | 'other'>('windows');
   const [selectedPlatformTab, setSelectedPlatformTab] = useState<'windows' | 'android'>('windows');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && navigator) {
-      const ua = navigator.userAgent || navigator.vendor || '';
-      if (/android/i.test(ua)) {
-        setDetectedPlatform('android');
-        setSelectedPlatformTab('android');
-      } else if (/windows/i.test(ua)) {
-        setDetectedPlatform('windows');
-        setSelectedPlatformTab('windows');
-      } else {
-        setDetectedPlatform('other');
-        setSelectedPlatformTab('windows');
+    if (typeof window !== 'undefined') {
+      const isDesktop = isTauri();
+      setIsNativeDesktop(isDesktop);
+
+      if (navigator) {
+        const ua = navigator.userAgent || navigator.vendor || '';
+        if (/android/i.test(ua)) {
+          setDetectedPlatform('android');
+          setSelectedPlatformTab('android');
+        } else if (/windows/i.test(ua)) {
+          setDetectedPlatform('windows');
+          setSelectedPlatformTab('windows');
+        } else {
+          setDetectedPlatform('other');
+          setSelectedPlatformTab('windows');
+        }
       }
     }
   }, []);
@@ -223,7 +230,7 @@ export default function LandingPage() {
               Intelligence System
             </a>
             <a href="#desktop" className="hover:text-[#172033] transition-colors whitespace-nowrap">
-              {detectedPlatform === 'android' ? 'Android App' : 'Windows App'}
+              {detectedPlatform === 'android' ? 'Android App' : isNativeDesktop ? 'Desktop Specs' : 'Windows App'}
             </a>
             <a href="#about" className="hover:text-[#172033] transition-colors whitespace-nowrap">
               About
@@ -368,7 +375,15 @@ export default function LandingPage() {
                 <span>Start with MONVEX</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              {detectedPlatform === 'android' ? (
+              {isNativeDesktop ? (
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all active:translate-y-[1px]"
+                >
+                  <Cpu className="h-4 w-4 text-[#2563EB]" />
+                  <span>Open Workspace</span>
+                </Link>
+              ) : detectedPlatform === 'android' ? (
                 <div
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB] px-5 py-3.5 text-xs font-bold text-[#6B7280] shadow-2xs select-none cursor-default"
                   title="Android application is in closed preview — Public APK release coming soon"
@@ -1174,14 +1189,24 @@ export default function LandingPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
-                <a
-                  href={windowsDownloadUrl}
-                  download="MONVEX-Setup.exe"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
-                >
-                  <Download className="h-4 w-4 text-[#38BDF8]" />
-                  <span>Download for Windows</span>
-                </a>
+                {isNativeDesktop ? (
+                  <Link
+                    href="/dashboard"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                    <span>Open Native Workspace</span>
+                  </Link>
+                ) : (
+                  <a
+                    href={windowsDownloadUrl}
+                    download="MONVEX-Setup.exe"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
+                  >
+                    <Download className="h-4 w-4 text-[#38BDF8]" />
+                    <span>Download for Windows</span>
+                  </a>
+                )}
               </div>
             </div>
           ) : (

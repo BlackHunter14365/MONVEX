@@ -10,11 +10,21 @@ declare global {
       invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
     };
     __TAURI_IPC__?: unknown;
+    __TAURI_METADATA__?: unknown;
+    __IS_TAURI__?: boolean;
+    __MONVEX_DESKTOP__?: boolean;
   }
 }
 
 export const isTauri = (): boolean => {
-  return typeof window !== 'undefined' && (Boolean(window.__TAURI__) || Boolean(window.__TAURI_IPC__));
+  if (typeof window === 'undefined') return false;
+  return Boolean(
+    window.__IS_TAURI__ ||
+    window.__MONVEX_DESKTOP__ ||
+    window.__TAURI__ ||
+    window.__TAURI_IPC__ ||
+    window.__TAURI_METADATA__
+  );
 };
 
 export const sendNativeNotification = async (title: string, body: string): Promise<void> => {

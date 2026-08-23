@@ -75,6 +75,7 @@ fn main() {
                 tauri::WindowUrl::External("https://monvex-web.onrender.com".parse().unwrap()),
             )
             .title("MONVEX — Financial Intelligence")
+            .initialization_script("window.__IS_TAURI__ = true; window.__MONVEX_DESKTOP__ = true;")
             .inner_size(1280.0, 860.0)
             .min_inner_size(960.0, 640.0)
             .resizable(true)

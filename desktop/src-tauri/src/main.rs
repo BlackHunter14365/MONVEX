@@ -69,9 +69,30 @@ fn main() {
 
     tauri::Builder::default()
         .setup(|app| {
-            if let Some(window) = app.get_window("main") {
-                let _ = window.eval("if (!window.location.href.startsWith('https://monvex-web.onrender.com')) { window.location.href = 'https://monvex-web.onrender.com'; }");
-            }
+            let win = tauri::WindowBuilder::new(
+                app,
+                "main",
+                tauri::WindowUrl::External("https://monvex-web.onrender.com".parse().unwrap()),
+            )
+            .title("MONVEX — Financial Intelligence")
+            .inner_size(1280.0, 860.0)
+            .min_inner_size(960.0, 640.0)
+            .resizable(true)
+            .center()
+            .decorations(true)
+            .on_navigation(|url| {
+                println!("[MONVEX-NAV] Navigating to: {}", url);
+                if url.host_str() == Some("localhost") || url.host_str() == Some("127.0.0.1") {
+                    eprintln!("[MONVEX-NAV-BLOCKED] Blocked invalid localhost navigation: {}", url);
+                    return false;
+                }
+                true
+            })
+            .build()?;
+
+            let _ = win.show();
+            let _ = win.set_focus();
+
             Ok(())
         })
         .system_tray(system_tray)

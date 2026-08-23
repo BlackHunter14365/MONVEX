@@ -81,11 +81,11 @@ npx.cmd tauri build
 | **Target OS / Architecture** | Windows 10 / Windows 11 (64-bit `x64` / `x86_64`) |
 | **Primary NSIS Installer** | `MONVEX_2.0.1_x64-setup.exe` (Copy: `MONVEX-Setup.exe`) |
 | **Output Directory** | `d:\MONVEX\desktop\src-tauri\target\release\bundle\nsis\` |
-| **Exact File Size** | `5,478,910 bytes` (~5.23 MB) |
-| **SHA-256 Checksum** | `FB603957054C6A3E25DD238224AE50255C5A16397CF2E3A439B45D0C16FA31A8` |
+| **Exact File Size** | `5,481,871 bytes` (~5.23 MB) |
+| **SHA-256 Checksum** | `B4DDEE3E647FFAA50947F89E2A3248A5E60BF06B73F7E363C4370BB572593D96` |
 | **WebView2 Loader Dependency** | `WebView2Loader.dll` (`157,632 bytes` bundled directly into `$INSTDIR`) |
 | **WebView2 Provisioning Mode** | `embedBootstrapper` (Embedded Microsoft Evergreen Bootstrapper for 100% offline-ready runtime setup) |
-| **Standalone Executable** | `MONVEX.exe` (`21,261,828 bytes` / ~20.2 MB) |
+| **Standalone Executable** | `MONVEX.exe` (`21,302,401 bytes` / ~20.3 MB) |
 | **MSI Package** | `MONVEX_2.0.1_x64_en-US.msi` (`8,122,368 bytes` / ~7.75 MB) |
 
 ---

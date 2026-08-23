@@ -3,7 +3,7 @@
   "build": {
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
-    "devPath": "http://localhost:3000",
+    "devPath": "https://monvex-web.onrender.com",
     "distDir": "https://monvex-web.onrender.com"
   },
   "package": {
@@ -81,21 +81,6 @@
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true
     },
-    "windows": [
-      {
-        "label": "main",
-        "title": "MONVEX \u2014 Financial Intelligence",
-        "url": "https://monvex-web.onrender.com",
-        "width": 1280,
-        "height": 860,
-        "minWidth": 960,
-        "minHeight": 640,
-        "resizable": true,
-        "fullscreen": false,
-        "decorations": true,
-        "transparent": false,
-        "center": true
-      }
-    ]
+    "windows": []
   }
 }

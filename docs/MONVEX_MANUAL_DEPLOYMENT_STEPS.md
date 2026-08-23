@@ -6,17 +6,14 @@ Follow these exact steps to deploy MONVEX to Render Cloud and connect Google OAu
 
 ## Phase 1: Push Code to Your GitHub Repository
 
-1. **Create a GitHub Repository:**
-   - Go to [github.com/new](https://github.com/new).
-   - Name the repository `MONVEX` (Private or Public).
-   - Do **NOT** initialize with README or .gitignore (MONVEX is already configured).
-2. **Add Remote & Push in Terminal:**
+1. **Remote Already Configured:**
+   - Remote URL: `https://github.com/BlackHunter14365/MONVEX.git`
+2. **Push Branch from Terminal:**
    ```powershell
-   git remote add origin https://github.com/<your-username>/MONVEX.git
-   git branch -M master
    git push -u origin master
    ```
-3. **Verify:** Confirm that commit `532c336` is now the `HEAD` of `master` on GitHub.
+   *(If prompted by Git Credential Manager or GitHub, complete the browser sign-in or provide your GitHub Personal Access Token).*
+3. **Verify:** Confirm that commit `6d75385` is now the `HEAD` of `master` on `https://github.com/BlackHunter14365/MONVEX`.
 
 ---
 

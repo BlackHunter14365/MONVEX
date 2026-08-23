@@ -97,7 +97,7 @@ npx.cmd tauri build
 | **Release Status** | **READY TO ATTACH** (Git tag `v2.0.1` ready; waiting for GitHub Release UI attachment) |
 | **GitHub Tag** | `v2.0.1` |
 | **Target Release URL** | `https://github.com/BlackHunter14365/MONVEX/releases/tag/v2.0.1` |
-| **Target Download URL** | `https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.1/MONVEX-Setup.exe` |
+| **Target Download URL** | `https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe` |
 
 ### Step-by-Step Manual Release Publication:
 Since GitHub CLI (`gh`) and automated GitHub API authentication tokens are not configured in this terminal environment, publish the release in 1 minute via the GitHub Web Interface:

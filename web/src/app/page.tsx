@@ -47,7 +47,7 @@ import { AboutSection } from '@/components/landing/AboutSection';
 export default function LandingPage() {
   const windowsDownloadUrl =
     process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL ||
-    'https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.1/MONVEX-Setup.exe';
+    'https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe';
 
   // Platform Detection (SSR safe)
   const [detectedPlatform, setDetectedPlatform] = useState<'windows' | 'android' | 'other'>('windows');
@@ -1125,7 +1125,7 @@ export default function LandingPage() {
               )}
             >
               <Cpu className="h-3.5 w-3.5 text-[#38BDF8]" />
-              <span>Windows (v2.0.1 Live)</span>
+              <span>Windows (v2.0.0 Live)</span>
             </button>
             <button
               type="button"
@@ -1164,11 +1164,11 @@ export default function LandingPage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    NSIS Installer (~5.2 MB)
+                    NSIS Installer
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    v2.0.1 Production Release
+                    v2.0.0 Production Release
                   </span>
                 </div>
               </div>

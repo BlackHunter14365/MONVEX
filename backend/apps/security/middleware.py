@@ -24,7 +24,7 @@ TRAVERSAL_PATTERN = re.compile(
 )
 
 CMD_INJECTION_PATTERN = re.compile(
-    r"(?i)(;\s*(?:cat|chmod|wget|curl|netcat|nc|bash|sh|powershell|cmd\.exe)\b|\|\s*(?:cat|wget|curl)\b|`\s*(?:cat|curl|wget)\b)",
+    r"(?i)(;\s*(?:cat|chmod|wget|curl|netcat|nc|bash|sh|powershell|cmd\.exe|rm|id|whoami)\b|\|\s*(?:cat|chmod|wget|curl|netcat|nc|bash|sh|powershell|cmd\.exe|rm|id|whoami)\b|`\s*(?:cat|chmod|wget|curl|netcat|nc|bash|sh|powershell|cmd\.exe|rm|id|whoami)\b)",
     re.IGNORECASE
 )
 
@@ -87,6 +87,12 @@ class SecurityDefenseMiddleware(MiddlewareMixin):
             )
 
             logger.warning(f"[SECURITY SHIELD ALERT] Hostile {threat_type} intercepted from {ip} on {path} [Incident #{log_entry.id}]")
+
+            try:
+                from services.metrics_service import metrics_collector
+                metrics_collector.record_security_event(threat_type=threat_type)
+            except Exception:
+                pass
 
             return JsonResponse({
                 "success": False,

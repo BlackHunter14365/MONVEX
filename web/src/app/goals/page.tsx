@@ -22,6 +22,12 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useGoalsQuery } from '@/hooks/queries/useGoalsQuery';
+import {
+  useCreateGoalMutation,
+  useContributeGoalMutation,
+  useDeleteGoalMutation,
+} from '@/hooks/mutations/useGoalMutations';
 
 import { triggerConfetti } from '@/components/ui/ConfettiCelebration';
 
@@ -29,8 +35,12 @@ export default function GoalsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [goals, setGoals] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: rawGoals, isLoading } = useGoalsQuery();
+  const createGoalMutation = useCreateGoalMutation();
+  const contributeGoalMutation = useContributeGoalMutation();
+  const deleteGoalMutation = useDeleteGoalMutation();
+
+  const goals = Array.isArray(rawGoals) ? rawGoals : (rawGoals as any)?.results || [];
 
   // New Goal Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,21 +56,6 @@ export default function GoalsPage() {
   const [selectedGoal, setSelectedGoal] = useState<any>(null);
   const [contributeAmount, setContributeAmount] = useState('');
 
-  const fetchGoals = async () => {
-    try {
-      const data = await api.getGoals();
-      setGoals(Array.isArray(data) ? data : data?.results || []);
-    } catch {
-      // ignore
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
   const handleCreateGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     const tAmount = parseFloat(targetAmount);
@@ -75,7 +70,7 @@ export default function GoalsPage() {
     setErrorMsg('');
 
     try {
-      await api.createGoal({
+      await createGoalMutation.mutateAsync({
         title: goalName.trim(),
         name: goalName.trim(),
         target_amount: tAmount,
@@ -91,7 +86,6 @@ export default function GoalsPage() {
       setTargetAmount('');
       setCurrentAmount('0');
       setTargetDate('');
-      fetchGoals();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to create savings goal.');
     } finally {
@@ -109,12 +103,14 @@ export default function GoalsPage() {
 
     setIsSubmitting(true);
     try {
-      await api.contributeToGoal(selectedGoal.id, amount);
+      await contributeGoalMutation.mutateAsync({
+        goalId: selectedGoal.id,
+        amount,
+      });
       triggerConfetti();
       toast.success(`Allocated ${formatCurrency(amount, user?.currency)} to ${selectedGoal.title || selectedGoal.name}`);
       setIsContributeOpen(false);
       setContributeAmount('');
-      fetchGoals();
     } catch (err: any) {
       toast.error(err.message || 'Failed to record contribution.');
     } finally {
@@ -125,16 +121,15 @@ export default function GoalsPage() {
   const handleDeleteGoal = async (id: string) => {
     if (!confirm('Are you sure you want to remove this savings goal?')) return;
     try {
-      await api.deleteGoal(id);
+      await deleteGoalMutation.mutateAsync(id);
       toast.success('Goal removed.');
-      fetchGoals();
     } catch {
       toast.error('Failed to delete goal.');
     }
   };
 
-  const totalTarget = goals.reduce((acc, g) => acc + (parseFloat(g.target_amount) || 0), 0);
-  const totalSaved = goals.reduce((acc, g) => acc + (parseFloat(g.current_amount) || 0), 0);
+  const totalTarget = goals.reduce((acc: number, g: any) => acc + (parseFloat(g.target_amount) || 0), 0);
+  const totalSaved = goals.reduce((acc: number, g: any) => acc + (parseFloat(g.current_amount) || 0), 0);
   const overallPct = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
 
   return (

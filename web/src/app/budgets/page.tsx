@@ -25,14 +25,27 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useBudgetsQuery, useCategoriesQuery } from '@/hooks/queries/useBudgetsQuery';
+import {
+  useCreateBudgetMutation,
+  useUpdateBudgetMutation,
+  useDeleteBudgetMutation,
+} from '@/hooks/mutations/useBudgetMutations';
 
 export default function BudgetsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [budgets, setBudgets] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: rawBudgets, isLoading: isBudgetsLoading } = useBudgetsQuery();
+  const { data: rawCategories, isLoading: isCategoriesLoading } = useCategoriesQuery();
+
+  const createBudgetMutation = useCreateBudgetMutation();
+  const updateBudgetMutation = useUpdateBudgetMutation();
+  const deleteBudgetMutation = useDeleteBudgetMutation();
+
+  const budgets = Array.isArray(rawBudgets) ? rawBudgets : (rawBudgets as any)?.results || [];
+  const categories = Array.isArray(rawCategories) ? rawCategories : [];
+  const isLoading = isBudgetsLoading || isCategoriesLoading;
 
   // Budget Modal State (Add / Edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,25 +55,6 @@ export default function BudgetsPage() {
   const [period, setPeriod] = useState('MONTHLY');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  const fetchBudgetsAndCategories = async () => {
-    try {
-      const [bData, cData] = await Promise.all([
-        api.getBudgets(),
-        api.getCategories().catch(() => []),
-      ]);
-      setBudgets(Array.isArray(bData) ? bData : bData?.results || []);
-      setCategories(Array.isArray(cData) ? cData : []);
-    } catch {
-      // ignore
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBudgetsAndCategories();
-  }, []);
 
   const handleSaveBudget = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,17 +67,20 @@ export default function BudgetsPage() {
     setIsSubmitting(true);
     setErrorMsg('');
 
-    const selectedCat = categories.find((c) => c.name === categoryName);
+    const selectedCat = categories.find((c: any) => c.name === categoryName);
     try {
       if (editingBudget) {
-        await api.updateBudget(editingBudget.id, {
-          limit_amount: limit,
-          amount: limit,
-          period,
+        await updateBudgetMutation.mutateAsync({
+          id: editingBudget.id,
+          data: {
+            limit_amount: limit,
+            amount: limit,
+            period,
+          },
         });
         toast.success('Budget limit updated successfully!');
       } else {
-        await api.createBudget({
+        await createBudgetMutation.mutateAsync({
           category: selectedCat?.id,
           category_id: selectedCat?.id,
           category_name: categoryName,
@@ -97,7 +94,6 @@ export default function BudgetsPage() {
       setIsModalOpen(false);
       setEditingBudget(null);
       setBudgetAmount('');
-      fetchBudgetsAndCategories();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to save budget.');
     } finally {
@@ -108,17 +104,16 @@ export default function BudgetsPage() {
   const handleDeleteBudget = async (id: string) => {
     if (!confirm('Are you sure you want to remove this budget target?')) return;
     try {
-      await api.deleteBudget(id);
+      await deleteBudgetMutation.mutateAsync(id);
       toast.success('Budget removed.');
-      fetchBudgetsAndCategories();
     } catch {
       toast.error('Failed to remove budget.');
     }
   };
 
   // Aggregated figures
-  const totalAllocated = budgets.reduce((acc, b) => acc + (parseFloat(b.limit_amount ?? b.amount) || 0), 0);
-  const totalSpent = budgets.reduce((acc, b) => acc + (parseFloat(b.spent_amount ?? b.current_spent) || 0), 0);
+  const totalAllocated = budgets.reduce((acc: number, b: any) => acc + (parseFloat(b.limit_amount ?? b.amount) || 0), 0);
+  const totalSpent = budgets.reduce((acc: number, b: any) => acc + (parseFloat(b.spent_amount ?? b.current_spent) || 0), 0);
   const totalRemaining = Math.max(0, totalAllocated - totalSpent);
   const overallPct = totalAllocated > 0 ? Math.min(100, Math.round((totalSpent / totalAllocated) * 100)) : 0;
 

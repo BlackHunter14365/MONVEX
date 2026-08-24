@@ -26,3 +26,15 @@ export function useContributeGoalMutation() {
     },
   });
 }
+
+export function useDeleteGoalMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.deleteGoal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.goals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+}

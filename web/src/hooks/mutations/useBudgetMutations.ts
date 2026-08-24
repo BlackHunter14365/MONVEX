@@ -25,3 +25,15 @@ export function useUpdateBudgetMutation() {
     },
   });
 }
+
+export function useDeleteBudgetMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.deleteBudget(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+}

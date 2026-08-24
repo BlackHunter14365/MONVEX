@@ -9,3 +9,11 @@ export function useBudgetsQuery() {
     staleTime: 1000 * 60 * 2,
   });
 }
+
+export function useCategoriesQuery(type?: 'income' | 'expense') {
+  return useQuery({
+    queryKey: queryKeys.transactions.categories(),
+    queryFn: () => api.getCategories(type),
+    staleTime: 1000 * 60 * 10,
+  });
+}

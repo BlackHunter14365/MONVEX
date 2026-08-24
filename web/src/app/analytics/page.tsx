@@ -38,38 +38,21 @@ import {
   ReferenceLine,
 } from 'recharts';
 
+import { useAnalyticsQuery } from '@/hooks/queries/useAnalyticsQuery';
+
 export default function AnalyticsPage() {
   const { user } = useAuth();
 
-  const [summary, setSummary] = useState<any>(null);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: analyticsData, isLoading } = useAnalyticsQuery();
+
+  const summary = analyticsData?.summary || null;
+  const categoryData = Array.isArray(analyticsData?.spendingByCategory) ? analyticsData.spendingByCategory : [];
+  const monthlyTrend = Array.isArray(analyticsData?.monthlyTrend) ? analyticsData.monthlyTrend : [];
 
   // Advanced Chart State
   const [chartHorizon, setChartHorizon] = useState<'3M' | '6M' | '12M'>('6M');
   const [chartView, setChartView] = useState<'AREA' | 'BAR'>('AREA');
   const [activePieIndex, setActivePieIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const [sumRes, catRes, trendRes] = await Promise.all([
-          api.getAnalyticsSummary().catch(() => null),
-          api.getSpendingByCategory().catch(() => []),
-          api.getMonthlyTrend().catch(() => []),
-        ]);
-        setSummary(sumRes);
-        setCategoryData(Array.isArray(catRes) ? catRes : []);
-        setMonthlyTrend(Array.isArray(trendRes) ? trendRes : []);
-      } catch {
-        // ignore
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAnalytics();
-  }, []);
 
   const totalIncome = summary?.monthly_income ?? summary?.total_income ?? 0;
   const totalExpense = summary?.monthly_expense ?? summary?.total_expense ?? 0;

@@ -29,13 +29,20 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useTransactionsQuery } from '@/hooks/queries/useTransactionsQuery';
+import { useDeleteTransactionMutation } from '@/hooks/mutations/useTransactionMutations';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: rawTransactions, isLoading, refetch } = useTransactionsQuery();
+  const deleteMutation = useDeleteTransactionMutation();
+
+  const transactions = Array.isArray(rawTransactions)
+    ? rawTransactions
+    : (rawTransactions as any)?.results || [];
+
   const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'EXPENSE' | 'INCOME'>('ALL');
@@ -45,30 +52,17 @@ export default function TransactionsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<any>(null);
 
-  const fetchTransactions = async () => {
-    try {
-      const data = await api.getTransactions();
-      setTransactions(Array.isArray(data) ? data : data?.results || []);
-    } catch {
-      // ignore
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTransactions();
-    const handleTxAdded = () => fetchTransactions();
+    const handleTxAdded = () => refetch();
     window.addEventListener('monvex:transaction-added', handleTxAdded);
     return () => window.removeEventListener('monvex:transaction-added', handleTxAdded);
-  }, []);
+  }, [refetch]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this transaction record?')) return;
     try {
-      await api.deleteTransaction(id);
+      await deleteMutation.mutateAsync(id);
       toast.success('Transaction deleted successfully.');
-      fetchTransactions();
     } catch {
       toast.error('Failed to delete transaction.');
     }
@@ -98,7 +92,7 @@ export default function TransactionsPage() {
 
   // Filter & Sort
   const filtered = transactions
-    .filter((tx) => {
+    .filter((tx: any) => {
       if (typeFilter !== 'ALL' && tx.type !== typeFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -109,7 +103,7 @@ export default function TransactionsPage() {
       }
       return true;
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
       if (sortBy === 'amount_desc') return parseFloat(b.amount) - parseFloat(a.amount);
       if (sortBy === 'amount_asc') return parseFloat(a.amount) - parseFloat(b.amount);
       return new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -381,7 +375,7 @@ export default function TransactionsPage() {
             setIsAddModalOpen(false);
             setEditingTx(null);
           }}
-          onSuccess={fetchTransactions}
+          onSuccess={() => refetch()}
           initialTransaction={editingTx}
         />
       </div>

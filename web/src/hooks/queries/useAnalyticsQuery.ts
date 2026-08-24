@@ -6,13 +6,14 @@ export function useAnalyticsQuery() {
   return useQuery({
     queryKey: queryKeys.analytics.summary(),
     queryFn: async () => {
-      const [summary, healthScore, anomalies, monthlyTrend] = await Promise.all([
+      const [summary, healthScore, anomalies, monthlyTrend, spendingByCategory] = await Promise.all([
         api.getAnalyticsSummary().catch(() => null),
         api.getHealthScore().catch(() => null),
         api.getAnomalies().catch(() => []),
         api.getMonthlyTrend().catch(() => []),
+        api.getSpendingByCategory().catch(() => []),
       ]);
-      return { summary, healthScore, anomalies, monthlyTrend };
+      return { summary, healthScore, anomalies, monthlyTrend, spendingByCategory };
     },
     staleTime: 1000 * 60 * 3,
   });

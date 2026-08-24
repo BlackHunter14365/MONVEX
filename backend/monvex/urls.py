@@ -3,14 +3,15 @@ MONVEX Root URL Configuration
 """
 from django.contrib import admin
 from django.urls import path, include
-from .views import health_check, readiness_check
+from .views import health_check, readiness_check, observability_status
 from apps.security.views import ContactSubmissionView
 from apps.transactions.views_extra import UniversalSearchView
 
 urlpatterns = [
-    # Probes
+    # Probes & Observability
     path('health/', health_check, name='health-check'),
     path('ready/', readiness_check, name='readiness-check'),
+    path('api/v1/observability/status/', observability_status, name='observability-status'),
 
     # Admin & V1 APIs
     path('admin/', admin.site.urls),

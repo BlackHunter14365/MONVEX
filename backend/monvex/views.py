@@ -1,5 +1,5 @@
 """
-Production Health Check & Readiness Endpoints
+Production Health Check, Readiness, & Internal Observability Endpoints
 """
 import time
 from django.db import connection
@@ -19,7 +19,7 @@ def health_check(request):
         'status': 'healthy',
         'uptime_seconds': round(time.time() - START_TIME, 2),
         'service': 'monvex-backend',
-        'version': '1.0.0',
+        'version': '3.4.0',
     })
 
 @api_view(['GET'])
@@ -50,3 +50,30 @@ def readiness_check(request):
         'checks': checks,
         'timestamp': time.time(),
     }, status=status_code)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def observability_status(request):
+    """
+    Internal observability snapshot for monitoring, AI regression health, and release verification.
+    Zero secret or PII exposure.
+    """
+    from services.metrics_service import metrics_collector
+    snapshot = metrics_collector.get_snapshot()
+
+    # Verify DB status
+    db_ok = False
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1;")
+            db_ok = (cursor.fetchone()[0] == 1)
+    except Exception:
+        db_ok = False
+
+    snapshot["release"] = {
+        "version": "3.4.0",
+        "milestone": "V3.4_PRODUCTION_RELEASE_GATE",
+        "database_connected": db_ok,
+    }
+
+    return JsonResponse(snapshot, status=200)

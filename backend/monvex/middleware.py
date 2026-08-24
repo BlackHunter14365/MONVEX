@@ -56,4 +56,18 @@ class RequestCorrelationMiddleware(MiddlewareMixin):
                 f"[{req_id}] {method} {path} -> {status_code} ({duration_ms}ms) | user={user_id}"
             )
 
+            # 4. Feed thread-safe rolling metrics aggregator
+            try:
+                from services.metrics_service import metrics_collector
+                client_platform = getattr(request, 'client_platform', 'web')
+                metrics_collector.record_request(
+                    method=method,
+                    path=path,
+                    status_code=status_code,
+                    duration_ms=duration_ms,
+                    client_platform=client_platform,
+                )
+            except Exception:
+                pass
+
         return response

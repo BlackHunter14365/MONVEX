@@ -1,26 +1,29 @@
 """
 MONVEX Financial Integrity Monitoring Engine
-Deterministic Invariant Verification Suite for Ledger, Balances, Budgets, and Goals.
-Verifies arithmetic and tenant invariants without mutating production data.
+Deterministic Invariant Verification Suite for Ledger, Balances, Budgets, Goals, and Relational State.
+Verifies 8 fundamental arithmetic and tenant invariants without mutating production data.
 """
 from decimal import Decimal
 from datetime import date, timedelta
 from typing import Dict, Any, List
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.contrib.auth.models import User
-from apps.transactions.models import Transaction, Asset, Liability, RecurringPayment
+from apps.transactions.models import Transaction, Asset, Liability, RecurringPayment, Category
 from apps.budgets.models import Budget
 from apps.goals.models import SavingsGoal
 
 class FinancialIntegrityService:
     """
-    Automated Financial Invariant Checker.
-    Evaluates 5 fundamental accounting invariants:
+    Automated Financial Invariant Checker & Watchdog.
+    Evaluates 8 fundamental accounting and relational invariants:
       1. Cashflow Conservation: Income - Expenses == Net Balance Delta
-      2. Budget Boundary Invariant: Actual Spend + Remaining Allowance == Limit Amount
-      3. Savings Goal Invariant: Current Amount <= Target Amount (unless completed) & Progress Ratio
+      2. Budget Boundary Invariant: Limit amount > 0 and valid category assignment
+      3. Savings Goal Invariant: Target amount > 0, Current saved amount >= 0
       4. Net Worth Invariant: Total Assets - Total Liabilities == Net Worth
-      5. Ledger Sanitization: All transaction amounts > 0, valid user references, valid categories
+      5. Ledger Sanitization: All transaction amounts > 0
+      6. Orphaned & Relationship Invariant: No dangling user references, valid category bindings
+      7. Duplicate Ledger Detection: Identifies exact redundant transactions on same timestamp
+      8. State Consistency Invariant: Valid non-negative balances on loans and recurring subscriptions
     """
 
     @classmethod
@@ -30,7 +33,7 @@ class FinancialIntegrityService:
             "username": user.username,
             "timestamp": str(date.today()),
             "status": "HEALTHY",
-            "invariants_checked": 5,
+            "invariants_checked": 8,
             "invariants_passed": 0,
             "violations": [],
             "metrics": {}
@@ -58,7 +61,7 @@ class FinancialIntegrityService:
             if b.limit_amount <= Decimal('0.00'):
                 budget_violations.append({
                     "budget_id": str(b.id),
-                    "category": b.category.name,
+                    "category": b.category.name if b.category else "Unknown",
                     "issue": "Zero or negative budget limit"
                 })
         
@@ -121,8 +124,66 @@ class FinancialIntegrityService:
         else:
             results["invariants_passed"] += 1
 
+        # -------------------------------------------------------------
+        # Invariant 6: Orphaned & Relationship Invariant
+        # -------------------------------------------------------------
+        orphaned_budgets = Budget.objects.filter(user=user, category__isnull=True)
+        if orphaned_budgets.exists():
+            results["violations"].append({
+                "invariant": "ORPHANED_RELATIONSHIPS",
+                "details": f"{orphaned_budgets.count()} budget(s) found without an assigned category"
+            })
+        else:
+            results["invariants_passed"] += 1
+
+        # -------------------------------------------------------------
+        # Invariant 7: Duplicate Ledger Detection Invariant
+        # -------------------------------------------------------------
+        # Finds identical transactions on identical date, user, amount, and description
+        duplicates = (
+            txs.values('date', 'amount', 'description', 'type')
+            .annotate(cnt=Count('id'))
+            .filter(cnt__gt=3) # Allow realistic identical micro-transactions (up to 3), flag suspicious batch cloning
+        )
+        if duplicates.exists():
+            results["violations"].append({
+                "invariant": "SUSPICIOUS_LEDGER_DUPLICATION",
+                "details": f"{duplicates.count()} pattern(s) found with > 3 identical transactions"
+            })
+        else:
+            results["invariants_passed"] += 1
+
+        # -------------------------------------------------------------
+        # Invariant 8: State Consistency Invariant
+        # -------------------------------------------------------------
+        invalid_liabs = Liability.objects.filter(user=user, remaining_balance__lt=Decimal('0.00'))
+        invalid_recs = RecurringPayment.objects.filter(user=user, amount__lte=Decimal('0.00'))
+        state_violations = []
+        if invalid_liabs.exists():
+            state_violations.append(f"{invalid_liabs.count()} liability record(s) with negative remaining balance")
+        if invalid_recs.exists():
+            state_violations.append(f"{invalid_recs.count()} subscription record(s) with amount <= 0")
+
+        if state_violations:
+            results["violations"].append({
+                "invariant": "STATE_CONSISTENCY",
+                "details": state_violations
+            })
+        else:
+            results["invariants_passed"] += 1
+
         # Determine Final Health Status
         if results["violations"]:
             results["status"] = "WARNING" if len(results["violations"]) == 1 else "CORRUPT"
+
+        # Record into central telemetry aggregator
+        try:
+            from services.metrics_service import metrics_collector
+            metrics_collector.record_invariant_audit(
+                violations_count=len(results["violations"]),
+                violations_list=results["violations"]
+            )
+        except Exception:
+            pass
 
         return results

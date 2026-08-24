@@ -567,8 +567,55 @@ CRITICAL RULES:
                 f"**Opportunities for Optimization:**\n{warning_lines}"
             )
 
-        # 4. Budget Status & Limits
-        elif any(w in q_lower for w in ['budget', 'over budget', 'limit', 'left in my budget', 'pace', 'remaining budget']):
+        # 4. Subscriptions & Recurring Fixed Obligations
+        elif any(w in q_lower for w in ['subscription', 'recurring', 'netflix', 'spotify', 'prime', 'membership', 'gym', 'apple music']):
+            recs = MONVEXTools.get_recurring_expenses(user)
+            tools_used.append('get_recurring_expenses')
+            tool_activity.append(f"Audited {recs['active_subscriptions_count']} recurring subscriptions (₹{recs['total_monthly_burn']:,.2f}/mo)")
+            data['subscriptions'] = recs
+
+            if recs['active_subscriptions_count'] == 0:
+                answer = (
+                    "### 🔄 Recurring Subscriptions Audit\n\n"
+                    "You have **0 active subscriptions or recurring commitments** registered in MONVEX.\n\n"
+                    "Your monthly fixed recurring overhead is **₹0.00**."
+                )
+            else:
+                lines = [f"- **{s['name']}** ({s['category']}): **₹{s['amount']:,.2f}** / {s['frequency'].lower()} (Next due: {s['next_due_date']})" for s in recs['subscriptions']]
+                answer = (
+                    f"### 🔄 Recurring Subscriptions & Fixed Commitments\n\n"
+                    f"- **Active Commitments:** {recs['active_subscriptions_count']} services\n"
+                    f"- **Monthly Recurring Burn:** **₹{recs['total_monthly_burn']:,.2f} / month**\n"
+                    f"- **Annualized Obligation:** **₹{recs['annualized_burn']:,.2f} / year**\n\n"
+                    f"**Active Subscriptions:**\n" + "\n".join(lines) +
+                    f"\n\n💡 Tip: Review low-frequency subscriptions in the **/subscriptions** workspace to eliminate unused services."
+                )
+
+        # 4.5 Savings Optimization & Target Allocation Plan
+        elif any(w in q_lower for w in ['plan to save', 'save 10', 'save 5', 'how to save', 'savings plan']):
+            summary = MONVEXTools.get_transaction_summary(user, 30)
+            cashflow = MONVEXTools.get_cashflow(user, 30)
+            tools_used.extend(['get_transaction_summary', 'get_cashflow'])
+            tool_activity.append("Synthesized discretionary savings potential from cashflow telemetry")
+            data['summary'] = summary
+            data['cashflow'] = cashflow
+
+            discretionary_spend = sum((c['amount'] for c in summary['top_categories'] if c['category'].lower() in ['shopping', 'food & dining', 'entertainment', 'travel']), 0.0)
+            target_cut = round(discretionary_spend * 0.20, 2)
+
+            answer = (
+                f"### 🎯 Actionable Savings Strategy Plan\n\n"
+                f"- **Current Monthly Inflow:** +₹{cashflow['total_inflow']:,.2f}\n"
+                f"- **Current Discretionary Outflow:** ₹{discretionary_spend:,.2f}\n"
+                f"- **Current Net Monthly Savings:** +₹{cashflow['net_cashflow']:,.2f} ({cashflow['savings_rate_pct']}% rate)\n\n"
+                f"**Step-by-Step Optimization Roadmap:**\n"
+                f"1. **Discretionary Capping:** Trim 20% from Dining & Shopping to unlock **+₹{target_cut:,.2f}/month** in immediate capital.\n"
+                f"2. **Pay Yourself First:** Automate a recurring ₹10,000 transfer to your Savings Goal on the 1st of every month.\n"
+                f"3. **Emergency Runway Preservation:** Keep ₹{cashflow['total_liquid_reserves']:,.2f} in liquid reserves while investing surplus."
+            )
+
+        # 5. Budget Status & Limits
+        elif any(w in q_lower for w in ['budget', 'over budget', 'limit', 'left in my budget', 'pace', 'remaining budget', 'overspending']):
             budgets = MONVEXTools.get_budgets(user)
             tools_used.append('get_budgets')
             tool_activity.append(f"Audited {budgets['total_budgets']} active budgets")
@@ -592,8 +639,8 @@ CRITICAL RULES:
                     f"\n\n- **Overall Budget Utilization:** **{budgets['overall_usage_pct']}%** (₹{budgets['total_budget_spent']:,.2f} spent of ₹{budgets['total_budget_limit']:,.2f})"
                 )
 
-        # 5. Savings Goals Progress
-        elif any(w in q_lower for w in ['goal', 'emergency fund', 'target', 'savings goal', 'how close am i']):
+        # 6. Savings Goals Progress
+        elif any(w in q_lower for w in ['goal', 'emergency fund', 'target', 'savings goal', 'how close am i', 'how long until', 'reach my']):
             goals = MONVEXTools.get_goals(user)
             tools_used.append('get_goals')
             tool_activity.append(f"Queried {goals['total_goals']} savings goals")
@@ -638,8 +685,8 @@ CRITICAL RULES:
                     f"{acc_lines}"
                 )
 
-        # 7. Period Comparison
-        elif any(w in q_lower for w in ['compare', 'last month', 'previous month', 'variance', 'difference']):
+        # 7. Period Comparison & "Why" Variance Analysis
+        elif any(w in q_lower for w in ['compare', 'last month', 'previous month', 'variance', 'difference', 'why', 'increase', 'increased', 'higher than', 'spike']):
             comp = MONVEXTools.compare_periods(user, 30, 30)
             tools_used.append('compare_periods')
             tool_activity.append(f"Compared 30-day spend ({'+' if comp['net_delta'] > 0 else ''}₹{comp['net_delta']:,.2f})")

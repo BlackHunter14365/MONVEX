@@ -39,55 +39,63 @@ class FinancialAgentOrchestrator:
     @classmethod
     def classify_intent(cls, prompt: str) -> str:
         """
-        Deterministic intent classifier for logging and routing.
+        Deterministic intent classifier for logging, telemetry, and optimal tool routing.
         """
         p = prompt.lower().strip()
 
-        # Public market / current web queries
+        # 1. Public market / current web queries
         if any(w in p for w in ['usd/inr', 'dollar to inr', 'gold price', 'silver price', 'repo rate', 'rbi policy', 'sensex', 'nifty', 'inflation rate']):
             return 'CURRENT_MARKET_INFORMATION'
 
-        # Affordability & purchase
-        if any(w in p for w in ['afford', 'can i buy', 'can i purchase', 'iphone', 'laptop', 'car', 'should i get']):
+        # 2. Subscriptions & recurring obligations
+        if any(w in p for w in ['subscription', 'recurring', 'netflix', 'spotify', 'prime', 'membership', 'gym', 'apple music']):
+            return 'SUBSCRIPTION_QUERY'
+
+        # 3. Period comparison & "Why" variance attribution
+        if any(w in p for w in ['why', 'increase', 'increased', 'more than last month', 'compare', 'variance', 'difference', 'higher than', 'spike']):
+            return 'PERIOD_COMPARISON'
+
+        # 4. Specific budget checks & overspend alerts
+        if any(w in p for w in ['budget', 'over budget', 'overspending', 'overspend', 'limit', 'remaining budget', 'pace', 'velocity']):
+            return 'BUDGET_QUERY'
+
+        # 5. Savings goals & milestones
+        if any(w in p for w in ['goal', 'emergency fund', 'target', 'savings goal', 'how long until', 'reach my', 'milestone']):
+            return 'GOAL_QUERY'
+
+        # 6. Account & liquid balance
+        if any(w in p for w in ['balance', 'current balance', 'account', 'total balance', 'bank', 'wallet', 'liquid']):
+            return 'ACCOUNT_QUERY'
+
+        # 7. Affordability & planned purchases
+        if any(w in p for w in ['afford', 'can i buy', 'can i purchase', 'iphone', 'laptop', 'car', 'should i get', 'purchasing', 'buy ']):
             return 'AFFORDABILITY'
 
-        # What-if simulations
-        if any(w in p for w in ['what if', 'cut spending', 'reduce by', 'simulate']):
+        # 8. What-if & scenario simulations
+        if any(w in p for w in ['what if', 'cut spending', 'reduce by', 'simulate', 'save more', 'cut ']):
             return 'WHAT_IF_SIMULATION'
 
-        # Health score
-        if any(w in p for w in ['health score', 'financial health', 'diagnostic', 'grade']):
+        # 9. Statistical anomaly detection
+        if any(w in p for w in ['anomaly', 'unusual', 'outlier', 'irregular', 'unexpected', 'leak']):
+            return 'ANOMALY_DETECTION'
+
+        # 10. Financial Health Diagnostic
+        if any(w in p for w in ['health score', 'financial health', 'diagnostic', 'grade', 'health index']):
             return 'FINANCIAL_HEALTH'
 
-        # Forecasts
+        # 11. Forward-looking Forecasts
         if any(w in p for w in ['forecast', 'predict', 'next month', 'year ahead', 'future balance']):
             return 'FORECAST'
 
-        # Budgets
-        if any(w in p for w in ['budget', 'over budget', 'limit', 'remaining budget']):
-            return 'BUDGET_QUERY'
+        # 12. Savings Optimization Plan
+        if any(w in p for w in ['plan to save', 'save 10', 'save 5', 'how to save', 'savings plan']):
+            return 'SAVINGS_PLAN'
 
-        # Goals
-        if any(w in p for w in ['goal', 'emergency fund', 'target', 'savings goal']):
-            return 'GOAL_QUERY'
-
-        # Accounts
-        if any(w in p for w in ['account', 'balance', 'total balance', 'bank', 'wallet', 'card']):
-            return 'ACCOUNT_QUERY'
-
-        # Period comparison
-        if any(w in p for w in ['compare', 'last month', 'previous month', 'variance', 'difference']):
-            return 'PERIOD_COMPARISON'
-
-        # Anomalies
-        if any(w in p for w in ['anomaly', 'unusual', 'spike', 'outlier', 'irregular']):
-            return 'ANOMALY_DETECTION'
-
-        # Transactions & category spend
+        # 13. Transactions & Category Spending Breakdown
         if any(w in p for w in ['spend', 'spent', 'expense', 'transaction', 'bought', 'outflow', 'merchant', 'food', 'dining', 'groceries', 'shopping']):
             return 'TRANSACTION_QUERY'
 
-        # General education
+        # 14. General Financial Knowledge / Concepts
         if any(w in p for w in ['what is', 'explain', 'how does', 'definition', 'compound interest', 'sip', 'cagr']):
             return 'GENERAL_KNOWLEDGE'
 

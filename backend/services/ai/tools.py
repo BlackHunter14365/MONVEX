@@ -304,7 +304,8 @@ class MONVEXTools:
             pct = round((saved / max(1.0, target)) * 100, 1)
             rem = max(0.0, target - saved)
 
-            days_left = (g.target_date - today).days if g.target_date else None
+            deadline_val = getattr(g, 'deadline', None)
+            days_left = (deadline_val - today).days if deadline_val else None
             monthly_req = round(rem / max(1.0, (days_left / 30.0)), 2) if days_left and days_left > 0 else rem
 
             items.append({
@@ -314,7 +315,7 @@ class MONVEXTools:
                 "current_saved": saved,
                 "remaining_amount": rem,
                 "progress_pct": pct,
-                "target_date": str(g.target_date) if g.target_date else None,
+                "target_date": str(deadline_val) if deadline_val else None,
                 "days_remaining": days_left,
                 "required_monthly_savings": monthly_req,
                 "is_completed": saved >= target

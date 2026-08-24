@@ -170,6 +170,7 @@ class MONVEXTools:
         Retrieves user's verified bank accounts, credit cards, and digital wallets with masked numbers.
         """
         assets = Asset.objects.filter(user=user).order_by('-created_at')
+        liabilities = Liability.objects.filter(user=user)
         accounts = []
         total_balance = 0.0
 
@@ -194,9 +195,16 @@ class MONVEXTools:
                 "masked_account": f"•••• {last4}"
             })
 
+        total_assets = total_balance
+        total_liab = float(liabilities.aggregate(s=Sum('remaining_balance'))['s'] or Decimal('0.00'))
+        net_worth = total_assets - total_liab
+
         return {
             "total_accounts": len(accounts),
             "total_liquid_balance": round(total_balance, 2),
+            "total_assets": round(total_assets, 2),
+            "total_liabilities": round(total_liab, 2),
+            "net_worth": round(net_worth, 2),
             "accounts": accounts
         }
 

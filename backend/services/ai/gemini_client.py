@@ -483,13 +483,15 @@ CRITICAL RULES:
         High-precision deterministic reasoning engine that computes answers
         from real database queries and math when external Gemini API is unreachable.
         """
+        from services.ai.orchestrator import FinancialAgentOrchestrator
+        intent = FinancialAgentOrchestrator.classify_intent(prompt)
         q_lower = prompt.lower().strip()
         tools_used = []
         tool_activity = []
         data = {}
 
         # 1. What-If Spending Reduction & SIP Growth
-        if any(w in q_lower for w in ['what if', 'reduce', 'cut', 'save more', 'simulate']):
+        if intent == 'WHAT_IF_SIMULATION':
             import re
             pct = 20.0
             pct_match = re.search(r'(\d+(?:\.\d+)?)\s*%', prompt)
@@ -518,7 +520,7 @@ CRITICAL RULES:
             )
 
         # 2. Affordability & Purchase Simulation
-        elif any(w in q_lower for w in ['afford', 'buy', 'purchase', 'iphone', 'laptop', 'car', 'can i get']):
+        elif intent == 'AFFORDABILITY':
             import re
             numbers = re.findall(r'\b\d+(?:,\d+)?(?:\.\d+)?\b', prompt.replace(',', ''))
             valid_nums = [float(n) for n in numbers if float(n) > 100 and float(n) != 2026.0]
@@ -547,7 +549,7 @@ CRITICAL RULES:
             )
 
         # 3. Financial Health Score
-        elif any(w in q_lower for w in ['health', 'score', 'audit', 'financial health', 'diagnostic']):
+        elif intent == 'FINANCIAL_HEALTH':
             health = MONVEXTools.calculate_financial_health(user)
             tools_used.append('calculate_financial_health')
             tool_activity.append(f"Generated deterministic financial health score: {health['score']}/100")
@@ -568,7 +570,7 @@ CRITICAL RULES:
             )
 
         # 4. Subscriptions & Recurring Fixed Obligations
-        elif any(w in q_lower for w in ['subscription', 'recurring', 'netflix', 'spotify', 'prime', 'membership', 'gym', 'apple music']):
+        elif intent == 'SUBSCRIPTION_QUERY':
             recs = MONVEXTools.get_recurring_expenses(user)
             tools_used.append('get_recurring_expenses')
             tool_activity.append(f"Audited {recs['active_subscriptions_count']} recurring subscriptions (₹{recs['total_monthly_burn']:,.2f}/mo)")
@@ -591,8 +593,8 @@ CRITICAL RULES:
                     f"\n\n💡 Tip: Review low-frequency subscriptions in the **/subscriptions** workspace to eliminate unused services."
                 )
 
-        # 4.5 Savings Optimization & Target Allocation Plan
-        elif any(w in q_lower for w in ['plan to save', 'save 10', 'save 5', 'how to save', 'savings plan']):
+        # 5. Savings Optimization Plan
+        elif intent == 'SAVINGS_PLAN':
             summary = MONVEXTools.get_transaction_summary(user, 30)
             cashflow = MONVEXTools.get_cashflow(user, 30)
             tools_used.extend(['get_transaction_summary', 'get_cashflow'])
@@ -614,8 +616,8 @@ CRITICAL RULES:
                 f"3. **Emergency Runway Preservation:** Keep ₹{cashflow['total_liquid_reserves']:,.2f} in liquid reserves while investing surplus."
             )
 
-        # 5. Budget Status & Limits
-        elif any(w in q_lower for w in ['budget', 'over budget', 'limit', 'left in my budget', 'pace', 'remaining budget', 'overspending']):
+        # 6. Budget Status & Limits
+        elif intent == 'BUDGET_QUERY':
             budgets = MONVEXTools.get_budgets(user)
             tools_used.append('get_budgets')
             tool_activity.append(f"Audited {budgets['total_budgets']} active budgets")
@@ -639,8 +641,8 @@ CRITICAL RULES:
                     f"\n\n- **Overall Budget Utilization:** **{budgets['overall_usage_pct']}%** (₹{budgets['total_budget_spent']:,.2f} spent of ₹{budgets['total_budget_limit']:,.2f})"
                 )
 
-        # 6. Savings Goals Progress
-        elif any(w in q_lower for w in ['goal', 'emergency fund', 'target', 'savings goal', 'how close am i', 'how long until', 'reach my']):
+        # 7. Savings Goals Progress
+        elif intent == 'GOAL_QUERY':
             goals = MONVEXTools.get_goals(user)
             tools_used.append('get_goals')
             tool_activity.append(f"Queried {goals['total_goals']} savings goals")
@@ -664,29 +666,55 @@ CRITICAL RULES:
                     f"\n\n💡 Tip: Maintain consistent monthly allocations to reach your targets ahead of schedule."
                 )
 
-        # 6. Accounts & Net Balance
-        elif any(w in q_lower for w in ['account', 'balance', 'total balance', 'how much money', 'cash', 'how many accounts']):
+        # 8. Net Worth & Balance Sheet
+        elif intent == 'NET_WORTH_QUERY':
             accounts = MONVEXTools.get_accounts(user)
             tools_used.append('get_accounts')
-            tool_activity.append(f"Retrieved {accounts['total_accounts']} verified financial accounts")
-            data['accounts'] = accounts
+            tool_activity.append(f"Calculated balance sheet & net worth (₹{accounts['net_worth']:,.2f})")
+            data['net_worth'] = accounts
 
-            if accounts['total_accounts'] == 0:
-                answer = (
-                    "### 🏦 Verified Financial Accounts\n\n"
-                    "You haven't linked any bank accounts, wallets, or cards yet.\n\n"
-                    "Click **Link Account** on the Dashboard or Wallets Hub to connect your primary checking or savings account."
-                )
-            else:
-                acc_lines = "\n".join([f"- **{a['name']}** ({a['institution']}): **₹{a['balance']:,.2f}** ({a['masked_account']})" for a in accounts['accounts']])
-                answer = (
-                    f"### 🏦 Verified Portfolio Liquidity\n\n"
-                    f"You have **{accounts['total_accounts']} linked account(s)** with a total liquid balance of **₹{accounts['total_liquid_balance']:,.2f}**:\n\n"
-                    f"{acc_lines}"
-                )
+            answer = (
+                f"### 💎 Net Worth & Balance Sheet Analysis\n\n"
+                f"- **Total Assets (Liquid & Portfolio):** **₹{accounts['total_assets']:,.2f}**\n"
+                f"- **Total Outstanding Liabilities:** **₹{accounts['total_liabilities']:,.2f}**\n"
+                f"- **Estimated Net Worth:** **₹{accounts['net_worth']:,.2f}**\n\n"
+                f"Your liquid cash constitutes **₹{accounts['total_liquid_balance']:,.2f}** across {accounts['total_accounts']} linked financial account(s)."
+            )
 
-        # 7. Period Comparison & "Why" Variance Analysis
-        elif any(w in q_lower for w in ['compare', 'last month', 'previous month', 'variance', 'difference', 'why', 'increase', 'increased', 'higher than', 'spike']):
+        # 9. Debts & Liabilities
+        elif intent == 'DEBT_QUERY':
+            accounts = MONVEXTools.get_accounts(user)
+            tools_used.append('get_accounts')
+            tool_activity.append(f"Retrieved active liabilities (₹{accounts['total_liabilities']:,.2f})")
+            data['liabilities'] = accounts
+
+            answer = (
+                f"### 💳 Debt & Liabilities Overview\n\n"
+                f"- **Total Outstanding Debt:** **₹{accounts['total_liabilities']:,.2f}**\n"
+                f"- **Total Asset Base:** **₹{accounts['total_assets']:,.2f}**\n"
+                f"- **Debt-to-Asset Ratio:** **{(accounts['total_liabilities'] / max(1.0, accounts['total_assets']) * 100):.1f}%**\n\n"
+                f"💡 Tip: Prioritize high-interest loans to minimize cumulative interest charges."
+            )
+
+        # 10. Cashflow Forecast
+        elif intent == 'FORECAST':
+            cashflow = MONVEXTools.get_cashflow(user, 30)
+            tools_used.append('get_cashflow')
+            tool_activity.append("Computed forward 30-day cashflow trajectory")
+            data['cashflow'] = cashflow
+
+            projected_balance = cashflow['total_liquid_reserves'] + cashflow['net_cashflow']
+            answer = (
+                f"### 🔮 30-Day Forward Cashflow Forecast\n\n"
+                f"- **Current Liquid Reserves:** ₹{cashflow['total_liquid_reserves']:,.2f}\n"
+                f"- **Projected 30-Day Inflow:** +₹{cashflow['total_inflow']:,.2f}\n"
+                f"- **Projected 30-Day Outflow:** -₹{cashflow['total_outflow']:,.2f}\n"
+                f"- **Projected 30-Day Surplus:** **+₹{cashflow['net_cashflow']:,.2f}**\n\n"
+                f"📈 **Estimated End-of-Month Balance:** **₹{projected_balance:,.2f}** ({cashflow['cash_runway_days']} days total cash runway)."
+            )
+
+        # 11. Period Comparison & "Why" Variance Analysis
+        elif intent == 'PERIOD_COMPARISON':
             comp = MONVEXTools.compare_periods(user, 30, 30)
             tools_used.append('compare_periods')
             tool_activity.append(f"Compared 30-day spend ({'+' if comp['net_delta'] > 0 else ''}₹{comp['net_delta']:,.2f})")
@@ -702,8 +730,8 @@ CRITICAL RULES:
                 f"**Top Category Variations:**\n{var_lines}"
             )
 
-        # 8. Statistical Outliers & Anomalies
-        elif any(w in q_lower for w in ['anomaly', 'anomalies', 'unusual', 'spike', 'irregular', 'outlier']):
+        # 12. Statistical Outliers & Anomalies
+        elif intent == 'ANOMALY_DETECTION':
             anom = MONVEXTools.detect_anomalies(user, 60)
             tools_used.append('detect_anomalies')
             tool_activity.append(f"Scanned 60-day telemetry ({anom['anomalies_found']} flagged)")
@@ -728,48 +756,29 @@ CRITICAL RULES:
                     f"Your spending velocity is consistent and predictable."
                 )
 
-        # 9. General Education & Knowledge
-        elif any(w in q_lower for w in ['compound interest', 'what is sip', 'what is inflation', 'credit utilization', 'how does cagr work']):
-            answer = (
-                "### 💡 Financial Principle Explained\n\n"
-                "**Compound Interest & Growth:**\n"
-                "Compound interest is earning returns on both your initial principal and the accumulated interest over time. "
-                "The mathematical formula is:\n\n"
-                "$$\\text{Corpus} = P \\times \\left(1 + \\frac{r}{n}\\right)^{n \\times t}$$\n\n"
-                "- **SIP (Systematic Investment Plan):** A discipline of investing a fixed amount at regular intervals into mutual funds or index instruments.\n"
-                "- **Inflation:** The rate at which the general level of prices rises, eroding purchasing power.\n"
-                "- **Credit Utilization:** The percentage of your available revolving credit limit being used (recommended < 30%)."
-            )
+        # 13. Accounts & Liquid Balance
+        elif intent == 'ACCOUNT_QUERY':
+            accounts = MONVEXTools.get_accounts(user)
+            tools_used.append('get_accounts')
+            tool_activity.append(f"Retrieved {accounts['total_accounts']} verified financial accounts")
+            data['accounts'] = accounts
 
-        # 10. Specific Category Audit (e.g. food, groceries, dining)
-        elif any(w in q_lower for w in ['food', 'dining', 'groceries', 'shopping', 'entertainment', 'travel', 'utilities', 'bills']):
-            cat_target = "Food & Dining" if ('food' in q_lower or 'dining' in q_lower) else "Shopping"
-            for candidate in ['shopping', 'groceries', 'travel', 'entertainment', 'utilities', 'bills']:
-                if candidate in q_lower:
-                    cat_target = candidate.title()
-                    break
-
-            tx_data = MONVEXTools.get_transactions(user, category=cat_target, limit=10)
-            tools_used.append('get_transactions')
-            tool_activity.append(f"Filtered transactions for category '{cat_target}' ({tx_data['total_count']} found)")
-            data['category_data'] = tx_data
-
-            if tx_data['total_count'] == 0:
+            if accounts['total_accounts'] == 0:
                 answer = (
-                    f"### 📊 {cat_target} Spending\n\n"
-                    f"You have **₹0.00** recorded in **{cat_target}** for the current period.\n\n"
-                    f"No transactions found matching this category in your verified ledger."
+                    "### 🏦 Verified Financial Accounts\n\n"
+                    "You haven't linked any bank accounts, wallets, or cards yet.\n\n"
+                    "Click **Link Account** on the Dashboard or Wallets Hub to connect your primary checking or savings account."
                 )
             else:
-                entries_str = "\n".join([f"- **{t['merchant']}**: ₹{t['amount']:,.2f} on {t['date']}" for t in tx_data['transactions'][:5]])
+                acc_lines = "\n".join([f"- **{a['name']}** ({a['institution']}): **₹{a['balance']:,.2f}** ({a['masked_account']})" for a in accounts['accounts']])
                 answer = (
-                    f"### 📊 {cat_target} Spending Report\n\n"
-                    f"- **Total Spend:** **₹{tx_data['total_filtered_amount']:,.2f}** across {tx_data['total_count']} entries\n\n"
-                    f"**Recent Logged Transactions:**\n{entries_str}"
+                    f"### 🏦 Verified Portfolio Liquidity\n\n"
+                    f"You have **{accounts['total_accounts']} linked account(s)** with a total liquid balance of **₹{accounts['total_liquid_balance']:,.2f}**:\n\n"
+                    f"{acc_lines}"
                 )
 
-        # 11. Generic Transactions & Spending Breakdown
-        elif any(w in q_lower for w in ['how much did i spend', 'where did i spend', 'spending', 'expense', 'biggest expense', 'outflow', 'top merchant', 'transaction']):
+        # 14. Transactions & Category Spending Breakdown
+        elif intent == 'TRANSACTION_QUERY':
             summary = MONVEXTools.get_transaction_summary(user, 30)
             tools_used.append('get_transaction_summary')
             tool_activity.append(f"Retrieved 30-day verified ledger (Total Outflow: ₹{summary['total_expense']:,.2f})")
@@ -795,7 +804,20 @@ CRITICAL RULES:
                     f"- **Net Savings:** **₹{summary['net_savings']:,.2f}** ({summary['savings_rate_pct']}% savings rate)"
                 )
 
-        # 12. Default Financial Overview
+        # 15. General Financial Education & Knowledge
+        elif intent == 'GENERAL_KNOWLEDGE':
+            answer = (
+                "### 💡 Financial Principle Explained\n\n"
+                "**Compound Interest & Growth:**\n"
+                "Compound interest is earning returns on both your initial principal and the accumulated interest over time. "
+                "The mathematical formula is:\n\n"
+                "$$\\text{Corpus} = P \\times \\left(1 + \\frac{r}{n}\\right)^{n \\times t}$$\n\n"
+                "- **SIP (Systematic Investment Plan):** A discipline of investing a fixed amount at regular intervals into mutual funds or index instruments.\n"
+                "- **Inflation:** The rate at which the general level of prices rises, eroding purchasing power.\n"
+                "- **Credit Utilization:** The percentage of your available revolving credit limit being used (recommended < 30%)."
+            )
+
+        # 16. Default Financial Overview
         else:
             summary = MONVEXTools.get_transaction_summary(user, 30)
             cashflow = MONVEXTools.get_cashflow(user, 30)

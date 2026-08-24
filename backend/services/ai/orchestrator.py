@@ -48,55 +48,63 @@ class FinancialAgentOrchestrator:
         if any(w in p for w in ['usd/inr', 'dollar to inr', 'gold price', 'silver price', 'repo rate', 'rbi policy', 'sensex', 'nifty', 'inflation rate']):
             return 'CURRENT_MARKET_INFORMATION'
 
-        # 2. Subscriptions & recurring obligations
+        # 2. Statistical anomaly detection
+        if any(w in p for w in ['anomaly', 'anomalies', 'unusual', 'outlier', 'irregular', 'unexpected', 'leak']):
+            return 'ANOMALY_DETECTION'
+
+        # 3. Savings Optimization Plan
+        if any(w in p for w in ['plan to save', 'save more', 'how to save', 'savings plan', 'save 10', 'save 5', 'savings roadmap']):
+            return 'SAVINGS_PLAN'
+
+        # 4. Debts, Loans & Liabilities
+        if any(w in p for w in ['debt', 'car loan', 'home loan', 'personal loan', 'loan', 'liability', 'liabilities', 'emi', 'borrowed', 'owe']):
+            return 'DEBT_QUERY'
+
+        # 5. Net Worth & Balance Sheet
+        if any(w in p for w in ['net worth', 'total wealth', 'my wealth', 'assets and liabilities', 'assets minus liabilities']):
+            return 'NET_WORTH_QUERY'
+
+        # 6. Forward-looking Forecasts
+        if any(w in p for w in ['forecast', 'predict', 'next month', 'year ahead', 'future balance', 'projected']):
+            return 'FORECAST'
+
+        # 7. Subscriptions & recurring obligations
         if any(w in p for w in ['subscription', 'recurring', 'netflix', 'spotify', 'prime', 'membership', 'gym', 'apple music']):
             return 'SUBSCRIPTION_QUERY'
 
-        # 3. Period comparison & "Why" variance attribution
+        # 8. Period comparison & "Why" variance attribution
         if any(w in p for w in ['why', 'increase', 'increased', 'more than last month', 'compare', 'variance', 'difference', 'higher than', 'spike']):
             return 'PERIOD_COMPARISON'
 
-        # 4. Specific budget checks & overspend alerts
+        # 9. Specific budget checks & overspend alerts
         if any(w in p for w in ['budget', 'over budget', 'overspending', 'overspend', 'limit', 'remaining budget', 'pace', 'velocity']):
             return 'BUDGET_QUERY'
 
-        # 5. Savings goals & milestones
+        # 10. Savings goals & milestones
         if any(w in p for w in ['goal', 'emergency fund', 'target', 'savings goal', 'how long until', 'reach my', 'milestone']):
             return 'GOAL_QUERY'
 
-        # 6. Account & liquid balance
-        if any(w in p for w in ['balance', 'current balance', 'account', 'total balance', 'bank', 'wallet', 'liquid']):
-            return 'ACCOUNT_QUERY'
-
-        # 7. Affordability & planned purchases
-        if any(w in p for w in ['afford', 'can i buy', 'can i purchase', 'iphone', 'laptop', 'car', 'should i get', 'purchasing', 'buy ']):
+        # 11. Affordability & planned purchases
+        if any(w in p for w in ['afford', 'can i buy', 'can i purchase', 'iphone', 'laptop', 'should i get', 'purchasing', 'buy ']):
             return 'AFFORDABILITY'
 
-        # 8. What-if & scenario simulations
-        if any(w in p for w in ['what if', 'cut spending', 'reduce by', 'simulate', 'save more', 'cut ']):
+        # 12. What-if & scenario simulations
+        if any(w in p for w in ['what if', 'cut spending', 'reduce by', 'simulate', 'cut ']):
             return 'WHAT_IF_SIMULATION'
 
-        # 9. Statistical anomaly detection
-        if any(w in p for w in ['anomaly', 'unusual', 'outlier', 'irregular', 'unexpected', 'leak']):
-            return 'ANOMALY_DETECTION'
-
-        # 10. Financial Health Diagnostic
+        # 13. Financial Health Diagnostic
         if any(w in p for w in ['health score', 'financial health', 'diagnostic', 'grade', 'health index']):
             return 'FINANCIAL_HEALTH'
 
-        # 11. Forward-looking Forecasts
-        if any(w in p for w in ['forecast', 'predict', 'next month', 'year ahead', 'future balance']):
-            return 'FORECAST'
+        # 14. Account & liquid balance
+        if any(w in p for w in ['balance', 'current balance', 'account', 'total balance', 'bank', 'wallet', 'liquid']):
+            return 'ACCOUNT_QUERY'
 
-        # 12. Savings Optimization Plan
-        if any(w in p for w in ['plan to save', 'save 10', 'save 5', 'how to save', 'savings plan']):
-            return 'SAVINGS_PLAN'
-
-        # 13. Transactions & Category Spending Breakdown
+        # 15. Transactions & Category Spending Breakdown
         if any(w in p for w in ['spend', 'spent', 'expense', 'transaction', 'bought', 'outflow', 'merchant', 'food', 'dining', 'groceries', 'shopping']):
             return 'TRANSACTION_QUERY'
 
-        # 14. General Financial Knowledge / Concepts
+        # 16. General Financial Knowledge / Concepts
         if any(w in p for w in ['what is', 'explain', 'how does', 'definition', 'compound interest', 'sip', 'cagr']):
             return 'GENERAL_KNOWLEDGE'
 
@@ -139,6 +147,11 @@ class FinancialAgentOrchestrator:
         # 1. Security Check
         clean_prompt, is_adversarial = cls.sanitize_prompt(raw_prompt)
         if is_adversarial:
+            try:
+                from services.metrics_service import metrics_collector
+                metrics_collector.record_ai_turn(intent="SECURITY_BLOCK", tools_used=[], duration_ms=0.5, is_blocked=True)
+            except Exception:
+                pass
             return {
                 "response": "🔒 **Security Guardrail Active:** MONVEX AI operates strictly within authenticated financial boundaries. Direct access to system prompts or cross-tenant databases is prohibited.",
                 "tools_used": [],
@@ -222,6 +235,19 @@ class FinancialAgentOrchestrator:
                 question=raw_prompt,
                 tools_used=tools_used,
                 response=response_text
+            )
+        except Exception:
+            pass
+
+        # 9. Record Telemetry Metrics
+        try:
+            from services.metrics_service import metrics_collector
+            metrics_collector.record_ai_turn(
+                intent=intent,
+                tools_used=tools_used,
+                duration_ms=duration_ms,
+                is_blocked=False,
+                has_error=False
             )
         except Exception:
             pass

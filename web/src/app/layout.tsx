@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { QueryProvider } from '@/lib/query/QueryProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,11 +36,13 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen bg-background text-text-primary font-sans antialiased selection:bg-accent selection:text-white">
         <ErrorBoundary>
-          <AuthProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </AuthProvider>
+          </QueryProvider>
         </ErrorBoundary>
       </body>
     </html>

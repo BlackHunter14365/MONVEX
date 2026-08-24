@@ -27,7 +27,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { useStaggerEntrance } from '@/hooks/useGsapAnimations';
+import { useStaggerEntrance } from '@/hooks/useAnimations';
+import { useDashboardQuery } from '@/hooks/queries/useDashboardQuery';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -43,45 +44,22 @@ import { WalletAccountsSection } from '@/components/finance/WalletAccountsSectio
 export default function DashboardPage() {
   const { user } = useAuth();
 
-  // Core data state
-  const [summary, setSummary] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [budgets, setBudgets] = useState<any[]>([]);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [recurring, setRecurring] = useState<any[]>([]);
-  const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Modern TanStack Query server state
+  const { data: dashboardData, isLoading, refetch } = useDashboardQuery();
+
+  const summary = dashboardData?.summary || null;
+  const transactions = dashboardData?.transactions || [];
+  const budgets = dashboardData?.budgets || [];
+  const goals = dashboardData?.goals || [];
+  const recurring = dashboardData?.recurring || [];
+  const monthlyTrend = dashboardData?.monthlyTrend || [];
 
   // Advanced Chart Controls
   const [chartHorizon, setChartHorizon] = useState<'7D' | '30D' | '90D' | '1Y'>('30D');
   const [chartMetric, setChartMetric] = useState<'EXPENSE' | 'DUAL' | 'NET'>('EXPENSE');
 
-  // GSAP animation container
+  // Animation container
   const containerRef = useStaggerEntrance('.dash-reveal', [isLoading]);
-
-  const fetchDashboardData = async () => {
-    try {
-      const [sumData, txData, bData, gData, rData, trendData] = await Promise.all([
-        api.getAnalyticsSummary().catch(() => null),
-        api.getTransactions().catch(() => []),
-        api.getBudgets().catch(() => []),
-        api.getGoals().catch(() => []),
-        api.getRecurringPayments().catch(() => []),
-        api.getMonthlyTrend().catch(() => []),
-      ]);
-
-      setSummary(sumData);
-      setTransactions(Array.isArray(txData) ? txData.slice(0, 5) : txData?.results?.slice(0, 5) || []);
-      setBudgets(Array.isArray(bData) ? bData.slice(0, 3) : bData?.results?.slice(0, 3) || []);
-      setGoals(Array.isArray(gData) ? gData.slice(0, 1) : gData?.results?.slice(0, 1) || []);
-      setRecurring(Array.isArray(rData) ? rData.slice(0, 3) : rData?.results?.slice(0, 3) || []);
-      setMonthlyTrend(Array.isArray(trendData) ? trendData : []);
-    } catch {
-      // Handled gracefully
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const [cachedName, setCachedName] = useState<string | null>(null);
 
@@ -101,10 +79,9 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetchDashboardData();
     loadProfileInfo();
 
-    const handleTxAdded = () => fetchDashboardData();
+    const handleTxAdded = () => refetch();
     const handleProfileUpdate = () => loadProfileInfo();
 
     window.addEventListener('monvex:transaction-added', handleTxAdded);

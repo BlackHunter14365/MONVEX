@@ -34,8 +34,11 @@ export class HttpClient {
 
   public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.getAccessToken();
+    const reqId = typeof crypto !== 'undefined' && crypto.randomUUID ? `req_${crypto.randomUUID().slice(0, 16)}` : `req_${Math.random().toString(36).substring(2, 10)}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'X-Request-ID': reqId,
+      'X-Client-Platform': 'web',
       ...(options.headers as Record<string, string>),
     };
 

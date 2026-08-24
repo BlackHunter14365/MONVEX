@@ -260,3 +260,7 @@ class FinancialAIAgentTests(TestCase):
         delete_resp = self.client.delete(f"/api/v1/ai/conversations/{conv_a.id}/")
         self.assertEqual(delete_resp.status_code, status.HTTP_404_NOT_FOUND)
 
+
+# Import AI Evaluation Suite for unified runner discovery
+from .test_evaluation import AIEvaluationTestSuite
+

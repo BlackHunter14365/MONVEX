@@ -445,6 +445,7 @@ class MONVEXTools:
             "active_subscriptions_count": len(items),
             "total_monthly_burn": round(total_monthly, 2),
             "total_annualized_burn": round(total_monthly * 12.0, 2),
+            "annualized_burn": round(total_monthly * 12.0, 2),
             "subscriptions": items
         }
 

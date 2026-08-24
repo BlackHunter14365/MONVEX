@@ -4,6 +4,7 @@ Central Orchestrator coordinating Intent Detection, Tool Selection, Gemini Reaso
 """
 import re
 import uuid
+import time
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 from django.contrib.auth.models import User
@@ -177,6 +178,9 @@ class FinancialAgentOrchestrator:
         use_search_grounding = (intent == 'CURRENT_MARKET_INFORMATION')
 
         # 5. Record User Turn
+        ai_turn_start = time.perf_counter()
+        ai_req_id = f"ai_{uuid.uuid4().hex[:16]}"
+
         ConversationMessage.objects.create(
             session=session,
             sender='user',
@@ -192,6 +196,7 @@ class FinancialAgentOrchestrator:
             use_search_grounding=use_search_grounding
         )
 
+        duration_ms = round((time.perf_counter() - ai_turn_start) * 1000.0, 2)
         response_text = ai_result.get("response", "")
         tools_used = ai_result.get("tools_used", [])
         tool_activity = ai_result.get("tool_activity", [])
@@ -225,6 +230,8 @@ class FinancialAgentOrchestrator:
             "response": response_text,
             "answer": response_text, # backward compat alias
             "conversation_id": str(session.id),
+            "ai_request_id": ai_req_id,
+            "duration_ms": duration_ms,
             "intent": intent,
             "tools_used": tools_used,
             "tool_activity": tool_activity,

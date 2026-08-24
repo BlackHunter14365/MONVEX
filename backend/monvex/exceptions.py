@@ -15,12 +15,16 @@ def custom_exception_handler(exc, context):
         "success": false,
         "error": {
             "code": "VALIDATION_ERROR",
+            "status": 400,
             "message": "...",
+            "request_id": "req_...",
             "details": {...}
         }
     }
     """
     response = exception_handler(exc, context)
+    request = context.get('request') if isinstance(context, dict) else None
+    request_id = getattr(request, 'request_id', None) or 'req_system'
 
     if response is not None:
         error_code = 'API_ERROR'
@@ -63,20 +67,22 @@ def custom_exception_handler(exc, context):
                 'code': error_code,
                 'status': response.status_code,
                 'message': message,
+                'request_id': request_id,
                 'details': response.data,
             }
         }
         response.data = custom_data
     else:
         # Unhandled 500 server errors
-        logger.error(f"Unhandled Exception: {str(exc)}", exc_info=True)
+        logger.error(f"[{request_id}] Unhandled Exception: {str(exc)}", exc_info=True)
         response = Response(
             {
                 'success': False,
                 'error': {
                     'code': 'INTERNAL_SERVER_ERROR',
                     'status': 500,
-                    'message': 'A critical server error occurred. Our engineering team has been notified.',
+                    'message': f'A critical server error occurred. Reference Request ID: {request_id}',
+                    'request_id': request_id,
                     'details': None,
                 }
             },

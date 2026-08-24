@@ -22,9 +22,12 @@ class ApiClient {
   static const Duration _timeout = Duration(seconds: 15);
 
   static Map<String, String> _buildHeaders(String? token, [Map<String, String>? extraHeaders]) {
+    final reqId = 'req_mob_${DateTime.now().millisecondsSinceEpoch}';
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Request-ID': reqId,
+      'X-Client-Platform': 'flutter-android',
     };
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';

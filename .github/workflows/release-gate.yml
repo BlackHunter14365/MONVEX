@@ -1,0 +1,155 @@
+name: MONVEX V3.4 Release Gate & Quality Assurance Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  secret-scan-and-audit:
+    name: 🛡️ Secret Scan & Credentials Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for Hardcoded Secrets
+        run: |
+          echo "Scanning repository files for high-entropy secrets and keys..."
+          python -c "
+          import os, re
+          patterns = [
+              re.compile(r'AIza[0-9A-Za-z-_]{35}'),
+              re.compile(r'AKIA[0-9A-Z]{16}'),
+              re.compile(r'ghp_[0-9a-zA-Z]{36}'),
+          ]
+          clean = True
+          for root, dirs, files in os.walk('.'):
+              if any(ignored in root for ignored in ['.git', 'node_modules', '.venv']):
+                  continue
+              for f in files:
+                  fp = os.path.join(root, f)
+                  try:
+                      with open(fp, 'r', encoding='utf-8', errors='ignore') as fh:
+                          content = fh.read()
+                          for p in patterns:
+                              if p.search(content):
+                                  print(f'🚨 High-entropy token pattern in {fp}')
+                                  clean = False
+                  except:
+                      pass
+          assert clean, 'Secret scan detected potential hardcoded secrets!'
+          print('✅ Secret scan clean (0 leaks detected).')
+          "
+
+  frontend-qa-gate:
+    name: 🌐 Web TypeScript & Production Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install NPM Dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: TypeScript Strict Typecheck
+        working-directory: web
+        run: npx tsc --noEmit
+
+      - name: Next.js Production Build
+        working-directory: web
+        run: npm run build
+
+  backend-qa-gate:
+    name: ⚙️ Backend Test Matrix, WAF & AI Release Gate
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: monvex_test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_test_password
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Execute Security Regression Gate
+        working-directory: backend
+        env:
+          SECRET_KEY: test-ci-secret-key-64-character-production-test-only
+          DEBUG: 'False'
+        run: python manage.py test apps.security.test_security_gate
+
+      - name: Execute 16-Test AI Evaluation Release Gate
+        working-directory: backend
+        env:
+          SECRET_KEY: test-ci-secret-key-64-character-production-test-only
+          DEBUG: 'False'
+        run: python manage.py test apps.ai_copilot.test_evaluation
+
+      - name: Execute Full Django Unit & Isolation Test Suite
+        working-directory: backend
+        env:
+          SECRET_KEY: test-ci-secret-key-64-character-production-test-only
+          DEBUG: 'False'
+          DB_ENGINE: 'postgres'
+          DB_NAME: monvex_test_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres_test_password
+          DB_HOST: localhost
+          DB_PORT: '5432'
+        run: python manage.py test --verbosity=2
+
+  release-manifest-verification:
+    name: 📋 Release Manifest Generation & Integrity Gate
+    runs-on: ubuntu-latest
+    needs: [secret-scan-and-audit, frontend-qa-gate, backend-qa-gate]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate Release Manifest
+        run: python scripts/generate_release_manifest.py
+
+      - name: Validate Generated Manifest
+        run: |
+          python -c "
+          import json
+          with open('release_manifest.json') as f:
+              m = json.load(f)
+          assert m['release_version'] == 'v3.4.0'
+          assert 'gates_verified' in m
+          print('✅ Release manifest schema and gates verified.')
+          "

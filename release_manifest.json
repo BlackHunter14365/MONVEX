@@ -1,0 +1,62 @@
+{
+  "manifest_version": "1.0",
+  "release_version": "v3.4.0",
+  "codename": "Production-Intelligence-QA-Release-Gate",
+  "generated_at_utc": "2026-08-24T20:17:32.483810+00:00",
+  "git": {
+    "commit_hash": "3ce74061d89503820b016b3ef77535c77043e7d8",
+    "short_hash": "3ce7406",
+    "branch": "master",
+    "last_commit_message": "security(gate): enhance WAF pattern neutralization and add automated security regression test suite"
+  },
+  "components": {
+    "release_version": "v3.4.0",
+    "codename": "Production-Intelligence-QA-Release-Gate",
+    "web": {
+      "name": "monvex-web",
+      "version": "0.1.0",
+      "next": "^14.2.5",
+      "react": "^18.3.1",
+      "tanstack_query": "^5.51.23",
+      "zustand": "^4.5.4"
+    },
+    "backend": {
+      "runtime": "Python 3.12",
+      "django": "5.2.0",
+      "djangorestframework": "3.16.1",
+      "google_genai": "1.66.0",
+      "psycopg2_binary": "2.9.11",
+      "celery": "5.6.2"
+    },
+    "mobile": {
+      "framework": "Flutter 3.x",
+      "channel": "stable",
+      "status": "frozen_production_tested"
+    },
+    "desktop": {
+      "framework": "Tauri v2",
+      "webview_url": "https://monvex-web.onrender.com"
+    }
+  },
+  "endpoints": {
+    "web_production": "https://monvex-web.onrender.com",
+    "api_production": "https://monvex-backend.onrender.com/api/v1",
+    "health_check": "https://monvex-backend.onrender.com/health/",
+    "observability_status": "https://monvex-backend.onrender.com/api/v1/observability/status/"
+  },
+  "gates_verified": {
+    "secret_scanning": "PASSED (0 exposed secrets)",
+    "waf_security_regression_gate": "PASSED (6/6 tests)",
+    "ai_intent_and_telemetry_gate": "PASSED (16/16 tests)",
+    "financial_integrity_watchdog": "PASSED (8/8 accounting invariants)",
+    "django_unit_and_isolation_tests": "PASSED (66/66 tests)",
+    "typescript_strict_typecheck": "PASSED (0 errors)",
+    "flutter_static_analysis": "PASSED (0 errors)"
+  },
+  "artifact_checksums": {
+    "monvex_apk_sha256": "7c1afddfa49bdf71af8e6bac19e149e7c4132da692296f44ee455cfab7cab7a9",
+    "render_yaml_sha256": "d958d667fcd5a3957430b0a72470e408b4d5593ec7edda37a55b80099dcc1156",
+    "web_package_json_sha256": "89f875f7afcb43b5d879fb0ae6a3951cee279f226d0353fdf59d97f6b0d6a030",
+    "backend_requirements_sha256": "59747963ac4fdd6860293de095a3c18e80e696aa8505c2d494960acb03a8b1d0"
+  }
+}

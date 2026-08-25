@@ -2,12 +2,12 @@
   "manifest_version": "1.0",
   "release_version": "v3.4.0",
   "codename": "Production-Intelligence-QA-Release-Gate",
-  "generated_at_utc": "2026-08-24T20:17:32.483810+00:00",
+  "generated_at_utc": "2026-08-25T15:46:01.032284+00:00",
   "git": {
-    "commit_hash": "3ce74061d89503820b016b3ef77535c77043e7d8",
-    "short_hash": "3ce7406",
+    "commit_hash": "1dfcbe97c513cf518fdfc879c88738c2d00bc21d",
+    "short_hash": "1dfcbe9",
     "branch": "master",
-    "last_commit_message": "security(gate): enhance WAF pattern neutralization and add automated security regression test suite"
+    "last_commit_message": "docs(v3.4): add production audit, AI release gate, release manifest, runbook, and deployment verification specs"
   },
   "components": {
     "release_version": "v3.4.0",

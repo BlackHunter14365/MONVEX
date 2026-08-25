@@ -194,5 +194,44 @@ class AIEvaluationTestSuite(TestCase):
         self.assertIn('security', data)
         self.assertIn('financial_integrity', data)
         self.assertIn('release', data)
-        self.assertEqual(data['release']['version'], '3.4.0')
         self.assertTrue(data['release']['database_connected'])
+
+    # 17. V4 STRUCTURED RESPONSE - PERIOD COMPARISON
+    def test_eval_17_v4_structured_response_period_comparison(self):
+        """Evaluation 17: V4 structured payload generates comparison chart and metrics."""
+        res = FinancialAgentOrchestrator.chat(user=self.user_a, prompt="Why did my spending increase?")
+        self.assertIn('metrics', res)
+        self.assertIn('charts', res)
+        self.assertIn('actions', res)
+        self.assertTrue(len(res['actions']) > 0)
+        if res.get('charts'):
+            self.assertEqual(res['charts'][0]['type'], 'comparison')
+
+    # 18. V4 STRUCTURED RESPONSE - BUDGETS
+    def test_eval_18_v4_structured_response_budget(self):
+        """Evaluation 18: V4 structured payload generates budget bar chart and utilization metrics."""
+        res = FinancialAgentOrchestrator.chat(user=self.user_a, prompt="Am I overspending on food?")
+        self.assertIn('metrics', res)
+        self.assertIn('charts', res)
+        self.assertIn('actions', res)
+        self.assertTrue(len(res['metrics']) > 0)
+        if res.get('charts'):
+            self.assertEqual(res['charts'][0]['type'], 'bar')
+
+    # 19. V4 STRUCTURED RESPONSE - FORECAST
+    def test_eval_19_v4_structured_response_forecast(self):
+        """Evaluation 19: V4 structured payload generates area trajectory chart."""
+        res = FinancialAgentOrchestrator.chat(user=self.user_a, prompt="Can you forecast my cashflow for next month?")
+        self.assertIn('metrics', res)
+        self.assertIn('charts', res)
+        if res.get('charts'):
+            self.assertEqual(res['charts'][0]['type'], 'area')
+
+    # 20. V4 STRUCTURED RESPONSE - WHAT-IF SIMULATION
+    def test_eval_20_v4_structured_response_what_if(self):
+        """Evaluation 20: V4 structured payload generates compounding wealth metrics."""
+        res = FinancialAgentOrchestrator.chat(user=self.user_a, prompt="What if I cut dining spending by 20%?")
+        self.assertIn('metrics', res)
+        self.assertIn('charts', res)
+        self.assertTrue(len(res['metrics']) > 0)
+

@@ -5,7 +5,7 @@ Deterministic Projections Based on Historical Run-Rates & Volatility
 import math
 from decimal import Decimal
 from datetime import date, timedelta
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.contrib.auth.models import User
 from apps.transactions.models import Transaction, RecurringPayment, Asset
 
@@ -24,14 +24,18 @@ class ForecastingEngine:
         start_60 = today - timedelta(days=60)
         start_30 = today - timedelta(days=30)
 
-        txs_60 = Transaction.objects.filter(user=user, date__gte=start_60)
-        txs_30 = Transaction.objects.filter(user=user, date__gte=start_30)
+        # Single combined query for 30-day and 60-day income and expenses
+        agg = Transaction.objects.filter(user=user, date__gte=start_60).aggregate(
+            exp_30=Sum('amount', filter=Q(date__gte=start_30, type='EXPENSE')),
+            inc_30=Sum('amount', filter=Q(date__gte=start_30, type='INCOME')),
+            exp_60=Sum('amount', filter=Q(type='EXPENSE')),
+            inc_60=Sum('amount', filter=Q(type='INCOME'))
+        )
 
-        expense_30 = float(txs_30.filter(type='EXPENSE').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-        income_30 = float(txs_30.filter(type='INCOME').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-
-        expense_60 = float(txs_60.filter(type='EXPENSE').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-        income_60 = float(txs_60.filter(type='INCOME').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+        expense_30 = float(agg['exp_30'] or Decimal('0.00'))
+        income_30 = float(agg['inc_30'] or Decimal('0.00'))
+        expense_60 = float(agg['exp_60'] or Decimal('0.00'))
+        income_60 = float(agg['inc_60'] or Decimal('0.00'))
 
         profile = getattr(user, 'profile', None)
         monthly_income_profile = float(getattr(profile, 'monthly_income', Decimal('0.00')) or Decimal('0.00'))

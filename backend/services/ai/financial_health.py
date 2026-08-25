@@ -5,7 +5,7 @@ Deterministic, Multi-Factor Financial Health Calculator (0 - 100)
 import math
 from decimal import Decimal
 from datetime import date, timedelta
-from django.db.models import Sum, Avg, StdDev
+from django.db.models import Sum, Avg, StdDev, Q
 from django.contrib.auth.models import User
 from apps.transactions.models import Transaction, RecurringPayment, Asset, Liability
 from apps.budgets.models import Budget
@@ -31,8 +31,12 @@ class FinancialHealthEngine:
 
         # 1. Income & Expenses (Past 30 Days)
         txs_30 = Transaction.objects.filter(user=user, date__gte=start_30)
-        income_30 = float(txs_30.filter(type='INCOME').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-        expense_30 = float(txs_30.filter(type='EXPENSE').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+        flows_30 = txs_30.aggregate(
+            inc=Sum('amount', filter=Q(type='INCOME')),
+            exp=Sum('amount', filter=Q(type='EXPENSE'))
+        )
+        income_30 = float(flows_30['inc'] or Decimal('0.00'))
+        expense_30 = float(flows_30['exp'] or Decimal('0.00'))
 
         profile = getattr(user, 'profile', None)
         monthly_income_profile = float(getattr(profile, 'monthly_income', Decimal('0.00')) or Decimal('0.00'))
@@ -73,13 +77,17 @@ class FinancialHealthEngine:
             score_runway = 0.0
 
         # Factor 3: Budget Adherence (20 pts)
-        budgets = Budget.objects.filter(user=user, is_active=True)
-        total_budgets = budgets.count()
+        budgets = list(Budget.objects.filter(user=user, is_active=True))
+        total_budgets = len(budgets)
         overspent_budgets = 0
 
         if total_budgets > 0:
+            cat_spends = {
+                r['category_id']: float(r['total'])
+                for r in txs_30.filter(type='EXPENSE').values('category_id').annotate(total=Sum('amount'))
+            }
             for b in budgets:
-                cat_spend = float(txs_30.filter(category=b.category, type='EXPENSE').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+                cat_spend = cat_spends.get(b.category_id, 0.0)
                 if cat_spend > float(b.limit_amount):
                     overspent_budgets += 1
             kept_ratio = (total_budgets - overspent_budgets) / total_budgets
@@ -113,11 +121,14 @@ class FinancialHealthEngine:
 
         # Factor 6: Savings Goals Progress (10 pts)
         goals = SavingsGoal.objects.filter(user=user)
-        if goals.exists():
-            total_target = float(goals.aggregate(s=Sum('target_amount'))['s'] or Decimal('0.00'))
-            total_saved = float(goals.aggregate(s=Sum('current_amount'))['s'] or Decimal('0.00'))
-            goal_pct = min(100.0, (total_saved / total_target) * 100) if total_target > 0 else 0.0
+        goal_agg = goals.aggregate(t=Sum('target_amount'), s=Sum('current_amount'))
+        total_target = float(goal_agg['t'] or Decimal('0.00'))
+        total_saved = float(goal_agg['s'] or Decimal('0.00'))
+        if total_target > 0:
+            goal_pct = min(100.0, (total_saved / total_target) * 100)
             score_goals = round((goal_pct / 100.0) * 10.0, 1)
+        elif goal_agg['t'] is not None:
+            score_goals = 5.0
         else:
             score_goals = 5.0
 

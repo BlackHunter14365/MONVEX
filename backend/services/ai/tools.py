@@ -238,7 +238,13 @@ class MONVEXTools:
         budgets = Budget.objects.filter(user=user, is_active=True).select_related('category')
         today = date.today()
         start_30 = today - timedelta(days=30)
+        
+        # Single pre-aggregated query for all category spending
         txs = Transaction.objects.filter(user=user, type='EXPENSE', date__gte=start_30)
+        cat_spends = {
+            row['category_id']: float(row['total'])
+            for row in txs.values('category_id').annotate(total=Sum('amount'))
+        }
 
         items = []
         total_limit = 0.0
@@ -246,7 +252,7 @@ class MONVEXTools:
 
         for b in budgets:
             cname = b.category.name if b.category else "General"
-            spent = float(txs.filter(category=b.category).aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+            spent = cat_spends.get(b.category_id, 0.0)
             limit = float(b.limit_amount)
             rem = max(0.0, limit - spent)
             pct = round((spent / max(1.0, limit)) * 100, 1)
@@ -361,8 +367,12 @@ class MONVEXTools:
         start_date = today - timedelta(days=period_days)
 
         txs = Transaction.objects.filter(user=user, date__gte=start_date)
-        inflow = float(txs.filter(type='INCOME').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-        outflow = float(txs.filter(type='EXPENSE').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+        flows = txs.aggregate(
+            inf=Sum('amount', filter=Q(type='INCOME')),
+            out=Sum('amount', filter=Q(type='EXPENSE'))
+        )
+        inflow = float(flows['inf'] or Decimal('0.00'))
+        outflow = float(flows['out'] or Decimal('0.00'))
 
         profile = getattr(user, 'profile', None)
         profile_income = float(getattr(profile, 'monthly_income', Decimal('0.00')) or Decimal('0.00'))
@@ -397,28 +407,22 @@ class MONVEXTools:
         today = date.today()
         start_date = today - timedelta(days=period_days)
 
-        txs = Transaction.objects.filter(user=user, type='EXPENSE', date__gte=start_date).select_related('category')
-        total_expense = float(txs.aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-
-        cats = {}
-        for t in txs:
-            cname = t.category.name if t.category else "Uncategorized"
-            if cname not in cats:
-                cats[cname] = {"category": cname, "amount": 0.0, "count": 0}
-            cats[cname]["amount"] += float(t.amount)
-            cats[cname]["count"] += 1
+        txs = Transaction.objects.filter(user=user, type='EXPENSE', date__gte=start_date)
+        cat_aggs = list(txs.values('category__name').annotate(amount=Sum('amount'), count=Count('id')).order_by('-amount'))
+        total_expense = sum((float(c['amount']) for c in cat_aggs), 0.0)
 
         res = []
-        for c in cats.values():
-            pct = round((c['amount'] / max(1.0, total_expense)) * 100, 1)
+        for c in cat_aggs:
+            cname = c['category__name'] or "Uncategorized"
+            amt = float(c['amount'])
+            pct = round((amt / max(1.0, total_expense)) * 100, 1)
             res.append({
-                "category": c['category'],
-                "amount": round(c['amount'], 2),
+                "category": cname,
+                "amount": round(amt, 2),
                 "transaction_count": c['count'],
                 "percentage": pct
             })
 
-        res.sort(key=lambda x: x['amount'], reverse=True)
         return {
             "total_expense": round(total_expense, 2),
             "period_days": period_days,
@@ -430,7 +434,7 @@ class MONVEXTools:
         """
         Active recurring subscriptions and fixed obligations.
         """
-        recs = RecurringPayment.objects.filter(user=user, is_active=True)
+        recs = RecurringPayment.objects.filter(user=user, is_active=True).select_related('category')
         items = []
         total_monthly = 0.0
 
@@ -461,6 +465,7 @@ class MONVEXTools:
     def compare_periods(cls, user: User, period1_days: int = 30, period2_days: int = 30) -> dict:
         """
         Compares spending between current period (e.g. past 30 days) and preceding period (e.g. 30 to 60 days ago).
+        Optimized with direct group-by aggregations in 2 single queries.
         """
         today = date.today()
         cur_start = today - timedelta(days=period1_days)
@@ -469,22 +474,17 @@ class MONVEXTools:
         cur_txs = Transaction.objects.filter(user=user, type='EXPENSE', date__gte=cur_start)
         prev_txs = Transaction.objects.filter(user=user, type='EXPENSE', date__gte=prev_start, date__lt=cur_start)
 
-        cur_total = float(cur_txs.aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-        prev_total = float(prev_txs.aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+        cur_cat_rows = list(cur_txs.values('category__name').annotate(total=Sum('amount')))
+        prev_cat_rows = list(prev_txs.values('category__name').annotate(total=Sum('amount')))
+
+        cur_cats = {r['category__name'] or "Uncategorized": float(r['total']) for r in cur_cat_rows}
+        prev_cats = {r['category__name'] or "Uncategorized": float(r['total']) for r in prev_cat_rows}
+
+        cur_total = sum(cur_cats.values())
+        prev_total = sum(prev_cats.values())
 
         delta = round(cur_total - prev_total, 2)
         pct_change = round(((cur_total - prev_total) / max(1.0, prev_total)) * 100, 1) if prev_total > 0 else 0.0
-
-        # Category level comparison
-        cur_cats = {}
-        for t in cur_txs:
-            cname = t.category.name if t.category else "Uncategorized"
-            cur_cats[cname] = cur_cats.get(cname, 0.0) + float(t.amount)
-
-        prev_cats = {}
-        for t in prev_txs:
-            cname = t.category.name if t.category else "Uncategorized"
-            prev_cats[cname] = prev_cats.get(cname, 0.0) + float(t.amount)
 
         all_cat_names = set(cur_cats.keys()).union(set(prev_cats.keys()))
         cat_deltas = []

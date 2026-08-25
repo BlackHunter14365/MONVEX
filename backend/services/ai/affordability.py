@@ -27,8 +27,12 @@ class AffordabilityEngine:
         liquid_balance = float(assets.filter(asset_type__in=['BANK', 'CASH']).aggregate(s=Sum('value'))['s'] or Decimal('0.00'))
 
         txs_30 = Transaction.objects.filter(user=user, date__gte=start_30)
-        expense_30 = float(txs_30.filter(type='EXPENSE').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
-        income_30 = float(txs_30.filter(type='INCOME').aggregate(s=Sum('amount'))['s'] or Decimal('0.00'))
+        flows_30 = txs_30.aggregate(
+            exp=Sum('amount', filter=Q(type='EXPENSE')),
+            inc=Sum('amount', filter=Q(type='INCOME'))
+        )
+        expense_30 = float(flows_30['exp'] or Decimal('0.00'))
+        income_30 = float(flows_30['inc'] or Decimal('0.00'))
 
         profile = getattr(user, 'profile', None)
         monthly_income_profile = float(getattr(profile, 'monthly_income', Decimal('0.00')) or Decimal('0.00'))

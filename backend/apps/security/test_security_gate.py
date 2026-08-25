@@ -89,3 +89,45 @@ class SecurityRegressionGateTestSuite(TestCase):
         latest = SecurityAuditLog.objects.latest('created_at')
         self.assertEqual(latest.event_type, 'INJECTION_BLOCKED')
         self.assertEqual(latest.severity, 'CRITICAL')
+
+    def test_gate_07_cors_preflight_and_request_correlation_headers(self):
+        """Security Gate 7: CORS preflight allows x-request-id header and preserves request correlation."""
+        from django.conf import settings
+        orig_debug = settings.DEBUG
+        orig_allow_all = settings.CORS_ALLOW_ALL_ORIGINS
+        try:
+            settings.DEBUG = False
+            settings.CORS_ALLOW_ALL_ORIGINS = False
+
+            # Preflight on authentication endpoints
+            endpoints = ['/api/v1/auth/login/', '/api/v1/auth/register/', '/api/v1/auth/google/']
+            for ep in endpoints:
+                res = self.client.options(
+                    ep,
+                    HTTP_ORIGIN='https://monvex-web.onrender.com',
+                    HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+                    HTTP_ACCESS_CONTROL_REQUEST_HEADERS='x-request-id, content-type, authorization',
+                )
+                self.assertEqual(res.status_code, 200)
+                self.assertEqual(res.headers.get('Access-Control-Allow-Origin'), 'https://monvex-web.onrender.com')
+                allow_headers = res.headers.get('Access-Control-Allow-Headers', '').lower()
+                self.assertIn('x-request-id', allow_headers)
+
+            # Unauthorized origin test
+            bad_res = self.client.options(
+                '/api/v1/auth/login/',
+                HTTP_ORIGIN='https://hostile-site.com',
+                HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+                HTTP_ACCESS_CONTROL_REQUEST_HEADERS='x-request-id, content-type',
+            )
+            self.assertFalse(bad_res.headers.get('Access-Control-Allow-Origin'))
+
+            # Request correlation test
+            custom_req_id = 'req_test_correlation_12345'
+            corr_res = self.client.get('/health/', HTTP_X_REQUEST_ID=custom_req_id)
+            self.assertEqual(corr_res.headers.get('X-Request-ID'), custom_req_id)
+            self.assertTrue(corr_res.headers.get('X-Response-Time-Ms'))
+        finally:
+            settings.DEBUG = orig_debug
+            settings.CORS_ALLOW_ALL_ORIGINS = orig_allow_all
+

@@ -189,11 +189,25 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
+from corsheaders.defaults import default_headers
+
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
-    origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,tauri://localhost').split(',') if origin.strip()
+    origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost').split(',') if origin.strip()
 ]
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-request-id",
+    "x-correlation-id",
+    "x-client-platform",
+)
+
+CORS_EXPOSE_HEADERS = (
+    "x-request-id",
+    "x-response-time-ms",
+)
 
 # CSRF Trusted Origins for Secure Production Web Requests
 CSRF_TRUSTED_ORIGINS = [

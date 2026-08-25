@@ -3,8 +3,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
-import { DesktopAIWorkspace, DesktopChatMessage, DesktopChatSessionHistory } from '@/components/ai/DesktopAIWorkspace';
+import { DesktopAIWorkspace } from '@/components/ai/DesktopAIWorkspace';
 import { MobileAIWorkspace, MobileChatMessage, MobileChatSessionHistory } from '@/components/ai/MobileAIWorkspace';
+import {
+  DesktopChatMessage,
+  DesktopChatSessionHistory,
+  AIMetricCard,
+  AIChartConfig,
+  AIInsightItem,
+  AIRecommendationItem,
+  AIActionChip,
+  AIWarningItem,
+} from '@/types/ai';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -73,7 +83,13 @@ export default function AIPage() {
               citations: m.citations || [],
               intent: m.intent,
               data: m.data,
-              thoughtDuration: '1.4s',
+              metrics: m.metrics || [],
+              charts: m.charts || [],
+              insights: m.insights || [],
+              recommendations: m.recommendations || [],
+              actions: m.actions || [],
+              warnings: m.warnings || [],
+              thoughtDuration: '1.2s',
               timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               isStreaming: false,
             }))
@@ -190,13 +206,19 @@ export default function AIPage() {
     toast.info('🔊 Reading response aloud...');
   };
 
-  // Streaming Typewriter Simulator
+  // Streaming Typewriter Simulator with Structured Blocks
   const simulateStreamingResponse = (
     fullText: string,
     tools: string[],
     activity: string[],
     citations: Array<{ title: string; url: string }>,
-    intent?: string
+    intent?: string,
+    metrics?: AIMetricCard[],
+    charts?: AIChartConfig[],
+    insights?: AIInsightItem[],
+    recommendations?: AIRecommendationItem[],
+    actions?: AIActionChip[],
+    warnings?: AIWarningItem[]
   ) => {
     const msgId = `ai_${Date.now()}`;
     const words = fullText.split(' ');
@@ -211,7 +233,13 @@ export default function AIPage() {
       reasoningSteps: activity.length > 0 ? activity : ['Queried verified database ledger', 'Synthesized risk-adjusted telemetry'],
       citations: citations,
       intent: intent,
-      thoughtDuration: '1.6s',
+      metrics: metrics || [],
+      charts: charts || [],
+      insights: insights || [],
+      recommendations: recommendations || [],
+      actions: actions || [],
+      warnings: warnings || [],
+      thoughtDuration: '1.2s',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isStreaming: true,
     };
@@ -241,7 +269,7 @@ export default function AIPage() {
           prev.map((m) => (m.id === msgId ? { ...m, content: fullText, isStreaming: false } : m))
         );
       }
-    }, 20);
+    }, 18);
   };
 
   const handleSend = async (queryText?: string) => {
@@ -278,7 +306,19 @@ export default function AIPage() {
       const activity = res.tool_activity || [];
       const citations = res.citations || [];
 
-      simulateStreamingResponse(fullAnswer, tools, activity, citations, res.intent);
+      simulateStreamingResponse(
+        fullAnswer,
+        tools,
+        activity,
+        citations,
+        res.intent,
+        res.metrics,
+        res.charts,
+        res.insights,
+        res.recommendations,
+        res.actions,
+        res.warnings
+      );
     } catch {
       setIsLoading(false);
       const errorMsg: DesktopChatMessage = {
@@ -323,24 +363,28 @@ export default function AIPage() {
       subtitle: 'Scan recent transactions for statistical outliers',
       icon: '📊',
       prompt: 'Did I have any unusual expense or outlier spending spike this month?',
+      category: 'spending' as const,
     },
     {
-      title: 'Affordability & Impulse Check',
+      title: 'Affordability & Runway Check',
       subtitle: 'Simulate purchase impact on emergency runway',
       icon: '🛍️',
       prompt: 'Can I afford to buy an iPhone for ₹79,900 next month without hurting my runway?',
+      category: 'simulation' as const,
     },
     {
-      title: '5-Year SIP Wealth Simulation',
-      subtitle: 'Compound monthly savings at 12% annual return',
+      title: '30-Day Cashflow Forecast',
+      subtitle: 'Deterministic projection with confidence bounds',
       icon: '📈',
-      prompt: 'How much wealth can I build if I invest my monthly savings for 5 years at 12% APY?',
+      prompt: 'Forecast my cashflow trajectory for the next 30 days based on run-rate',
+      category: 'forecast' as const,
     },
     {
-      title: 'Cut Dining Out by 20%',
-      subtitle: 'Calculate 6-month compounding surplus',
+      title: 'What-If Savings Simulation',
+      subtitle: 'Calculate 5-year compounding surplus from cutting dining by 20%',
       icon: '🍕',
       prompt: 'What happens if I cut Food & Dining spending by 20% for the next 6 months?',
+      category: 'simulation' as const,
     },
   ];
 
@@ -417,7 +461,7 @@ export default function AIPage() {
 
   return (
     <AppShell>
-      {/* DESKTOP WORKSPACE (>= 1024px) - 100% UNCHANGED */}
+      {/* DESKTOP WORKSPACE (>= 1024px) - V4.0 REDESIGNED FINANCIAL INTELLIGENCE CONSOLE */}
       <DesktopAIWorkspace
         user={user}
         displayName={displayName}
@@ -457,12 +501,12 @@ export default function AIPage() {
         renderFormattedContent={renderFormattedContent}
       />
 
-      {/* DEDICATED MOBILE WORKSPACE (< 1024px) - FULL-SCREEN MOBILE-FIRST */}
+      {/* DEDICATED MOBILE WORKSPACE (< 1024px) - PRESERVED MOBILE-NATIVE EXPERIENCE */}
       <div className="lg:hidden w-full h-full">
         <MobileAIWorkspace
           user={user}
-          messages={messages as MobileChatMessage[]}
-          chatHistory={chatHistory as MobileChatSessionHistory[]}
+          messages={messages as unknown as MobileChatMessage[]}
+          chatHistory={chatHistory as unknown as MobileChatSessionHistory[]}
           currentConversationId={currentConversationId}
           inputQuery={inputQuery}
           setInputQuery={setInputQuery}

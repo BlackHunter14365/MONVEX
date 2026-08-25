@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Send,
   Sparkles,
@@ -29,34 +29,22 @@ import {
   VolumeX,
   ThumbsUp,
   ThumbsDown,
-  ExternalLink,
   Trash2,
   Pin,
+  Square,
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
-
-export interface DesktopChatMessage {
-  id: string;
-  sender: 'user' | 'assistant';
-  content: string;
-  toolsUsed?: string[];
-  toolActivity?: string[];
-  citations?: Array<{ title: string; url: string }>;
-  intent?: string;
-  data?: any;
-  reasoningSteps?: string[];
-  thoughtDuration?: string;
-  timestamp: string;
-  isStreaming?: boolean;
-}
-
-export interface DesktopChatSessionHistory {
-  id: string;
-  title: string;
-  dateGroup: 'Today' | 'Yesterday' | 'Previous 7 Days';
-  pinned?: boolean;
-}
+import { DesktopChatMessage, DesktopChatSessionHistory, AIStarterPrompt } from '@/types/ai';
+import { DynamicAIChart } from './charts/DynamicAIChart';
+import {
+  AIMetricCardBlock,
+  AIInsightBlock,
+  AIRecommendationBlock,
+  AIActionChipsBlock,
+  AIToolExecutionBlock,
+} from './blocks';
+import { CardReveal } from '@/components/motion';
 
 interface DesktopAIWorkspaceProps {
   user: any;
@@ -93,7 +81,7 @@ interface DesktopAIWorkspaceProps {
   handleSelectConversation: (id: string) => void;
   handleDeleteConversation: (e: React.MouseEvent, id: string) => void;
   handleSend: (queryText?: string) => void;
-  starterPrompts: Array<{ title: string; subtitle: string; icon: string; prompt: string }>;
+  starterPrompts: AIStarterPrompt[];
   renderFormattedContent: (content: string) => React.ReactNode;
 }
 
@@ -136,243 +124,255 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
   renderFormattedContent,
 }) => {
   const toast = useToast();
+  const [searchHistory, setSearchHistory] = useState('');
+
+  const filteredHistory = chatHistory.filter((c) =>
+    c.title.toLowerCase().includes(searchHistory.toLowerCase())
+  );
+
+  const todaySessions = filteredHistory.filter((c) => c.dateGroup === 'Today');
+  const yesterdaySessions = filteredHistory.filter((c) => c.dateGroup === 'Yesterday');
+  const previousSessions = filteredHistory.filter((c) => c.dateGroup === 'Previous 7 Days');
 
   return (
     <div className="hidden lg:flex h-[calc(100vh-6.5rem)] rounded-3xl overflow-hidden border border-[#E4E2DC] shadow-xl bg-[#FBFBFA]">
       {/* =========================================================================
-          1. CHATGPT LEFT SIDEBAR (History, Projects, Model Selector, Profile)
+          1. LEFT SIDEBAR (History, Search, Model Selector, Profile)
           ========================================================================= */}
       <aside
         className={cn(
           'flex flex-col justify-between shrink-0 bg-[#F7F6F3] border-r border-[#E4E2DC] transition-all duration-300 select-none z-20',
-          isSidebarOpen ? 'w-64 p-3.5' : 'w-0 p-0 overflow-hidden border-r-0'
+          isSidebarOpen ? 'w-72 p-3.5' : 'w-0 p-0 overflow-hidden border-r-0'
         )}
       >
-        {/* Top Section */}
-        <div className="space-y-4 flex-1 min-h-0 flex flex-col">
-          {/* Header / New Chat Button */}
+        <div className="space-y-3.5 overflow-hidden flex flex-col flex-1">
+          {/* Top Actions: Toggle Sidebar & New Chat Button */}
           <div className="flex items-center justify-between gap-2">
             <button
+              type="button"
               onClick={handleNewChat}
-              className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-[#EFECE6] text-xs font-bold text-[#172033] border border-[#E4E2DC] shadow-xs transition-all group"
-              title="Start a new conversation"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-2xl bg-white hover:bg-[#F1EFEA] border border-[#E4E2DC] shadow-2xs text-xs font-bold text-[#172033] transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-5 rounded-md overflow-hidden shrink-0">
-                  <img src="/ai-logo.png" alt="ChatGPT" className="h-full w-full object-cover" />
-                </div>
-                <span>New chat</span>
-              </div>
-              <SquarePen className="h-3.5 w-3.5 text-[#858D9A] group-hover:text-[#172033]" />
+              <Plus className="h-4 w-4 text-[#2563EB]" />
+              <span>New Conversation</span>
             </button>
 
             <button
+              type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-2 rounded-xl text-[#858D9A] hover:text-[#172033] hover:bg-white transition-colors"
+              className="p-2 rounded-xl text-[#858D9A] hover:text-[#172033] hover:bg-white border border-transparent hover:border-[#E4E2DC] transition-colors"
               title="Close sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Quick Filter Search */}
+          {/* Search History */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#94A3B8]" />
+            <Search className="h-3.5 w-3.5 text-[#858D9A] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search history..."
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/80 border border-[#E4E2DC] text-[11px] font-semibold text-[#172033] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#172033]"
+              value={searchHistory}
+              onChange={(e) => setSearchHistory(e.target.value)}
+              placeholder="Search conversations..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-[#E4E2DC] text-[11.5px] font-semibold text-[#172033] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#172033]/40"
             />
           </div>
 
-          {/* Recents Chat List */}
+          {/* Session History Stream */}
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
-            {['Today', 'Yesterday', 'Previous 7 Days'].map((grp) => {
-              const groupItems = chatHistory.filter((c) => c.dateGroup === grp);
-              if (groupItems.length === 0) return null;
-
-              return (
-                <div key={grp} className="space-y-1">
-                  <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2 block">
-                    {grp}
-                  </span>
-                  {groupItems.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleSelectConversation(item.id)}
-                      className={cn(
-                        'w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold text-left transition-all group cursor-pointer',
-                        currentConversationId === item.id
-                          ? 'bg-white text-[#0F172A] shadow-xs border border-[#E4E2DC]'
-                          : 'text-[#334155] hover:text-[#0F172A] hover:bg-white/70'
-                      )}
-                    >
-                      <span className="truncate pr-1 flex-1">{item.title}</span>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {item.pinned && <Pin className="h-3 w-3 text-[#2563EB]" />}
-                        <button
-                          onClick={(e) => handleDeleteConversation(e, item.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[#F6F5F1] rounded text-[#858D9A] hover:text-rose-600 transition-all"
-                          title="Delete chat"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+            {filteredHistory.length === 0 ? (
+              <div className="py-8 text-center space-y-1">
+                <BrainCircuit className="h-6 w-6 text-[#858D9A] mx-auto stroke-1" />
+                <span className="text-xs text-[#858D9A] font-medium block">No history found</span>
+              </div>
+            ) : (
+              <>
+                {/* Today */}
+                {todaySessions.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2">
+                      Today
+                    </span>
+                    {todaySessions.map((session) => (
+                      <div
+                        key={session.id}
+                        onClick={() => handleSelectConversation(session.id)}
+                        className={cn(
+                          'group flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all',
+                          currentConversationId === session.id
+                            ? 'bg-white text-[#172033] shadow-xs border border-[#E4E2DC]'
+                            : 'text-[#5F6878] hover:bg-white/60 hover:text-[#172033]'
+                        )}
+                      >
+                        <span className="truncate flex-1 pr-2">{session.title}</span>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {session.pinned && <Pin className="h-3 w-3 text-amber-600 fill-amber-600" />}
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteConversation(e, session.id)}
+                            className="p-1 text-[#858D9A] hover:text-[#E11D48]"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+                    ))}
+                  </div>
+                )}
+
+                {/* Yesterday */}
+                {yesterdaySessions.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2">
+                      Yesterday
+                    </span>
+                    {yesterdaySessions.map((session) => (
+                      <div
+                        key={session.id}
+                        onClick={() => handleSelectConversation(session.id)}
+                        className={cn(
+                          'group flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all',
+                          currentConversationId === session.id
+                            ? 'bg-white text-[#172033] shadow-xs border border-[#E4E2DC]'
+                            : 'text-[#5F6878] hover:bg-white/60 hover:text-[#172033]'
+                        )}
+                      >
+                        <span className="truncate flex-1 pr-2">{session.title}</span>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {session.pinned && <Pin className="h-3 w-3 text-amber-600 fill-amber-600" />}
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteConversation(e, session.id)}
+                            className="p-1 text-[#858D9A] hover:text-[#E11D48]"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Previous 7 Days */}
+                {previousSessions.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2">
+                      Previous 7 Days
+                    </span>
+                    {previousSessions.map((session) => (
+                      <div
+                        key={session.id}
+                        onClick={() => handleSelectConversation(session.id)}
+                        className={cn(
+                          'group flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all',
+                          currentConversationId === session.id
+                            ? 'bg-white text-[#172033] shadow-xs border border-[#E4E2DC]'
+                            : 'text-[#5F6878] hover:bg-white/60 hover:text-[#172033]'
+                        )}
+                      >
+                        <span className="truncate flex-1 pr-2">{session.title}</span>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {session.pinned && <Pin className="h-3 w-3 text-amber-600 fill-amber-600" />}
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteConversation(e, session.id)}
+                            className="p-1 text-[#858D9A] hover:text-[#E11D48]"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
-        {/* Bottom User Pill Capsule */}
-        <div className="pt-3 border-t border-[#E4E2DC]">
-          <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-[#E4E2DC] shadow-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden shrink-0 bg-[#172033] text-white text-[10px] font-black">
-                {userAvatar ? (
-                  <img src={userAvatar} alt="User" className="h-full w-full object-cover" />
-                ) : userPreset ? (
-                  <span>{userPreset.emoji}</span>
-                ) : (
-                  <span>{displayName.slice(0, 1)}</span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-xs font-extrabold text-[#172033] block truncate leading-tight">
-                  {displayName}
-                </span>
-                <span className="text-[10px] text-[#858D9A] font-mono block truncate">
-                  @{user?.username || 'user'}
-                </span>
-              </div>
+        {/* Bottom Profile Pill */}
+        <div className="pt-3 border-t border-[#E4E2DC] flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-7 w-7 rounded-xl bg-[#172033] text-white flex items-center justify-center text-[10.5px] font-black shrink-0 shadow-xs">
+              {displayName.slice(0, 1).toUpperCase()}
             </div>
-            <span className="brutalist-tag-emerald text-[9px] py-0 px-1.5 shrink-0">Pro</span>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-[#172033] block truncate">{displayName}</span>
+              <span className="text-[10px] text-[#858D9A] block truncate font-medium">Enterprise Tier</span>
+            </div>
           </div>
+          <div className="h-2 w-2 rounded-full bg-emerald-500" title="Online" />
         </div>
       </aside>
 
       {/* =========================================================================
-          2. CHATGPT MAIN CANVAS (Top Navbar, Chat Stream / Welcome, Floating Dock)
+          2. MAIN CONSOLE CANVAS
           ========================================================================= */}
-      <main className="flex-1 flex flex-col min-w-0 bg-white relative">
-        {/* Top Sticky Header Nav */}
-        <header className="h-14 px-4 sm:px-6 border-b border-[#E4E2DC] flex items-center justify-between bg-white/90 backdrop-blur-md z-10">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#FFFFFF] relative overflow-hidden">
+        {/* Header */}
+        <header className="h-14 border-b border-[#E4E2DC] px-5 flex items-center justify-between bg-[#FBFBFA] z-10 shrink-0 select-none">
           <div className="flex items-center gap-3">
             {!isSidebarOpen && (
               <button
+                type="button"
                 onClick={() => setIsSidebarOpen(true)}
                 className="p-2 rounded-xl text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1] transition-colors"
-                title="Open sidebar"
+                title="Open history sidebar"
               >
                 <PanelLeftOpen className="h-4 w-4" />
               </button>
             )}
 
-            {/* Model Switcher Pill */}
-            <div className="relative">
-              <button
-                onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#F6F5F1] text-xs font-black text-[#172033] transition-colors border border-transparent hover:border-[#E4E2DC]"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
-                <span>MONVEX {activeModel}</span>
-                <ChevronDown className="h-3.5 w-3.5 text-[#858D9A]" />
-              </button>
-
-              {isModelDropdownOpen && (
-                <div className="absolute left-0 top-full mt-1.5 w-64 rounded-2xl bg-white border border-[#E4E2DC] shadow-2xl p-2 space-y-1 z-50 animate-in fade-in zoom-in-95">
-                  {[
-                    { id: '5.6 Terra Extra High', desc: 'Deep Multi-Step Financial Math & Reasoning', tag: 'Default' },
-                    { id: 'Quantum-Finance 1.5 Pro', desc: 'Ultra-Fast Real-Time Telemetry & Insights', tag: 'Fast' },
-                    { id: 'Autonomous Outlier Detective', desc: 'Statistical Z-score Anomaly Scanner', tag: 'Security' },
-                  ].map((mod) => (
-                    <button
-                      key={mod.id}
-                      onClick={() => {
-                        setActiveModel(mod.id);
-                        setIsModelDropdownOpen(false);
-                        toast.info(`Switched model to ${mod.id}`);
-                      }}
-                      className={cn(
-                        'w-full p-2.5 rounded-xl text-left transition-all flex flex-col',
-                        activeModel === mod.id ? 'bg-[#F6F5F1] text-[#172033]' : 'hover:bg-[#FAFAF7] text-[#5F6878]'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-[#172033]">{mod.id}</span>
-                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#2563EB]">
-                          {mod.tag}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-[#858D9A] mt-0.5 font-medium">{mod.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-xs p-1">
+                <Sparkles className="h-3.5 w-3.5 text-white" />
+              </div>
+              <div>
+                <span className="text-xs font-black text-[#172033] tracking-tight block leading-none">
+                  MONVEX AI
+                </span>
+                <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 leading-tight">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Gemini 2.0 Flash • Online
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Top Center Segmented Switcher */}
-          <div className="hidden sm:flex items-center p-1 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC]">
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={cn(
-                'px-3.5 py-1 rounded-lg text-xs font-bold transition-all',
-                activeTab === 'chat' ? 'bg-white text-[#172033] shadow-xs' : 'text-[#858D9A] hover:text-[#172033]'
-              )}
-            >
-              Chat
-            </button>
-            <button
-              onClick={() => setActiveTab('workspace')}
-              className={cn(
-                'px-3.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1',
-                activeTab === 'workspace' ? 'bg-white text-[#172033] shadow-xs' : 'text-[#858D9A] hover:text-[#172033]'
-              )}
-            >
-              <Sparkles className="h-3 w-3 text-purple-600" />
-              <span>Financial Work</span>
-            </button>
-          </div>
-
-          {/* Right Action Icons */}
           <div className="flex items-center gap-2">
-            <span className="brutalist-tag-emerald text-[9px] py-0.5 px-2 hidden md:inline-flex">
-              Live Telemetry Active
-            </span>
             <button
+              type="button"
               onClick={handleNewChat}
-              className="p-2 rounded-xl text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1] transition-colors"
-              title="New Chat"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E4E2DC] text-xs font-bold text-[#172033] transition-all shadow-2xs"
             >
-              <SquarePen className="h-4 w-4" />
+              <SquarePen className="h-3.5 w-3.5 text-[#2563EB]" />
+              <span>New Chat</span>
             </button>
           </div>
         </header>
 
-        {/* =======================================================================
-            3. CENTER CANVAS (ChatGPT Empty Greeting OR Message Stream)
-            ======================================================================= */}
+        {/* Message Canvas */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6 scrollbar-thin">
           {messages.length === 0 ? (
-            /* EMPTY CHATGPT WELCOME CANVAS */
+            /* EMPTY CANVAS / WELCOME SCREEN */
             <div className="max-w-2xl mx-auto h-full flex flex-col justify-center items-center text-center space-y-8 py-8 animate-in fade-in duration-300">
-              {/* Big Greeting */}
               <div className="space-y-2">
-                <div className="h-16 w-16 mx-auto rounded-3xl overflow-hidden shadow-xl p-1 bg-gradient-to-br from-blue-500 to-indigo-700">
+                <div className="h-16 w-16 mx-auto rounded-3xl overflow-hidden shadow-xl p-1 bg-gradient-to-br from-blue-600 to-indigo-800">
                   <img src="/ai-logo.png" alt="MONVEX AI" className="h-full w-full object-cover rounded-2xl" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black text-[#172033] tracking-tight">
-                  What should we work on today?
+                  Next-Generation Financial Intelligence
                 </h1>
                 <p className="text-xs sm:text-sm text-[#5F6878] font-medium max-w-md mx-auto">
-                  Ask anything about your cashflow, budgets, runway, or run a what-if simulation grounded on your verified ledger.
+                  Ask anything about your spending trends, budget caps, runway forecasts, or run deterministic what-if simulations.
                 </p>
               </div>
 
-              {/* Central Floating Prompt Capsule (ChatGPT Style) */}
+              {/* Central Floating Composer Capsule */}
               <div className="w-full rounded-3xl border border-[#E4E2DC] bg-white shadow-xl p-4 space-y-3 transition-all hover:border-[#172033]/30">
                 <textarea
                   ref={textareaRef}
@@ -386,36 +386,29 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                   }}
                   placeholder={
                     isRecording
-                      ? '🎙️ Listening... (Speak clearly into your microphone)'
-                      : 'Work with MONVEX AI (e.g. Can I afford an iPhone?, Audit spending, Simulate savings)...'
+                      ? '🎙️ Listening... Speak your inquiry'
+                      : 'Ask MONVEX AI (e.g. Why did spending increase?, Forecast 30-day balance, Simulate saving ₹5,000)...'
                   }
                   rows={2}
                   className="w-full resize-none bg-transparent text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed"
                 />
 
                 <div className="flex items-center justify-between pt-1 border-t border-[#F1EFEA]">
-                  {/* Left Tools */}
                   <div className="flex items-center gap-2 text-xs font-bold text-[#5F6878]">
                     <button
                       type="button"
-                      onClick={() => toast.info('Ledger Attachment Simulator: Active.')}
+                      onClick={() => toast.info('Statement / CSV Ingestion: Telemetry Active.')}
                       className="p-1.5 rounded-lg hover:bg-[#F6F5F1] text-[#858D9A] hover:text-[#172033] transition-colors"
                       title="Attach Statement or CSV"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
-
                     <div className="flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60 font-semibold">
                       <ShieldCheck className="h-3 w-3 text-amber-600" />
-                      <span>Full access</span>
+                      <span>Deterministic Math</span>
                     </div>
-
-                    <span className="text-[10px] text-[#858D9A] font-mono hidden sm:inline">
-                      5.6 terra Extra High
-                    </span>
                   </div>
 
-                  {/* Right Tools: Mic & Send Arrow */}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -426,7 +419,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                           ? 'bg-[#E11D48] text-white animate-pulse shadow-md'
                           : 'text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1]'
                       )}
-                      title="Voice Input (Microphone)"
+                      title="Voice Input"
                     >
                       {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                     </button>
@@ -469,11 +462,10 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
               </div>
             </div>
           ) : (
-            /* ACTIVE CONVERSATION STREAM */
-            <div className="max-w-3xl mx-auto space-y-6 pb-24">
+            /* ACTIVE CONVERSATION STREAM WITH RICH BLOCKS */
+            <div className="max-w-3xl mx-auto space-y-6 pb-28">
               {messages.map((msg) => {
                 const isUser = msg.sender === 'user';
-                const isReasoningOpen = openReasoningMap[msg.id];
                 const userFeedback = likedMap[msg.id];
                 const isSpeaking = speakingId === msg.id;
 
@@ -485,10 +477,10 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                       isUser ? 'ml-auto flex-row-reverse max-w-xl' : 'max-w-3xl'
                     )}
                   >
-                    {/* Avatar Icon */}
+                    {/* Avatar */}
                     <div
                       className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-xl overflow-hidden shrink-0 shadow-sm mt-0.5',
+                        'flex h-8 w-8 items-center justify-center rounded-xl overflow-hidden shrink-0 shadow-xs mt-0.5',
                         isUser ? 'bg-[#172033] text-white text-[11px] font-black' : 'ring-1 ring-blue-500/20 bg-white'
                       )}
                     >
@@ -501,148 +493,121 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                           <span>{displayName.slice(0, 1)}</span>
                         )
                       ) : (
-                        <img src="/ai-logo.png" alt="ChatGPT" className="h-full w-full object-cover" />
+                        <img src="/ai-logo.png" alt="MONVEX AI" className="h-full w-full object-cover" />
                       )}
                     </div>
 
                     {/* Content Body */}
                     <div className="space-y-2 flex-1 min-w-0">
-                      {/* Bubble */}
                       <div
                         className={cn(
-                          'p-4 sm:p-5 rounded-2xl text-[13.5px] leading-relaxed shadow-sm transition-all',
+                          'p-4 sm:p-5 rounded-2xl text-[13.5px] leading-relaxed shadow-xs transition-all',
                           isUser
                             ? 'bg-[#172033] text-white rounded-tr-xs'
                             : 'bg-white border border-[#E4E2DC] text-[#0F172A] rounded-tl-xs shadow-slate-100'
                         )}
                       >
-                        {/* Collapsible Reasoning & Tool Activity Drawer */}
-                        {!isUser && ((msg.toolActivity && msg.toolActivity.length > 0) || (msg.reasoningSteps && msg.reasoningSteps.length > 0)) && (
-                          <div className="mb-3 border-b border-[#F1EFEA] pb-2.5">
-                            <button
-                              onClick={() => toggleReasoning(msg.id)}
-                              className="flex items-center gap-1.5 text-xs font-extrabold text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
-                            >
-                              <BrainCircuit className="h-3.5 w-3.5" />
-                              <span>
-                                {msg.toolsUsed && msg.toolsUsed.length > 0
-                                  ? `Executed ${msg.toolsUsed.length} Telemetry Tool${msg.toolsUsed.length > 1 ? 's' : ''}`
-                                  : `Thought for ${msg.thoughtDuration || '1.6s'}`}
-                              </span>
-                              {isReasoningOpen ? (
-                                <ChevronUp className="h-3.5 w-3.5" />
-                              ) : (
-                                <ChevronDown className="h-3.5 w-3.5" />
-                              )}
-                            </button>
+                        {/* Tool Execution Status */}
+                        {!isUser && (
+                          <AIToolExecutionBlock
+                            toolsUsed={msg.toolsUsed}
+                            toolActivity={msg.toolActivity}
+                            duration={msg.thoughtDuration || '1.2s'}
+                          />
+                        )}
 
-                            {isReasoningOpen && (
-                              <div className="mt-2 p-3 rounded-xl bg-[#F6F5F1] text-[11px] font-mono text-[#5F6878] space-y-1.5 border border-[#E4E2DC] animate-in fade-in">
-                                {(msg.toolActivity || msg.reasoningSteps || []).map((step, sIdx) => (
-                                  <div key={sIdx} className="flex items-center gap-2">
-                                    <span className="text-[#2563EB] font-bold">✓</span>
-                                    <span className="text-[#334155] font-semibold">{step}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                        {/* Verified Financial KPI Cards */}
+                        {!isUser && msg.metrics && msg.metrics.length > 0 && (
+                          <AIMetricCardBlock metrics={msg.metrics} />
+                        )}
+
+                        {/* Dynamic Visual Financial Charts */}
+                        {!isUser && msg.charts && msg.charts.length > 0 && (
+                          <div className="space-y-3 my-2">
+                            {msg.charts.map((chart, cIdx) => (
+                              <DynamicAIChart key={`${chart.title}-${cIdx}`} chart={chart} />
+                            ))}
                           </div>
                         )}
 
-                        {/* Message Content */}
-                        <div>
-                          {isUser ? (
-                            <p className="whitespace-pre-wrap font-medium">{msg.content}</p>
-                          ) : (
-                            <>
-                              {renderFormattedContent(msg.content)}
-                              {msg.isStreaming && (
-                                <span className="inline-block w-1.5 h-4 ml-1 bg-[#2563EB] animate-pulse align-middle" />
-                              )}
-
-                              {/* Google Search Grounding Citations */}
-                              {msg.citations && msg.citations.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-[#F1EFEA] space-y-1.5">
-                                  <span className="text-[11px] font-bold text-[#5F6878] flex items-center gap-1">
-                                    <Search className="h-3 w-3 text-[#2563EB]" /> Verified Web Sources (Google Search Grounding)
-                                  </span>
-                                  <div className="flex flex-wrap gap-2">
-                                    {msg.citations.map((c, cIdx) => (
-                                      <a
-                                        key={cIdx}
-                                        href={c.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F6F5F1] hover:bg-[#EFECE6] text-[11px] font-semibold text-[#172033] border border-[#E4E2DC] transition-colors"
-                                      >
-                                        <span className="truncate max-w-[200px]">{c.title || c.url}</span>
-                                        <ExternalLink className="h-3 w-3 text-[#858D9A]" />
-                                      </a>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          )}
+                        {/* Markdown Text Response */}
+                        <div className="prose prose-sm max-w-none text-[#0F172A] dark:text-[#0F172A]">
+                          {renderFormattedContent(msg.content)}
                         </div>
+
+                        {/* Variance Drivers & Telemetry Insights */}
+                        {!isUser && msg.insights && msg.insights.length > 0 && (
+                          <AIInsightBlock insights={msg.insights} />
+                        )}
+
+                        {/* Actionable Recommendations */}
+                        {!isUser && msg.recommendations && msg.recommendations.length > 0 && (
+                          <AIRecommendationBlock
+                            recommendations={msg.recommendations}
+                            onActionClick={(prompt) => handleSend(prompt)}
+                          />
+                        )}
+
+                        {/* Context-Aware Follow-Up Actions */}
+                        {!isUser && msg.actions && msg.actions.length > 0 && !msg.isStreaming && (
+                          <AIActionChipsBlock
+                            actions={msg.actions}
+                            onActionClick={(prompt) => handleSend(prompt)}
+                            disabled={isLoading}
+                          />
+                        )}
                       </div>
 
-                      {/* Action Bar for Assistant Messages (ChatGPT Style) */}
+                      {/* Footer Actions (Copy, TTS, Feedback) */}
                       {!isUser && !msg.isStreaming && (
-                        <div className="flex items-center gap-2 text-[#858D9A] text-xs pt-0.5">
+                        <div className="flex items-center gap-2 text-[11px] text-[#858D9A] px-1">
                           <button
+                            type="button"
                             onClick={() => handleCopy(msg.id, msg.content)}
-                            className="p-1.5 rounded-lg hover:bg-[#F6F5F1] hover:text-[#172033] transition-colors flex items-center gap-1"
-                            title="Copy"
+                            className="flex items-center gap-1 hover:text-[#172033] transition-colors p-1 rounded-md hover:bg-[#F6F5F1]"
                           >
                             {copiedId === msg.id ? (
-                              <Check className="h-3.5 w-3.5 text-[#059669]" />
+                              <Check className="h-3.5 w-3.5 text-emerald-600" />
                             ) : (
                               <Copy className="h-3.5 w-3.5" />
                             )}
+                            <span>{copiedId === msg.id ? 'Copied' : 'Copy'}</span>
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => handleReadAloud(msg.id, msg.content)}
                             className={cn(
-                              'p-1.5 rounded-lg hover:bg-[#F6F5F1] transition-colors flex items-center gap-1',
+                              'flex items-center gap-1 transition-colors p-1 rounded-md hover:bg-[#F6F5F1]',
                               isSpeaking ? 'text-[#2563EB] font-bold' : 'hover:text-[#172033]'
                             )}
-                            title={isSpeaking ? 'Stop speech' : 'Read aloud'}
                           >
-                            {isSpeaking ? <VolumeX className="h-3.5 w-3.5 text-rose-500 animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
+                            {isSpeaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                            <span>{isSpeaking ? 'Stop' : 'Read Aloud'}</span>
                           </button>
 
-                          <button
-                            onClick={() => handleFeedback(msg.id, 'like')}
-                            className={cn(
-                              'p-1.5 rounded-lg hover:bg-[#F6F5F1] transition-colors',
-                              userFeedback === 'like' ? 'text-[#059669]' : 'hover:text-[#172033]'
-                            )}
-                            title="Good response"
-                          >
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                          </button>
-
-                          <button
-                            onClick={() => handleFeedback(msg.id, 'dislike')}
-                            className={cn(
-                              'p-1.5 rounded-lg hover:bg-[#F6F5F1] transition-colors',
-                              userFeedback === 'dislike' ? 'text-[#E11D48]' : 'hover:text-[#172033]'
-                            )}
-                            title="Bad response"
-                          >
-                            <ThumbsDown className="h-3.5 w-3.5" />
-                          </button>
-
-                          <button
-                            onClick={() => handleSend(messages[messages.length - 2]?.content || 'Regenerate analysis')}
-                            className="p-1.5 rounded-lg hover:bg-[#F6F5F1] hover:text-[#172033] transition-colors flex items-center gap-1 text-[11px] font-bold ml-1"
-                            title="Regenerate"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            <span>Retry</span>
-                          </button>
+                          <div className="flex items-center gap-1 ml-auto">
+                            <button
+                              type="button"
+                              onClick={() => handleFeedback(msg.id, 'like')}
+                              className={cn(
+                                'p-1 rounded-md transition-colors',
+                                userFeedback === 'like' ? 'text-emerald-600 bg-emerald-50' : 'hover:text-[#172033]'
+                              )}
+                            >
+                              <ThumbsUp className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleFeedback(msg.id, 'dislike')}
+                              className={cn(
+                                'p-1 rounded-md transition-colors',
+                                userFeedback === 'dislike' ? 'text-rose-600 bg-rose-50' : 'hover:text-[#172033]'
+                              )}
+                            >
+                              <ThumbsDown className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -650,23 +615,11 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                 );
               })}
 
-              {/* Thinking Pulse Loader */}
+              {/* Streaming loading indicator */}
               {isLoading && (
-                <div className="flex items-start gap-3.5 max-w-md animate-in fade-in">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl overflow-hidden shrink-0 ring-1 ring-blue-500/20 bg-white shadow-sm">
-                    <img src="/ai-logo.png" alt="MONVEX AI" className="h-full w-full object-cover animate-pulse" />
-                  </div>
-                  <div className="p-4 rounded-2xl bg-white border border-[#E4E2DC] rounded-tl-xs shadow-sm space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#2563EB]">
-                      <Activity className="h-3.5 w-3.5 animate-pulse" />
-                      <span>Thinking & synthesizing telemetry...</span>
-                    </div>
-                    <div className="flex gap-1.5 pt-0.5">
-                      <div className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce" />
-                      <div className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce [animation-delay:0.15s]" />
-                      <div className="h-2 w-2 rounded-full bg-[#2563EB] animate-bounce [animation-delay:0.3s]" />
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-white border border-[#E4E2DC] shadow-xs text-xs text-[#5F6878] animate-pulse">
+                  <Sparkles className="h-4 w-4 text-[#2563EB] animate-spin" />
+                  <span className="font-semibold">Synthesizing live verified financial telemetry...</span>
                 </div>
               )}
 
@@ -675,92 +628,73 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
           )}
         </div>
 
-        {/* =======================================================================
-            4. FLOATING DOCKED PROMPT BAR (When messages exist)
-            ======================================================================= */}
+        {/* Bottom Floating Composer Bar (Active Chat) */}
         {messages.length > 0 && (
-          <div className="p-4 bg-gradient-to-t from-white via-white to-transparent border-t border-[#E4E2DC]/80">
-            <div className="max-w-3xl mx-auto space-y-2">
-              {isRecording && (
-                <div className="px-4 py-1.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs font-bold text-rose-700 animate-in fade-in">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2.5 w-2.5 rounded-full bg-rose-600 animate-ping" />
-                    <span>Microphone Active: Listening to your voice...</span>
-                  </div>
-                  <button onClick={toggleVoiceRecording} className="text-[11px] underline">
-                    Stop
+          <div className="absolute bottom-4 left-4 right-4 max-w-3xl mx-auto z-20">
+            <div className="rounded-3xl border border-[#E4E2DC] bg-white/95 backdrop-blur-md shadow-2xl p-3 space-y-2">
+              <textarea
+                ref={textareaRef}
+                value={inputQuery}
+                onChange={(e) => setInputQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={
+                  isRecording
+                    ? '🎙️ Listening... Speak your inquiry'
+                    : 'Ask MONVEX AI (e.g. Can I afford this?, Compare with last month)...'
+                }
+                rows={1}
+                className="w-full resize-none bg-transparent text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed max-h-36"
+              />
+
+              <div className="flex items-center justify-between pt-1 border-t border-[#F1EFEA]">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#5F6878]">
+                  <button
+                    type="button"
+                    onClick={() => toast.info('Ledger Attachment Active.')}
+                    className="p-1.5 rounded-lg hover:bg-[#F6F5F1] text-[#858D9A] hover:text-[#172033] transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  <span className="text-[10px] text-[#858D9A] font-mono">
+                    Enter to send • Shift+Enter for newline
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleVoiceRecording}
+                    className={cn(
+                      'p-2 rounded-full transition-all',
+                      isRecording
+                        ? 'bg-[#E11D48] text-white animate-pulse shadow-md'
+                        : 'text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1]'
+                    )}
+                    title="Voice Input"
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSend()}
+                    disabled={!inputQuery.trim() || isLoading}
+                    className={cn(
+                      'h-8 w-8 rounded-full flex items-center justify-center transition-all shadow-sm',
+                      inputQuery.trim()
+                        ? 'bg-[#172033] hover:bg-black text-white'
+                        : 'bg-[#E4E2DC] text-[#858D9A] cursor-not-allowed'
+                    )}
+                  >
+                    <Send className="h-3.5 w-3.5" />
                   </button>
                 </div>
-              )}
-
-              <div className="rounded-3xl border border-[#E4E2DC] bg-white shadow-lg p-3 space-y-2 focus-within:border-[#172033] focus-within:shadow-xl transition-all">
-                <textarea
-                  ref={textareaRef}
-                  value={inputQuery}
-                  onChange={(e) => setInputQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder={
-                    isRecording
-                      ? 'Listening... Speak clearly'
-                      : 'Message MONVEX AI (Enter to send, Shift+Enter for new line)...'
-                  }
-                  rows={1}
-                  className="w-full resize-none bg-transparent text-xs sm:text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed"
-                />
-
-                <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#858D9A]">
-                    <button
-                      type="button"
-                      onClick={() => toast.info('File attachment tool')}
-                      className="p-1 rounded-lg hover:bg-[#F6F5F1] hover:text-[#172033] transition-colors"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                    <span className="text-[10px] font-mono text-[#858D9A] hidden sm:inline">
-                      {activeModel}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={toggleVoiceRecording}
-                      className={cn(
-                        'p-1.5 rounded-full transition-all',
-                        isRecording
-                          ? 'bg-[#E11D48] text-white animate-pulse'
-                          : 'text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1]'
-                      )}
-                    >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSend()}
-                      disabled={!inputQuery.trim() || isLoading}
-                      className={cn(
-                        'h-7 w-7 rounded-full flex items-center justify-center transition-all',
-                        inputQuery.trim()
-                          ? 'bg-[#172033] hover:bg-black text-white shadow-sm'
-                          : 'bg-[#E4E2DC] text-[#858D9A] cursor-not-allowed'
-                      )}
-                    >
-                      <Send className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
               </div>
-
-              <p className="text-[10px] text-center text-[#94A3B8] font-medium">
-                MONVEX AI can make mistakes. Verify important financial and tax decisions.
-              </p>
             </div>
           </div>
         )}

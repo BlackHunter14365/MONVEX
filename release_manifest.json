@@ -2,12 +2,12 @@
   "manifest_version": "1.0",
   "release_version": "v3.4.0",
   "codename": "Production-Intelligence-QA-Release-Gate",
-  "generated_at_utc": "2026-08-25T15:46:01.032284+00:00",
+  "generated_at_utc": "2026-08-25T16:16:14.610691+00:00",
   "git": {
-    "commit_hash": "1dfcbe97c513cf518fdfc879c88738c2d00bc21d",
-    "short_hash": "1dfcbe9",
+    "commit_hash": "e5d0fa9b2e9696f4e2cda954ada3f035015723d3",
+    "short_hash": "e5d0fa9",
     "branch": "master",
-    "last_commit_message": "docs(v3.4): add production audit, AI release gate, release manifest, runbook, and deployment verification specs"
+    "last_commit_message": "docs(v3.5): add performance report, AI profiling, DB profiling, release validation, and migration notes"
   },
   "components": {
     "release_version": "v3.4.0",

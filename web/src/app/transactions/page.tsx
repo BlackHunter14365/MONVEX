@@ -31,6 +31,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useTransactionsQuery } from '@/hooks/queries/useTransactionsQuery';
 import { useDeleteTransactionMutation } from '@/hooks/mutations/useTransactionMutations';
+import { CardReveal } from '@/components/motion';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
@@ -204,7 +205,7 @@ export default function TransactionsPage() {
         />
 
         {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-[#E4E2DC] shadow-subtle">
+        <CardReveal index={0} className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-[#E4E2DC] shadow-subtle">
           {/* Search Input */}
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
@@ -248,10 +249,10 @@ export default function TransactionsPage() {
               <option value="amount_asc">Lowest amount</option>
             </select>
           </div>
-        </div>
+        </CardReveal>
 
         {/* Transactions Table Card */}
-        <div className="editorial-card overflow-hidden">
+        <CardReveal index={1} className="editorial-card overflow-hidden">
           {isLoading ? (
             <div className="p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
@@ -366,7 +367,7 @@ export default function TransactionsPage() {
               </table>
             </div>
           )}
-        </div>
+        </CardReveal>
 
         {/* Create / Edit Transaction Modal */}
         <AddTransactionModal

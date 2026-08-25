@@ -25,6 +25,7 @@ import { Modal } from '@/components/ui/Modal';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function NetWorthPage() {
   const toast = useToast();
@@ -176,45 +177,45 @@ export default function NetWorthPage() {
 
         {/* TOP SUMMARY CARDS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Calculated Net Worth</span>
             <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
-              {formatCurrency(netWorthData?.net_worth || 0)}
+              <AnimatedValue value={netWorthData?.net_worth || 0} />
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               Assets minus Liabilities
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={1} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Total Assets Base</span>
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
-              {formatCurrency(netWorthData?.total_assets || 0)}
+              <AnimatedValue value={netWorthData?.total_assets || 0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               {netWorthData?.assets_list?.length || 0} registered assets
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={2} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Total Liabilities</span>
             <div className="text-xl sm:text-2xl font-black text-[#E11D48] tracking-tight">
-              {formatCurrency(netWorthData?.total_liabilities || 0)}
+              <AnimatedValue value={netWorthData?.total_liabilities || 0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               {netWorthData?.liabilities_list?.length || 0} active debts
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={3} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Solvency / Leverage</span>
             <div className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
-              {netWorthData?.debt_to_asset_ratio || 0}%
+              <AnimatedValue value={parseFloat(netWorthData?.debt_to_asset_ratio) || 0} type="percentage" decimals={1} />
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               Status: {netWorthData?.solvency_status || 'STRONG'}
             </span>
-          </div>
+          </CardReveal>
         </div>
 
         {/* 2-COLUMN ASSETS & LIABILITIES MANAGEMENT */}

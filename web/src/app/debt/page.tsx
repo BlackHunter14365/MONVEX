@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/Badge';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function DebtPage() {
   const toast = useToast();
@@ -89,45 +90,45 @@ export default function DebtPage() {
 
         {/* TOP METRICS STRIP */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Total Outstanding Principal</span>
             <div className="text-xl sm:text-2xl font-black text-[#E11D48] tracking-tight">
-              {formatCurrency(debtOverview?.total_remaining_balance || 0)}
+              <AnimatedValue value={debtOverview?.total_remaining_balance || 0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Across {debtOverview?.total_liabilities_count || 0} active loans
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={1} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Total Monthly EMI Outflow</span>
             <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
-              {formatCurrency(debtOverview?.total_monthly_emi || 0)}
+              <AnimatedValue value={debtOverview?.total_monthly_emi || 0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Fixed monthly obligation
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={2} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Simulated Interest Saved</span>
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
-              {formatCurrency(simResult?.interest_saved || 0)}
+              <AnimatedValue value={simResult?.interest_saved || 0} />
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               With +{formatCurrency(extraPayment)}/mo extra
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={3} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Repayment Acceleration</span>
             <div className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
-              {simResult?.months_saved || 0} Months
+              <AnimatedValue value={simResult?.months_saved || 0} type="number" decimals={0} suffix=" Months" />
             </div>
             <span className="text-[11px] text-[#2563EB] font-bold block">
               Earlier debt-free date!
             </span>
-          </div>
+          </CardReveal>
         </div>
 
         {/* 2-COLUMN DEBT LAB */}

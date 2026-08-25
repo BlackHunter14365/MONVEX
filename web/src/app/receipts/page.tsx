@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/Badge';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { CardReveal } from '@/components/motion';
 
 export default function ReceiptsPage() {
   const toast = useToast();

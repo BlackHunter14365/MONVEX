@@ -28,6 +28,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
+import { AnimatedValue } from '@/components/motion';
 
 export interface AccountItem {
   id: string;
@@ -867,7 +868,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-0.5">
                       <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 block">Total Liquidity</span>
                       <span className="text-base font-black text-emerald-400 block truncate">
-                        {formatCurrency(totalPortfolioLiquidity, userCurrency)}
+                        <AnimatedValue value={totalPortfolioLiquidity} currency={userCurrency} />
                       </span>
                     </div>
                   </div>

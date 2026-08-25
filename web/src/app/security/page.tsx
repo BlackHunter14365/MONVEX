@@ -36,6 +36,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 interface SecurityShieldItem {
   id: string;
@@ -184,7 +185,7 @@ export default function SecurityPage() {
 
         {/* 1. TOP TELEMETRY HUD */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <div className="flex items-center justify-between">
               <span className="swiss-eyebrow block">Defense Status</span>
               <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse" />
@@ -195,49 +196,49 @@ export default function SecurityPage() {
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Multi-layer WAF & CSP Active
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={1} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <div className="flex items-center justify-between">
               <span className="swiss-eyebrow block">Security Health Index</span>
               <ShieldCheck className="h-4 w-4 text-[#2563EB]" />
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
-                {overview?.health_score || 98}
+                <AnimatedValue value={overview?.health_score || 98} type="number" decimals={0} />
               </span>
               <span className="text-xs font-bold text-[#858D9A]">/ 100</span>
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               ✓ Optimal Configuration
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={2} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <div className="flex items-center justify-between">
               <span className="swiss-eyebrow block">Attacks Intercepted</span>
               <ShieldAlert className="h-4 w-4 text-[#E11D48]" />
             </div>
             <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
-              {overview?.total_blocked_attacks ?? 3}
+              <AnimatedValue value={overview?.total_blocked_attacks ?? 3} type="number" decimals={0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               SQLi & XSS Payloads Blocked
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={3} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <div className="flex items-center justify-between">
               <span className="swiss-eyebrow block">Audit Trail Events</span>
               <Activity className="h-4 w-4 text-[#7C3AED]" />
             </div>
             <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
-              {overview?.total_audit_events ?? auditLogs.length}
+              <AnimatedValue value={overview?.total_audit_events ?? auditLogs.length} type="number" decimals={0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Tamper-Proof Event Records
             </span>
-          </div>
+          </CardReveal>
         </div>
 
         {/* 2. AUTOMATED VULNERABILITY SCANNER RESULTS */}

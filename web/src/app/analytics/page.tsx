@@ -39,6 +39,7 @@ import {
 } from 'recharts';
 
 import { useAnalyticsQuery } from '@/hooks/queries/useAnalyticsQuery';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
@@ -145,61 +146,61 @@ export default function AnalyticsPage() {
         {/* 1. Core Health KPI Grid with Animated Spark Indicators */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Health Score */}
-          <div className="editorial-card p-6 space-y-1.5">
+          <CardReveal index={0} hoverLift={true} className="editorial-card p-6 space-y-1.5">
             <span className="swiss-eyebrow block">
               Financial health score
             </span>
             <div className="flex items-baseline gap-2">
               <span className="swiss-metric text-3xl sm:text-4xl text-[#172033]">
-                {healthScore}
+                {isLoading ? <Skeleton className="h-9 w-16" /> : <AnimatedValue value={healthScore} type="number" decimals={0} />}
               </span>
               <span className="text-xs text-[#858D9A] font-bold">/ 100</span>
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               {healthScore >= 70 ? 'Excellent capital retention' : 'Moderate capital velocity'}
             </span>
-          </div>
+          </CardReveal>
 
           {/* Income */}
-          <div className="editorial-card p-6 space-y-1.5">
+          <CardReveal index={1} hoverLift={true} className="editorial-card p-6 space-y-1.5">
             <span className="swiss-eyebrow block">
               Monthly income
             </span>
             <div className="swiss-metric text-2xl sm:text-3xl text-[#172033]">
-              {formatCurrency(totalIncome, user?.currency)}
+              {isLoading ? <Skeleton className="h-8 w-24" /> : <AnimatedValue value={totalIncome} currency={user?.currency} />}
             </div>
             <span className="text-[11px] text-[#059669] font-bold flex items-center gap-1">
               <ArrowUpRight className="h-3.5 w-3.5" />
               <span>Inflow verified</span>
             </span>
-          </div>
+          </CardReveal>
 
           {/* Spending */}
-          <div className="editorial-card p-6 space-y-1.5">
+          <CardReveal index={2} hoverLift={true} className="editorial-card p-6 space-y-1.5">
             <span className="swiss-eyebrow block">
               Monthly spending
             </span>
             <div className="swiss-metric text-2xl sm:text-3xl text-[#E11D48]">
-              {formatCurrency(totalExpense, user?.currency)}
+              {isLoading ? <Skeleton className="h-8 w-24" /> : <AnimatedValue value={totalExpense} currency={user?.currency} />}
             </div>
             <span className="text-[11px] text-[#E11D48] font-bold flex items-center gap-1">
               <ArrowDownRight className="h-3.5 w-3.5" />
               <span>Outflow total</span>
             </span>
-          </div>
+          </CardReveal>
 
           {/* Savings Rate */}
-          <div className="editorial-card p-6 space-y-1.5">
+          <CardReveal index={3} hoverLift={true} className="editorial-card p-6 space-y-1.5">
             <span className="swiss-eyebrow block">
               Savings rate
             </span>
             <div className="swiss-metric text-2xl sm:text-3xl text-[#059669]">
-              {savingsRate}%
+              {isLoading ? <Skeleton className="h-8 w-16" /> : <AnimatedValue value={savingsRate} type="percentage" decimals={1} />}
             </div>
             <span className="text-[11px] text-[#5F6878] font-semibold block">
-              {formatCurrency(netSavings, user?.currency)} retained
+              {isLoading ? '--' : <AnimatedValue value={netSavings} currency={user?.currency} />} retained
             </span>
-          </div>
+          </CardReveal>
         </div>
 
         {/* 2. Main Charts Section (Trajectory & Donut Matrix) */}

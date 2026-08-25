@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/Badge';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function SimulatorPage() {
   const toast = useToast();
@@ -105,47 +106,47 @@ export default function SimulatorPage() {
           }
         />
 
-        {/* TOP METRIC COMPARISON STRIP */}
+        {/* TOP SUMMARY CARDS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Simulated Monthly Surplus</span>
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
-              {formatCurrency(simResults?.simulated?.monthly_surplus || 0)}
+              <AnimatedValue value={simResults?.simulated?.monthly_surplus || 0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-bold block">
               + {formatCurrency(simResults?.simulated?.monthly_surplus_delta || 0)} / mo vs baseline
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={1} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Projected Savings Rate</span>
             <div className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
-              {simResults?.simulated?.savings_rate || 0}%
+              <AnimatedValue value={simResults?.simulated?.savings_rate || 0} type="percentage" decimals={1} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Baseline: {simResults?.baseline?.savings_rate || 0}%
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={2} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Accumulated Capital ({timeframeMonths}M)</span>
             <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
-              {formatCurrency(simResults?.simulated?.total_wealth_created || 0)}
+              <AnimatedValue value={simResults?.simulated?.total_wealth_created || 0} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Direct retained liquidity
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={3} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">5-Year Compounded Corpus</span>
             <div className="text-xl sm:text-2xl font-black text-[#7C3AED] tracking-tight">
-              {formatCurrency(simResults?.compounded_growth?.five_year_horizon?.simulated_corpus || 0)}
+              <AnimatedValue value={simResults?.compounded_growth?.five_year_horizon?.simulated_corpus || 0} />
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               + {formatCurrency(simResults?.compounded_growth?.five_year_horizon?.additional_wealth || 0)} extra
             </span>
-          </div>
+          </CardReveal>
         </div>
 
         {/* 2-COLUMN SIMULATOR LAB */}

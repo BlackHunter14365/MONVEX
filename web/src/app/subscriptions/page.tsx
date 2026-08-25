@@ -21,6 +21,7 @@ import { Modal } from '@/components/ui/Modal';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function SubscriptionsPage() {
   const toast = useToast();
@@ -126,45 +127,45 @@ export default function SubscriptionsPage() {
 
         {/* TOP SUMMARY CARDS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Monthly Recurring Burn</span>
             <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
-              {formatCurrency(totalMonthly)}
+              <AnimatedValue value={totalMonthly} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               Fixed commitments per month
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={1} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Annualized Obligation</span>
             <div className="text-xl sm:text-2xl font-black text-[#E11D48] tracking-tight">
-              {formatCurrency(totalAnnual)}
+              <AnimatedValue value={totalAnnual} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               12-month projected drain
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={2} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Active Memberships</span>
             <div className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
-              {subscriptions.length}
+              <AnimatedValue value={subscriptions.length} type="number" decimals={0} />
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               ✓ Continuous audit active
             </span>
-          </div>
+          </CardReveal>
 
-          <div className="editorial-card p-5 space-y-1 rounded-xl">
+          <CardReveal index={3} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Optimization Potential</span>
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
-              {formatCurrency(totalMonthly * 0.25)}
+              <AnimatedValue value={totalMonthly * 0.25} />
             </div>
             <span className="text-[11px] text-[#5F6878] font-medium block">
               By pruning unused services
             </span>
-          </div>
+          </CardReveal>
         </div>
 
         {/* SUBSCRIPTIONS GRID */}

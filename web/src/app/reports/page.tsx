@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/Badge';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function ReportsPage() {
   const toast = useToast();
@@ -152,28 +153,28 @@ export default function ReportsPage() {
             <div>
               <span className="text-[10px] text-[#858D9A] block font-mono font-bold uppercase">Total Inflow</span>
               <span className="text-base sm:text-lg font-black text-[#059669]">
-                +{formatCurrency(reportData?.executive_summary?.total_inflow || 0)}
+                +<AnimatedValue value={reportData?.executive_summary?.total_inflow || 0} />
               </span>
             </div>
 
             <div>
               <span className="text-[10px] text-[#858D9A] block font-mono font-bold uppercase">Total Outflow</span>
               <span className="text-base sm:text-lg font-black text-[#E11D48]">
-                -{formatCurrency(reportData?.executive_summary?.total_outflow || 0)}
+                -<AnimatedValue value={reportData?.executive_summary?.total_outflow || 0} />
               </span>
             </div>
 
             <div>
               <span className="text-[10px] text-[#858D9A] block font-mono font-bold uppercase">Net Savings</span>
               <span className="text-base sm:text-lg font-black text-[#172033]">
-                {formatCurrency(reportData?.executive_summary?.net_savings || 0)}
+                <AnimatedValue value={reportData?.executive_summary?.net_savings || 0} />
               </span>
             </div>
 
             <div>
               <span className="text-[10px] text-[#858D9A] block font-mono font-bold uppercase">Health Score</span>
               <span className="text-base sm:text-lg font-black text-[#2563EB]">
-                {reportData?.executive_summary?.health_score || 95}/100 ({reportData?.executive_summary?.health_grade || 'A'})
+                <AnimatedValue value={reportData?.executive_summary?.health_score || 95} type="number" decimals={0} />/100 ({reportData?.executive_summary?.health_grade || 'A'})
               </span>
             </div>
           </div>

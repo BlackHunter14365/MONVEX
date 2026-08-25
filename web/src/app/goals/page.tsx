@@ -28,6 +28,7 @@ import {
   useContributeGoalMutation,
   useDeleteGoalMutation,
 } from '@/hooks/mutations/useGoalMutations';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 import { triggerConfetti } from '@/components/ui/ConfettiCelebration';
 
@@ -151,7 +152,7 @@ export default function GoalsPage() {
         />
 
         {/* Overview Stat Card */}
-        <div className="editorial-card p-6 sm:p-7">
+        <CardReveal className="editorial-card p-6 sm:p-7">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="space-y-1.5">
               <span className="swiss-eyebrow">Total target</span>
@@ -159,7 +160,7 @@ export default function GoalsPage() {
                 <Skeleton className="h-8 w-28" />
               ) : (
                 <div className="swiss-metric text-2xl text-[#172033]">
-                  {formatCurrency(totalTarget, user?.currency)}
+                  <AnimatedValue value={totalTarget} currency={user?.currency} />
                 </div>
               )}
               <span className="text-[11px] text-[#858D9A] block">Cumulative targets</span>
@@ -171,7 +172,7 @@ export default function GoalsPage() {
                 <Skeleton className="h-8 w-28" />
               ) : (
                 <div className="swiss-metric text-2xl text-[#059669]">
-                  {formatCurrency(totalSaved, user?.currency)}
+                  <AnimatedValue value={totalSaved} currency={user?.currency} />
                 </div>
               )}
               <span className="text-[11px] font-bold text-[#059669] block">
@@ -185,13 +186,13 @@ export default function GoalsPage() {
                 <Skeleton className="h-8 w-28" />
               ) : (
                 <div className="swiss-metric text-2xl text-[#172033]">
-                  {formatCurrency(Math.max(0, totalTarget - totalSaved), user?.currency)}
+                  <AnimatedValue value={Math.max(0, totalTarget - totalSaved)} currency={user?.currency} />
                 </div>
               )}
               <span className="text-[11px] text-[#858D9A] block">Across all active goals</span>
             </div>
           </div>
-        </div>
+        </CardReveal>
 
         {/* Goals Grid */}
         <div>
@@ -209,7 +210,7 @@ export default function GoalsPage() {
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {goals.map((g: any) => {
+              {goals.map((g: any, gIdx: number) => {
                 const cur = parseFloat(g.current_amount) || 0;
                 const tar = parseFloat(g.target_amount) || 1;
                 const pct = Math.min(100, Math.round((cur / tar) * 100));
@@ -219,13 +220,18 @@ export default function GoalsPage() {
                 if (deadline) {
                   const now = new Date();
                   const end = new Date(deadline);
-                  const months = Math.max(1, (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth()));
-                  const remaining = Math.max(0, tar - cur);
-                  requiredMonthly = Math.round(remaining / months);
+                  const monthsRemaining = Math.max(1, (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth()));
+                  const remainingToSave = Math.max(0, tar - cur);
+                  requiredMonthly = Math.round(remainingToSave / monthsRemaining);
                 }
 
                 return (
-                  <div key={g.id} className="editorial-card p-5 sm:p-6 space-y-4 flex flex-col justify-between">
+                  <CardReveal
+                    key={g.id}
+                    index={gIdx}
+                    hoverLift={true}
+                    className="editorial-card p-5 sm:p-6 space-y-4 flex flex-col justify-between"
+                  >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
@@ -300,7 +306,7 @@ export default function GoalsPage() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                  </div>
+                  </CardReveal>
                 );
               })}
             </div>

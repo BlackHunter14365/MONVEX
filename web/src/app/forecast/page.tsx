@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -132,23 +133,23 @@ export default function ForecastPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="editorial-card p-6 space-y-1.5">
+            <CardReveal index={0} hoverLift={true} className="editorial-card p-6 space-y-1.5">
               <span className="swiss-eyebrow block">Current Starting Balance</span>
               <div className="swiss-metric text-2xl sm:text-3xl text-[#172033]">
-                {formatCurrency(forecast?.starting_balance || 0, user?.currency)}
+                <AnimatedValue value={forecast?.starting_balance || 0} currency={user?.currency} />
               </div>
               <span className="text-[11px] text-[#858D9A] block">Real-time baseline</span>
-            </div>
+            </CardReveal>
 
-            <div className="editorial-card p-6 space-y-1.5">
+            <CardReveal index={1} hoverLift={true} className="editorial-card p-6 space-y-1.5">
               <span className="swiss-eyebrow block">Daily Average Burn</span>
               <div className="swiss-metric text-2xl sm:text-3xl text-[#E11D48]">
-                {formatCurrency(forecast?.daily_burn_rate || 0, user?.currency)} / day
+                <AnimatedValue value={forecast?.daily_burn_rate || 0} currency={user?.currency} suffix=" / day" />
               </div>
               <span className="text-[11px] text-[#858D9A] block">30-day historical run-rate</span>
-            </div>
+            </CardReveal>
 
-            <div className="editorial-card p-6 space-y-1.5">
+            <CardReveal index={2} hoverLift={true} className="editorial-card p-6 space-y-1.5">
               <span className="swiss-eyebrow block">
                 Projected Balance in {days} Days
               </span>
@@ -158,7 +159,7 @@ export default function ForecastPage() {
                   simulatedEndBalance >= 0 ? 'text-[#059669]' : 'text-[#E11D48]'
                 )}
               >
-                {formatCurrency(simulatedEndBalance, user?.currency)}
+                <AnimatedValue value={simulatedEndBalance} currency={user?.currency} />
               </div>
               <span className="text-[11px] text-[#858D9A] block">
                 {incomeDelta !== 0 || expenseDelta !== 0 ? (
@@ -167,7 +168,7 @@ export default function ForecastPage() {
                   'Estimated baseline liquidity'
                 )}
               </span>
-            </div>
+            </CardReveal>
           </div>
         )}
 

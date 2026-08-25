@@ -40,6 +40,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { WalletAccountsSection } from '@/components/finance/WalletAccountsSection';
+import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -355,7 +356,7 @@ export default function DashboardPage() {
                     <Skeleton className="h-10 w-48 mt-1" />
                   ) : (
                     <div className="swiss-metric text-3xl sm:text-4xl text-[#172033]">
-                      {formatCurrency(totalNetBalance, user?.currency)}
+                      <AnimatedValue value={totalNetBalance} currency={user?.currency} />
                     </div>
                   )}
                   <div className="pt-1 flex items-center gap-2">
@@ -378,7 +379,7 @@ export default function DashboardPage() {
                       <Skeleton className="h-6 w-20" />
                     ) : (
                       <div className="text-base sm:text-lg font-extrabold text-[#172033] tabular-nums">
-                        {formatCurrency(totalIncome, user?.currency)}
+                        <AnimatedValue value={totalIncome} currency={user?.currency} />
                       </div>
                     )}
                     <span className="text-[11px] font-bold text-[#059669] block">
@@ -395,7 +396,7 @@ export default function DashboardPage() {
                       <Skeleton className="h-6 w-20" />
                     ) : (
                       <div className="text-base sm:text-lg font-extrabold text-[#172033] tabular-nums">
-                        {formatCurrency(totalExpense, user?.currency)}
+                        <AnimatedValue value={totalExpense} currency={user?.currency} />
                       </div>
                     )}
                     <span className="text-[11px] font-bold text-[#E11D48] block">
@@ -412,7 +413,7 @@ export default function DashboardPage() {
                       <Skeleton className="h-6 w-20" />
                     ) : (
                       <div className="text-base sm:text-lg font-extrabold text-[#172033] tabular-nums">
-                        {formatCurrency(netSavings, user?.currency)}
+                        <AnimatedValue value={netSavings} currency={user?.currency} />
                       </div>
                     )}
                     <span className="text-[11px] font-bold text-[#059669] block">

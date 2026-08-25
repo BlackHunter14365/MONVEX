@@ -31,6 +31,7 @@ import {
   useUpdateBudgetMutation,
   useDeleteBudgetMutation,
 } from '@/hooks/mutations/useBudgetMutations';
+import { AnimatedValue, CardReveal, StaggerContainer, StaggerItem } from '@/components/motion';
 
 export default function BudgetsPage() {
   const { user } = useAuth();
@@ -156,7 +157,7 @@ export default function BudgetsPage() {
           }
         />
 
-        <div className="editorial-card p-6 sm:p-7">
+        <CardReveal className="editorial-card p-6 sm:p-7">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="space-y-1.5">
               <span className="swiss-eyebrow">Total allocated</span>
@@ -164,7 +165,7 @@ export default function BudgetsPage() {
                 <Skeleton className="h-8 w-28" />
               ) : (
                 <div className="swiss-metric text-2xl text-[#172033]">
-                  {formatCurrency(totalAllocated, user?.currency)}
+                  <AnimatedValue value={totalAllocated} currency={user?.currency} />
                 </div>
               )}
               <span className="text-[11px] font-semibold text-[#858D9A] block">Monthly target limit</span>
@@ -176,7 +177,7 @@ export default function BudgetsPage() {
                 <Skeleton className="h-8 w-28" />
               ) : (
                 <div className="swiss-metric text-2xl text-[#E11D48]">
-                  {formatCurrency(totalSpent, user?.currency)}
+                  <AnimatedValue value={totalSpent} currency={user?.currency} />
                 </div>
               )}
               <span className="text-[11px] font-bold text-[#E11D48] block">
@@ -190,7 +191,7 @@ export default function BudgetsPage() {
                 <Skeleton className="h-8 w-28" />
               ) : (
                 <div className="swiss-metric text-2xl text-[#059669]">
-                  {formatCurrency(totalRemaining, user?.currency)}
+                  <AnimatedValue value={totalRemaining} currency={user?.currency} />
                 </div>
               )}
               <span className="text-[11px] font-bold text-[#059669] block">
@@ -198,7 +199,7 @@ export default function BudgetsPage() {
               </span>
             </div>
           </div>
-        </div>
+        </CardReveal>
 
         {/* Budget Category Cards Grid */}
         <div>
@@ -217,7 +218,7 @@ export default function BudgetsPage() {
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {budgets.map((b: any) => {
+              {budgets.map((b: any, bIdx: number) => {
                 const spent = parseFloat(b.spent_amount ?? b.current_spent) || 0;
                 const limit = parseFloat(b.limit_amount ?? b.amount) || 1;
                 const pct = Math.min(100, Math.round((spent / limit) * 100));
@@ -228,7 +229,12 @@ export default function BudgetsPage() {
                 const Icon = catStyles.icon;
 
                 return (
-                  <div key={b.id} className="editorial-card p-5 sm:p-6 space-y-4 flex flex-col justify-between">
+                  <CardReveal
+                    key={b.id}
+                    index={bIdx}
+                    hoverLift={true}
+                    className="editorial-card p-5 sm:p-6 space-y-4 flex flex-col justify-between"
+                  >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
@@ -308,7 +314,7 @@ export default function BudgetsPage() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </CardReveal>
                 );
               })}
             </div>

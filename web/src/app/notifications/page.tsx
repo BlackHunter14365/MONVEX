@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/Badge';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { CardReveal } from '@/components/motion';
 
 export default function NotificationsPage() {
   const toast = useToast();

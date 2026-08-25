@@ -2,12 +2,12 @@
   "manifest_version": "1.0",
   "release_version": "v3.4.0",
   "codename": "Production-Intelligence-QA-Release-Gate",
-  "generated_at_utc": "2026-08-25T16:16:14.610691+00:00",
+  "generated_at_utc": "2026-08-25T16:42:36.412512+00:00",
   "git": {
-    "commit_hash": "e5d0fa9b2e9696f4e2cda954ada3f035015723d3",
-    "short_hash": "e5d0fa9",
+    "commit_hash": "ec8f5ec9fb6b845eb0dd337a12db7fec38bb4fd3",
+    "short_hash": "ec8f5ec",
     "branch": "master",
-    "last_commit_message": "docs(v3.5): add performance report, AI profiling, DB profiling, release validation, and migration notes"
+    "last_commit_message": "docs(v3.5): document frontend motion system and data animation standards"
   },
   "components": {
     "release_version": "v3.4.0",

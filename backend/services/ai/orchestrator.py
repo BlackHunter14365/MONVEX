@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from apps.ai_copilot.models import AIInteraction, ConversationSession, ConversationMessage
 from .gemini_client import GeminiClient
 from .tools import MONVEXTools
+from .response_builder import FinancialResponseBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +240,14 @@ class FinancialAgentOrchestrator:
         except Exception:
             pass
 
-        # 9. Record Telemetry Metrics
+        # 9. Build Structured V4 Response Blocks (Metrics, Charts, Insights, Recommendations, Actions)
+        structured_blocks = FinancialResponseBuilder.build_structured_payload(
+            intent=intent,
+            data=data_payload,
+            prompt=raw_prompt
+        )
+
+        # 10. Record Telemetry Metrics
         try:
             from services.metrics_service import metrics_collector
             metrics_collector.record_ai_turn(
@@ -263,5 +271,11 @@ class FinancialAgentOrchestrator:
             "tool_activity": tool_activity,
             "citations": citations,
             "data": data_payload,
+            "metrics": structured_blocks.get("metrics", []),
+            "charts": structured_blocks.get("charts", []),
+            "insights": structured_blocks.get("insights", []),
+            "recommendations": structured_blocks.get("recommendations", []),
+            "actions": structured_blocks.get("actions", []),
+            "warnings": structured_blocks.get("warnings", []),
             "model": ai_result.get("model", "MONVEX-AI")
         }

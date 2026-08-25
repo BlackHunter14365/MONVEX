@@ -40,10 +40,46 @@ class ChatInputSerializer(serializers.Serializer):
         return attrs
 
 class ConversationMessageSerializer(serializers.ModelSerializer):
+    metrics = serializers.SerializerMethodField()
+    charts = serializers.SerializerMethodField()
+    insights = serializers.SerializerMethodField()
+    recommendations = serializers.SerializerMethodField()
+    actions = serializers.SerializerMethodField()
+
     class Meta:
         model = ConversationMessage
-        fields = ['id', 'sender', 'content', 'intent', 'tools_used', 'tool_activity', 'citations', 'data', 'created_at']
+        fields = [
+            'id', 'sender', 'content', 'intent', 'tools_used', 'tool_activity',
+            'citations', 'data', 'metrics', 'charts', 'insights', 'recommendations', 'actions', 'created_at'
+        ]
         read_only_fields = ['id', 'created_at']
+
+    def _get_blocks(self, obj):
+        if hasattr(obj, '_cached_structured_blocks'):
+            return obj._cached_structured_blocks
+        from services.ai.response_builder import FinancialResponseBuilder
+        blocks = FinancialResponseBuilder.build_structured_payload(
+            intent=obj.intent,
+            data=obj.data or {},
+            prompt=obj.content
+        )
+        obj._cached_structured_blocks = blocks
+        return blocks
+
+    def get_metrics(self, obj):
+        return self._get_blocks(obj).get('metrics', [])
+
+    def get_charts(self, obj):
+        return self._get_blocks(obj).get('charts', [])
+
+    def get_insights(self, obj):
+        return self._get_blocks(obj).get('insights', [])
+
+    def get_recommendations(self, obj):
+        return self._get_blocks(obj).get('recommendations', [])
+
+    def get_actions(self, obj):
+        return self._get_blocks(obj).get('actions', [])
 
 class ConversationSessionSerializer(serializers.ModelSerializer):
     messages = ConversationMessageSerializer(many=True, read_only=True)

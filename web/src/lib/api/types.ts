@@ -109,6 +109,12 @@ export interface AIChatResponse {
   tool_activity: any[];
   citations: any[];
   data: any;
+  metrics?: any[];
+  charts?: any[];
+  insights?: any[];
+  recommendations?: any[];
+  actions?: any[];
+  warnings?: any[];
   model: string;
 }
 

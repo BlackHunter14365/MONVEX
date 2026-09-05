@@ -100,16 +100,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#172033] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-12">
       {/* Brand Header */}
       <div className="text-center mb-8 space-y-3">
         <Link href="/" className="inline-flex flex-col items-center gap-3 group">
           <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-xl ring-2 ring-white/80 transition-transform group-hover:scale-105">
             <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#172033]">MONVEX</span>
+          <span className="text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
         </Link>
-        <p className="text-xs text-[#5F6878] font-medium">
+        <p className="text-xs text-[#625D69] font-medium">
           Sign in to access your personal financial intelligence workspace
         </p>
       </div>
@@ -125,40 +125,40 @@ export default function LoginPage() {
 
         <form onSubmit={handleLoginSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">
+            <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">
               Username or Email
             </label>
             <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
               <input
                 type="text"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="Enter username or email"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none transition-all"
+                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">
+            <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-10 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none transition-all"
+                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-10 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#858D9A] hover:text-[#172033]"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#898390] hover:text-[#191522]"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -179,7 +179,7 @@ export default function LoginPage() {
         {/* ─── OR ─── DIVIDER */}
         <div className="relative flex items-center justify-center">
           <div className="border-t border-[#E4E2DC] w-full" />
-          <span className="bg-white px-3 text-[11px] font-bold text-[#858D9A] uppercase tracking-wider relative">
+          <span className="bg-white px-3 text-[11px] font-bold text-[#898390] uppercase tracking-wider relative">
             Or
           </span>
         </div>
@@ -194,7 +194,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <div className="pt-4 border-t border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+        <div className="pt-4 border-t border-[#E4E2DC] text-center text-xs text-[#625D69]">
           Don&apos;t have an account?{' '}
           <Link href="/register" className="font-bold text-[#2563EB] hover:underline">
             Register here

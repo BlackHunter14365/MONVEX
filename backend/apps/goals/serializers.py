@@ -65,6 +65,8 @@ class SavingsGoalSerializer(serializers.ModelSerializer):
             return round((float(obj.current_amount) / float(obj.target_amount)) * 100.0, 1)
         return 0.0
 
+from decimal import Decimal
+
 class ContributeGoalInputSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('0.01'))
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')

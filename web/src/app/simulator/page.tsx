@@ -113,7 +113,7 @@ export default function SimulatorPage() {
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
               <AnimatedValue value={simResults?.simulated?.monthly_surplus || 0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-bold block">
+            <span className="text-[11px] text-[#625D69] font-bold block">
               + {formatCurrency(simResults?.simulated?.monthly_surplus_delta || 0)} / mo vs baseline
             </span>
           </CardReveal>
@@ -123,17 +123,17 @@ export default function SimulatorPage() {
             <div className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
               <AnimatedValue value={simResults?.simulated?.savings_rate || 0} type="percentage" decimals={1} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Baseline: {simResults?.baseline?.savings_rate || 0}%
             </span>
           </CardReveal>
 
           <CardReveal index={2} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Accumulated Capital ({timeframeMonths}M)</span>
-            <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
               <AnimatedValue value={simResults?.simulated?.total_wealth_created || 0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Direct retained liquidity
             </span>
           </CardReveal>
@@ -157,7 +157,7 @@ export default function SimulatorPage() {
               <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <Sliders className="h-4 w-4 text-[#2563EB]" />
-                  <h3 className="text-sm font-black text-[#172033]">
+                  <h3 className="text-sm font-black text-[#191522]">
                     Scenario Parameters
                   </h3>
                 </div>
@@ -177,8 +177,8 @@ export default function SimulatorPage() {
                       className={cn(
                         'py-1.5 rounded-xl text-xs font-bold transition-all border',
                         timeframeMonths === m
-                          ? 'bg-[#172033] text-white border-[#172033] shadow-xs'
-                          : 'bg-white text-[#5F6878] border-[#E4E2DC] hover:border-[#172033]'
+                          ? 'bg-[#4056A1] text-white border-[#26335F] shadow-xs'
+                          : 'bg-[#F1F0EC] text-[#625D69] border-[#E4E2DC] hover:bg-[#EEEAF7] hover:text-[#191522]'
                       )}
                     >
                       {m}M
@@ -190,7 +190,7 @@ export default function SimulatorPage() {
               {/* Inflow Lever */}
               <div className="space-y-2 pt-2 border-t border-[#E4E2DC]/80">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-extrabold text-[#172033]">Monthly Income Shift</span>
+                  <span className="font-extrabold text-[#191522]">Monthly Income Shift</span>
                   <span className="font-mono font-bold text-[#059669]">
                     {incomeDelta >= 0 ? `+${formatCurrency(incomeDelta)}` : formatCurrency(incomeDelta)}
                   </span>
@@ -202,9 +202,9 @@ export default function SimulatorPage() {
                   step="2500"
                   value={incomeDelta}
                   onChange={(e) => setIncomeDelta(Number(e.target.value))}
-                  className="w-full accent-[#172033] cursor-pointer"
+                  className="w-full accent-[#4056A1] cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-[#858D9A] font-semibold">
+                <div className="flex justify-between text-[10px] text-[#898390] font-semibold">
                   <span>-₹20k (Paycut)</span>
                   <span>Baseline</span>
                   <span>+₹50k (Promotion/Raise)</span>
@@ -218,7 +218,7 @@ export default function SimulatorPage() {
                 {/* Food Cut */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#172033]">Food & Dining Cut</span>
+                    <span className="font-bold text-[#191522]">Food & Dining Cut</span>
                     <span className="font-mono font-bold text-[#E11D48]">-{foodCut}%</span>
                   </div>
                   <input
@@ -228,14 +228,14 @@ export default function SimulatorPage() {
                     step="5"
                     value={foodCut}
                     onChange={(e) => setFoodCut(Number(e.target.value))}
-                    className="w-full accent-[#172033] cursor-pointer"
+                    className="w-full accent-[#4056A1] cursor-pointer"
                   />
                 </div>
 
                 {/* Shopping Cut */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#172033]">Shopping & Lifestyle Cut</span>
+                    <span className="font-bold text-[#191522]">Shopping & Lifestyle Cut</span>
                     <span className="font-mono font-bold text-[#E11D48]">-{shoppingCut}%</span>
                   </div>
                   <input
@@ -245,14 +245,14 @@ export default function SimulatorPage() {
                     step="5"
                     value={shoppingCut}
                     onChange={(e) => setShoppingCut(Number(e.target.value))}
-                    className="w-full accent-[#172033] cursor-pointer"
+                    className="w-full accent-[#4056A1] cursor-pointer"
                   />
                 </div>
 
                 {/* Transport Cut */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#172033]">Transportation / Cabs Cut</span>
+                    <span className="font-bold text-[#191522]">Transportation / Cabs Cut</span>
                     <span className="font-mono font-bold text-[#E11D48]">-{transportCut}%</span>
                   </div>
                   <input
@@ -262,7 +262,7 @@ export default function SimulatorPage() {
                     step="5"
                     value={transportCut}
                     onChange={(e) => setTransportCut(Number(e.target.value))}
-                    className="w-full accent-[#172033] cursor-pointer"
+                    className="w-full accent-[#4056A1] cursor-pointer"
                   />
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function SimulatorPage() {
               {/* Direct Extra Savings SIP Lever */}
               <div className="space-y-2 pt-2 border-t border-[#E4E2DC]/80">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-extrabold text-[#172033]">Direct Additional Monthly SIP</span>
+                  <span className="font-extrabold text-[#191522]">Direct Additional Monthly SIP</span>
                   <span className="font-mono font-bold text-[#2563EB]">+{formatCurrency(extraSavings)}/mo</span>
                 </div>
                 <input
@@ -291,7 +291,7 @@ export default function SimulatorPage() {
             {/* Category Reductions Breakdown */}
             <div className="editorial-card p-6 rounded-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-                <h3 className="text-sm font-black text-[#172033]">
+                <h3 className="text-sm font-black text-[#191522]">
                   Monthly Category Optimization Impact
                 </h3>
                 <span className="text-xs font-mono font-bold text-[#059669]">
@@ -306,8 +306,8 @@ export default function SimulatorPage() {
                     className="p-3.5 rounded-2xl bg-white border border-[#E4E2DC] flex items-center justify-between"
                   >
                     <div>
-                      <span className="text-xs font-black text-[#172033] block">{cat.category}</span>
-                      <span className="text-[11px] text-[#5F6878] font-mono">
+                      <span className="text-xs font-black text-[#191522] block">{cat.category}</span>
+                      <span className="text-[11px] text-[#625D69] font-mono">
                         Base: {formatCurrency(cat.current_monthly_spend)}/mo • Cut: {cat.reduction_pct}%
                       </span>
                     </div>
@@ -316,7 +316,7 @@ export default function SimulatorPage() {
                       <span className="text-xs font-black text-[#059669] block">
                         +{formatCurrency(cat.monthly_saved)}/mo
                       </span>
-                      <span className="text-[10px] text-[#858D9A] font-mono">
+                      <span className="text-[10px] text-[#898390] font-mono">
                         {formatCurrency(cat.total_saved_over_horizon)} in {timeframeMonths}M
                       </span>
                     </div>
@@ -330,7 +330,7 @@ export default function SimulatorPage() {
               <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-[#059669]" />
-                  <h3 className="text-sm font-black text-[#172033]">
+                  <h3 className="text-sm font-black text-[#191522]">
                     Savings Goals Acceleration
                   </h3>
                 </div>
@@ -340,7 +340,7 @@ export default function SimulatorPage() {
               </div>
 
               {(simResults?.goal_impacts || []).length === 0 ? (
-                <div className="p-6 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+                <div className="p-6 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
                   No active savings goals found. Create a goal in the Goals section to see timeline acceleration!
                 </div>
               ) : (
@@ -351,7 +351,7 @@ export default function SimulatorPage() {
                       className="p-4 rounded-2xl bg-white border border-[#E4E2DC] space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#172033]">{g.title}</span>
+                        <span className="text-xs font-black text-[#191522]">{g.title}</span>
                         {g.months_saved > 0 ? (
                           <span className="brutalist-tag-emerald text-[10px] py-0.5 px-2">
                             ✓ {g.months_saved} Months Earlier!
@@ -363,8 +363,8 @@ export default function SimulatorPage() {
 
                       <div className="grid grid-cols-2 gap-3 pt-2 text-xs font-mono border-t border-[#E4E2DC]/60">
                         <div>
-                          <span className="text-[10px] text-[#858D9A] block uppercase font-sans">Baseline Target</span>
-                          <span className="font-bold text-[#5F6878]">{g.baseline_finish_date}</span>
+                          <span className="text-[10px] text-[#898390] block uppercase font-sans">Baseline Target</span>
+                          <span className="font-bold text-[#625D69]">{g.baseline_finish_date}</span>
                         </div>
                         <div>
                           <span className="text-[10px] text-[#059669] block uppercase font-sans font-bold">Accelerated Target</span>
@@ -378,7 +378,7 @@ export default function SimulatorPage() {
             </div>
 
             {/* Compounded Wealth Growth Summary */}
-            <div className="p-5 rounded-3xl bg-gradient-to-br from-[#172033] to-[#0F172A] text-white shadow-xl space-y-4">
+            <div className="p-5 rounded-3xl bg-gradient-to-br from-[#2A1F3D] to-[#21182F] text-white shadow-xl space-y-4">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-emerald-400" />

@@ -55,9 +55,9 @@ export const DynamicAIChart: React.FC<DynamicAIChartProps> = ({ chart }) => {
           <div className="p-1 rounded-lg bg-[#F6F5F1] border border-[#E4E2DC]">
             {getChartIcon()}
           </div>
-          <h4 className="text-xs font-bold text-[#172033] tracking-tight">{chart.title}</h4>
+          <h4 className="text-xs font-bold text-[#191522] tracking-tight">{chart.title}</h4>
         </div>
-        <span className="text-[10px] font-semibold text-[#858D9A] uppercase tracking-wider bg-[#F6F5F1] px-2 py-0.5 rounded-md border border-[#E4E2DC]">
+        <span className="text-[10px] font-semibold text-[#898390] uppercase tracking-wider bg-[#F6F5F1] px-2 py-0.5 rounded-md border border-[#E4E2DC]">
           Verified Data
         </span>
       </div>
@@ -67,8 +67,8 @@ export const DynamicAIChart: React.FC<DynamicAIChartProps> = ({ chart }) => {
 
       {/* Chart Explanation / Footer */}
       {chart.description && (
-        <div className="pt-2 border-t border-[#F1EFEA] flex items-start gap-1.5 text-[11px] text-[#5F6878] leading-normal font-medium">
-          <HelpCircle className="h-3.5 w-3.5 text-[#858D9A] shrink-0 mt-0.5" />
+        <div className="pt-2 border-t border-[#F1EFEA] flex items-start gap-1.5 text-[11px] text-[#625D69] leading-normal font-medium">
+          <HelpCircle className="h-3.5 w-3.5 text-[#898390] shrink-0 mt-0.5" />
           <span>{chart.description}</span>
         </div>
       )}

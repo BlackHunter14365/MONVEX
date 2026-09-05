@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { MOTION_DURATIONS, MOTION_EASINGS, checkReducedMotion } from '@/lib/motion';
+import { MOTION_DURATIONS, MOTION_EASINGS } from '@/lib/motion';
 
 export interface PageTransitionProps {
   children: React.ReactNode;
@@ -14,19 +14,19 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
   children,
   className,
 }) => {
-  const isReduced = checkReducedMotion();
+  const prefersReduced = useReducedMotion();
 
-  if (isReduced) {
-    return <div className={className}>{children}</div>;
+  if (prefersReduced) {
+    return <div className={cn('w-full flex-1', className)}>{children}</div>;
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 4 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 4 }}
+      exit={{ opacity: 0, y: -4 }}
       transition={{
-        duration: MOTION_DURATIONS.NORMAL,
+        duration: MOTION_DURATIONS.PAGE, // 200ms
         ease: MOTION_EASINGS.PRIMARY,
       }}
       className={cn('w-full flex-1', className)}

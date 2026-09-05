@@ -330,7 +330,7 @@ export default function SettingsPage() {
               size="sm"
               isLoading={isSaving}
               leftIcon={<Save className="h-3.5 w-3.5" />}
-              className="bg-[#172033] hover:bg-[#0F172A] text-white shadow-md font-bold"
+              className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-md font-bold"
             >
               Save changes
             </Button>
@@ -350,11 +350,11 @@ export default function SettingsPage() {
                 className={cn(
                   'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
                   isActive
-                    ? 'bg-[#172033] text-white shadow-sm'
-                    : 'text-[#5F6878] hover:text-[#172033] hover:bg-white/60'
+                    ? 'bg-[#E9EDFA] text-[#26335F] border border-[#7184C4]/35 font-bold shadow-xs'
+                    : 'text-[#625D69] hover:text-[#191522] hover:bg-white/60'
                 )}
               >
-                <Icon className={cn('h-3.5 w-3.5', isActive ? 'text-white' : 'text-[#858D9A]')} />
+                <Icon className={cn('h-3.5 w-3.5', isActive ? 'text-white' : 'text-[#898390]')} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -370,7 +370,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-4">
                   {/* Active Profile Photo Surface */}
                   <div className="relative group shrink-0">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden bg-[#172033] text-white text-xl font-black shadow-lg border-2 border-white ring-2 ring-slate-900/10">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden bg-[#2A1F3D] text-white text-xl font-black shadow-lg border-2 border-white ring-2 ring-slate-900/10">
                       {avatarImage ? (
                         <img src={avatarImage} alt={fullName} className="h-full w-full object-cover" />
                       ) : selectedPreset ? (
@@ -390,7 +390,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-[#172033] text-white shadow-md hover:bg-[#2563EB] transition-all hover:scale-110"
+                      className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-[#2A1F3D] text-white shadow-md hover:bg-[#2563EB] transition-all hover:scale-110"
                       title="Upload Photo"
                     >
                       <Camera className="h-3 w-3" />
@@ -407,12 +407,12 @@ export default function SettingsPage() {
 
                   {/* Name & Identity */}
                   <div>
-                    <h3 className="text-base font-extrabold text-[#172033] flex items-center gap-2">
+                    <h3 className="text-base font-extrabold text-[#191522] flex items-center gap-2">
                       <span>{fullName}</span>
-                      <span className="text-xs text-[#858D9A] font-medium font-mono">(@{user?.username})</span>
+                      <span className="text-xs text-[#898390] font-medium font-mono">(@{user?.username})</span>
                     </h3>
-                    <span className="text-xs text-[#5F6878] font-medium block">{user?.email}</span>
-                    <span className="text-[11px] text-[#858D9A] italic block mt-0.5">{bio}</span>
+                    <span className="text-xs text-[#625D69] font-medium block">{user?.email}</span>
+                    <span className="text-[11px] text-[#898390] italic block mt-0.5">{bio}</span>
                   </div>
                 </div>
 
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                         className={cn(
                           'p-2.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1',
                           isSel
-                            ? 'border-[#172033] bg-[#172033]/5 ring-2 ring-[#172033]/20 shadow-sm'
+                            ? 'border-[#4056A1] bg-[#E9EDFA] ring-2 ring-[#4056A1]/25 shadow-sm'
                             : 'border-[#E4E2DC] bg-white hover:border-[#858D9A]'
                         )}
                       >
@@ -470,7 +470,7 @@ export default function SettingsPage() {
                         >
                           {p.emoji}
                         </div>
-                        <span className="text-[10px] font-bold text-[#172033] truncate max-w-full">
+                        <span className="text-[10px] font-bold text-[#191522] truncate max-w-full">
                           {p.label}
                         </span>
                       </button>
@@ -488,7 +488,7 @@ export default function SettingsPage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Enter first name"
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   />
                 </div>
                 <div>
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Enter last name"
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   />
                 </div>
                 <div>
@@ -508,12 +508,12 @@ export default function SettingsPage() {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   />
                 </div>
                 <div>
                   <label className="swiss-eyebrow mb-1.5 block">Account Level & Tier</label>
-                  <div className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] flex items-center justify-between">
+                  <div className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] flex items-center justify-between">
                     <span>MONVEX Enterprise / Individual</span>
                     <Badge variant="neutral" size="sm">Tier 1</Badge>
                   </div>
@@ -527,7 +527,7 @@ export default function SettingsPage() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="e.g. Financial Freedom Builder • Portfolio Target ₹1 Cr"
-                  className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                  className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                 />
               </div>
 
@@ -538,7 +538,7 @@ export default function SettingsPage() {
                   size="sm"
                   isLoading={isSaving}
                   leftIcon={<Save className="h-3.5 w-3.5" />}
-                  className="bg-[#172033] hover:bg-[#0F172A] text-white shadow-md font-bold px-6"
+                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-md font-bold px-6"
                 >
                   Save Profile Changes
                 </Button>
@@ -552,8 +552,8 @@ export default function SettingsPage() {
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="editorial-card p-6 sm:p-7 space-y-6">
               <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#172033]">Core Monetary Framework</h3>
-                <p className="text-xs text-[#5F6878] mt-0.5">
+                <h3 className="text-sm font-bold text-[#191522]">Core Monetary Framework</h3>
+                <p className="text-xs text-[#625D69] mt-0.5">
                   Set baseline monthly inflow, reporting denomination, and fiscal month boundaries.
                 </p>
               </div>
@@ -564,7 +564,7 @@ export default function SettingsPage() {
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="INR">INR (₹) - Indian Rupee</option>
                     <option value="USD">USD ($) - US Dollar</option>
@@ -582,9 +582,9 @@ export default function SettingsPage() {
                       type="number"
                       value={monthlyIncome}
                       onChange={(e) => setMonthlyIncome(e.target.value)}
-                      className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] pl-8 pr-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                      className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] pl-8 pr-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                     />
-                    <span className="absolute left-3 top-2.5 text-xs font-bold text-[#858D9A]">
+                    <span className="absolute left-3 top-2.5 text-xs font-bold text-[#898390]">
                       {currency === 'INR' ? '₹' : '$'}
                     </span>
                   </div>
@@ -601,9 +601,9 @@ export default function SettingsPage() {
                     step="1"
                     value={savingsTarget}
                     onChange={(e) => setSavingsTarget(e.target.value)}
-                    className="w-full accent-[#172033] cursor-pointer"
+                    className="w-full accent-[#4056A1] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-[#858D9A] font-semibold mt-1">
+                  <div className="flex justify-between text-[10px] text-[#898390] font-semibold mt-1">
                     <span>5% (Lean)</span>
                     <span>25% (Recommended)</span>
                     <span>60% (Aggressive FIRE)</span>
@@ -615,7 +615,7 @@ export default function SettingsPage() {
                   <select
                     value={fiscalStartDay}
                     onChange={(e) => setFiscalStartDay(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="1">1st of Month (Standard Calendar)</option>
                     <option value="5">5th of Month</option>
@@ -633,8 +633,8 @@ export default function SettingsPage() {
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="editorial-card p-6 sm:p-7 space-y-6">
               <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#172033]">Real-Time Telemetry Triggers</h3>
-                <p className="text-xs text-[#5F6878] mt-0.5">
+                <h3 className="text-sm font-bold text-[#191522]">Real-Time Telemetry Triggers</h3>
+                <p className="text-xs text-[#625D69] mt-0.5">
                   Control which mathematical deviations and threshold warnings trigger UI alerts.
                 </p>
               </div>
@@ -642,8 +642,8 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#172033] block">Statistical Outlier Anomaly Detection</span>
-                    <span className="text-[11px] text-[#5F6878]">
+                    <span className="text-xs font-extrabold text-[#191522] block">Statistical Outlier Anomaly Detection</span>
+                    <span className="text-[11px] text-[#625D69]">
                       Alert when a single expense exceeds 2.5 standard deviations from the 90-day category mean.
                     </span>
                   </div>
@@ -651,14 +651,14 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifAnomaly}
                     onChange={(e) => setNotifAnomaly(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#172033]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#172033] block">80% Budget Velocity Warning</span>
-                    <span className="text-[11px] text-[#5F6878]">
+                    <span className="text-xs font-extrabold text-[#191522] block">80% Budget Velocity Warning</span>
+                    <span className="text-[11px] text-[#625D69]">
                       Send alert when category spending reaches 80% with more than 10 days remaining in the billing cycle.
                     </span>
                   </div>
@@ -666,14 +666,14 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifBudget80}
                     onChange={(e) => setNotifBudget80(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#172033]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#172033] block">Savings Goal Milestone Celebrations</span>
-                    <span className="text-[11px] text-[#5F6878]">
+                    <span className="text-xs font-extrabold text-[#191522] block">Savings Goal Milestone Celebrations</span>
+                    <span className="text-[11px] text-[#625D69]">
                       Display milestone confirmations at 25%, 50%, 75%, and 100% savings goal completion.
                     </span>
                   </div>
@@ -681,14 +681,14 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifGoalMilestone}
                     onChange={(e) => setNotifGoalMilestone(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#172033]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#172033] block">Weekly Digest Email</span>
-                    <span className="text-[11px] text-[#5F6878]">
+                    <span className="text-xs font-extrabold text-[#191522] block">Weekly Digest Email</span>
+                    <span className="text-[11px] text-[#625D69]">
                       Receive an encrypted Sunday morning summary of weekly cash velocity and top expenses.
                     </span>
                   </div>
@@ -696,7 +696,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifWeeklyDigest}
                     onChange={(e) => setNotifWeeklyDigest(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#172033]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
                   />
                 </div>
               </div>
@@ -709,8 +709,8 @@ export default function SettingsPage() {
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="editorial-card p-6 sm:p-7 space-y-6">
               <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#172033]">Autonomous Reasoner Model Parameters</h3>
-                <p className="text-xs text-[#5F6878] mt-0.5">
+                <h3 className="text-sm font-bold text-[#191522]">Autonomous Reasoner Model Parameters</h3>
+                <p className="text-xs text-[#625D69] mt-0.5">
                   Tune the risk tolerance, speech dialect, and auto-tagging algorithms for the AI assistant.
                 </p>
               </div>
@@ -721,7 +721,7 @@ export default function SettingsPage() {
                   <select
                     value={aiEmergencyBuffer}
                     onChange={(e) => setAiEmergencyBuffer(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="2.0">2.0x Monthly Expenses (Lean)</option>
                     <option value="2.5">2.5x Monthly Expenses (Standard)</option>
@@ -735,7 +735,7 @@ export default function SettingsPage() {
                   <select
                     value={voiceLang}
                     onChange={(e) => setVoiceLang(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="en-IN">English (India - en-IN)</option>
                     <option value="en-US">English (United States - en-US)</option>
@@ -746,8 +746,8 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
                 <div>
-                  <span className="text-xs font-extrabold text-[#172033] block">Automatic Category Normalization</span>
-                  <span className="text-[11px] text-[#5F6878]">
+                  <span className="text-xs font-extrabold text-[#191522] block">Automatic Category Normalization</span>
+                  <span className="text-[11px] text-[#625D69]">
                     Allow the AI parser to automatically map unknown merchant names (e.g. Swiggy, Uber) to standard categories.
                   </span>
                 </div>
@@ -755,7 +755,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={aiAutoCategorize}
                   onChange={(e) => setAiAutoCategorize(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E4E2DC] accent-[#172033]"
+                  className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
                 />
               </div>
             </div>
@@ -766,7 +766,7 @@ export default function SettingsPage() {
         {activeTab === 'security' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             {/* Cyber Defense Center Gateway Card */}
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-[#172033] to-[#0F172A] text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-[#2A1F3D] to-[#21182F] text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center font-bold shrink-0">
                   <ShieldCheck className="h-5 w-5" />
@@ -786,7 +786,7 @@ export default function SettingsPage() {
 
               <a
                 href="/security"
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white text-[#172033] hover:bg-[#F6F5F1] text-xs font-bold shadow-md transition-all shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white text-[#191522] hover:bg-[#F6F5F1] text-xs font-bold shadow-md transition-all shrink-0"
               >
                 <span>Open Defense Center</span>
                 <span className="text-xs">➔</span>
@@ -795,8 +795,8 @@ export default function SettingsPage() {
 
             <div className="editorial-card p-6 sm:p-7 space-y-6">
               <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#172033]">Enterprise Access & Session Controls</h3>
-                <p className="text-xs text-[#5F6878] mt-0.5">
+                <h3 className="text-sm font-bold text-[#191522]">Enterprise Access & Session Controls</h3>
+                <p className="text-xs text-[#625D69] mt-0.5">
                   Manage active browser sessions, inactivity timeouts, and two-factor challenge enforcement.
                 </p>
               </div>
@@ -807,7 +807,7 @@ export default function SettingsPage() {
                   <select
                     value={sessionTimeout}
                     onChange={(e) => setSessionTimeout(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="15">15 Minutes (Strict)</option>
                     <option value="60">60 Minutes (Standard)</option>
@@ -818,14 +818,14 @@ export default function SettingsPage() {
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#172033] block">6-Digit OTP Security Challenge</span>
-                    <span className="text-[11px] text-[#5F6878]">Require email OTP on new device sign-ins.</span>
+                    <span className="text-xs font-extrabold text-[#191522] block">6-Digit OTP Security Challenge</span>
+                    <span className="text-[11px] text-[#625D69]">Require email OTP on new device sign-ins.</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={requireOtpLogin}
                     onChange={(e) => setRequireOtpLogin(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#172033]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
                   />
                 </div>
               </div>
@@ -836,12 +836,12 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="p-4 rounded-xl bg-white/80 border border-[#E4E2DC] flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-[#F6F5F1] text-[#172033] flex items-center justify-center font-bold">
+                      <div className="h-8 w-8 rounded-lg bg-[#F6F5F1] text-[#191522] flex items-center justify-center font-bold">
                         <Lock className="h-4 w-4" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-[#172033] block">Password Authentication</span>
-                        <span className="text-[11px] text-[#5F6878]">Standard email/username + password</span>
+                        <span className="text-xs font-bold text-[#191522] block">Password Authentication</span>
+                        <span className="text-[11px] text-[#625D69]">Standard email/username + password</span>
                       </div>
                     </div>
                     {user?.has_password_auth !== false ? (
@@ -862,8 +862,8 @@ export default function SettingsPage() {
                         </svg>
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-[#172033] block">Google Sign-In</span>
-                        <span className="text-[11px] text-[#5F6878]">Federated Google Identity</span>
+                        <span className="text-xs font-bold text-[#191522] block">Google Sign-In</span>
+                        <span className="text-[11px] text-[#625D69]">Federated Google Identity</span>
                       </div>
                     </div>
                     {user?.has_google_auth ? (
@@ -895,8 +895,8 @@ export default function SettingsPage() {
                         PC
                       </div>
                       <div>
-                        <span className="font-bold text-[#172033] block">Windows 11 • Chrome 124 (Current Session)</span>
-                        <span className="text-[10px] text-[#858D9A]">IP: 127.0.0.1 • Location: India • Active Now</span>
+                        <span className="font-bold text-[#191522] block">Windows 11 • Chrome 124 (Current Session)</span>
+                        <span className="text-[10px] text-[#898390]">IP: 127.0.0.1 • Location: India • Active Now</span>
                       </div>
                     </div>
                     <Badge variant="success" size="sm">Current</Badge>
@@ -912,19 +912,19 @@ export default function SettingsPage() {
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="editorial-card p-6 sm:p-7 space-y-6">
               <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#172033]">Data Portability & Encrypted Archives</h3>
-                <p className="text-xs text-[#5F6878] mt-0.5">
+                <h3 className="text-sm font-bold text-[#191522]">Data Portability & Encrypted Archives</h3>
+                <p className="text-xs text-[#625D69] mt-0.5">
                   Export complete transaction ledgers in open JSON and CSV spreadsheet formats.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-5 rounded-2xl bg-white/80 border border-[#E4E2DC] space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#172033]">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#191522]">
                     <Download className="h-4 w-4 text-[#2563EB]" />
                     <span>Complete JSON Database Backup</span>
                   </div>
-                  <p className="text-[11px] text-[#5F6878]">
+                  <p className="text-[11px] text-[#625D69]">
                     Export every transaction, category mapping, recurring payment, and budget rule into an encrypted JSON file.
                   </p>
                   <Button
@@ -938,11 +938,11 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white/80 border border-[#E4E2DC] space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#172033]">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#191522]">
                     <Download className="h-4 w-4 text-[#059669]" />
                     <span>Spreadsheet CSV Export</span>
                   </div>
-                  <p className="text-[11px] text-[#5F6878]">
+                  <p className="text-[11px] text-[#625D69]">
                     Download a clean CSV file compatible with Microsoft Excel, Apple Numbers, and Google Sheets.
                   </p>
                   <Button

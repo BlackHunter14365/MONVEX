@@ -1,24 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Target,
   Plus,
   Plane,
   Trash2,
   AlertCircle,
-  TrendingUp,
-  DollarSign,
-  Compass,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { Modal } from '@/components/ui/Modal';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
@@ -36,7 +34,7 @@ export default function GoalsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const { data: rawGoals, isLoading } = useGoalsQuery();
+  const { data: rawGoals, isLoading, isError, refetch } = useGoalsQuery();
   const createGoalMutation = useCreateGoalMutation();
   const contributeGoalMutation = useContributeGoalMutation();
   const deleteGoalMutation = useDeleteGoalMutation();
@@ -151,7 +149,6 @@ export default function GoalsPage() {
           }
         />
 
-        {/* Overview Stat Card */}
         <CardReveal className="editorial-card p-6 sm:p-7">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="space-y-1.5">
@@ -159,15 +156,15 @@ export default function GoalsPage() {
               {isLoading ? (
                 <Skeleton className="h-8 w-28" />
               ) : (
-                <div className="swiss-metric text-2xl text-[#172033]">
+                <div className="swiss-metric text-2xl text-[#191522]">
                   <AnimatedValue value={totalTarget} currency={user?.currency} />
                 </div>
               )}
-              <span className="text-[11px] text-[#858D9A] block">Cumulative targets</span>
+              <span className="text-[11px] font-semibold text-[#898390] block">Combined goal milestones</span>
             </div>
 
             <div className="space-y-1.5">
-              <span className="swiss-eyebrow">Total accumulated</span>
+              <span className="swiss-eyebrow">Accumulated capital</span>
               {isLoading ? (
                 <Skeleton className="h-8 w-28" />
               ) : (
@@ -181,15 +178,17 @@ export default function GoalsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <span className="swiss-eyebrow">Remaining buffer</span>
+              <span className="swiss-eyebrow">Active milestones</span>
               {isLoading ? (
                 <Skeleton className="h-8 w-28" />
               ) : (
-                <div className="swiss-metric text-2xl text-[#172033]">
-                  <AnimatedValue value={Math.max(0, totalTarget - totalSaved)} currency={user?.currency} />
+                <div className="swiss-metric text-2xl text-[#26335F]">
+                  {goals.length}
                 </div>
               )}
-              <span className="text-[11px] text-[#858D9A] block">Across all active goals</span>
+              <span className="text-[11px] font-semibold text-[#898390] block">
+                Concurrent savings programs
+              </span>
             </div>
           </div>
         </CardReveal>
@@ -201,6 +200,12 @@ export default function GoalsPage() {
               <Skeleton className="h-52 w-full rounded-2xl" />
               <Skeleton className="h-52 w-full rounded-2xl" />
             </div>
+          ) : isError && goals.length === 0 ? (
+            <ErrorState
+              title="Unable to load goals"
+              description="Failed to connect to the savings milestones engine. Check your network or try again."
+              onRetry={() => refetch()}
+            />
           ) : goals.length === 0 ? (
             <EmptyState
               title="No savings goals established"
@@ -239,10 +244,10 @@ export default function GoalsPage() {
                             <Plane className="h-4 w-4" />
                           </div>
                           <div>
-                            <h3 className="text-xs font-bold text-[#172033] block leading-tight">
+                            <h3 className="text-xs font-bold text-[#191522] block leading-tight">
                               {g.title || g.name}
                             </h3>
-                            <span className="text-[11px] font-medium text-[#5F6878]">
+                            <span className="text-[11px] font-medium text-[#625D69]">
                               {formatCurrency(cur, user?.currency)} of {formatCurrency(tar, user?.currency)}
                             </span>
                           </div>
@@ -263,8 +268,8 @@ export default function GoalsPage() {
                       {/* Target Date & Required Pace */}
                       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E4E2DC] text-[11px]">
                         <div>
-                          <span className="text-[#858D9A] block">Target date</span>
-                          <span className="font-bold text-[#172033]">
+                          <span className="text-[#898390] block">Target date</span>
+                          <span className="font-bold text-[#191522]">
                             {deadline
                               ? new Date(deadline).toLocaleDateString('en-US', {
                                   month: 'short',
@@ -274,8 +279,8 @@ export default function GoalsPage() {
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#858D9A] block">Required monthly</span>
-                          <span className="font-bold text-[#172033]">
+                          <span className="text-[#898390] block">Required monthly</span>
+                          <span className="font-bold text-[#191522]">
                             {requiredMonthly
                               ? `${formatCurrency(requiredMonthly, user?.currency)}`
                               : 'Flexible'}
@@ -298,13 +303,15 @@ export default function GoalsPage() {
                         + Add funds
                       </Button>
 
-                      <button
-                        onClick={() => handleDeleteGoal(g.id)}
-                        className="text-[#858D9A] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] transition-colors"
-                        title="Delete goal"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <Tooltip content="Delete savings goal">
+                        <button
+                          onClick={() => handleDeleteGoal(g.id)}
+                          className="text-[#898390] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] transition-colors"
+                          aria-label="Delete goal"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </CardReveal>
                 );
@@ -323,27 +330,27 @@ export default function GoalsPage() {
         >
           <form onSubmit={handleCreateGoal} className="space-y-4 pt-1">
             {errorMsg && (
-              <div className="p-3 rounded-lg bg-[#FFF1F2] border border-[#FECDD3] text-[#E11D48] text-xs flex items-center gap-2">
+              <div role="alert" className="p-3 rounded-xl bg-[#FDECEF] border border-[#FECDD3] text-[#E11D48] text-xs flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1 block">Goal Name</label>
+              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Goal Name</label>
               <input
                 type="text"
                 required
                 value={goalName}
                 onChange={(e) => setGoalName(e.target.value)}
                 placeholder="e.g. Travel Fund, Emergency Buffer"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-[#5F6878] mb-1 block">Target Amount</label>
+                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Target Amount</label>
                 <input
                   type="number"
                   step="0.01"
@@ -351,30 +358,30 @@ export default function GoalsPage() {
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="50000"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-[#5F6878] mb-1 block">Starting Saved</label>
+                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Starting Saved</label>
                 <input
                   type="number"
                   step="0.01"
                   value={currentAmount}
                   onChange={(e) => setCurrentAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1 block">Target Completion Date</label>
+              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Target Completion Date</label>
               <input
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#172033] focus:border-[#172033] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-medium text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
             </div>
 
@@ -399,7 +406,7 @@ export default function GoalsPage() {
         >
           <form onSubmit={handleContribute} className="space-y-4 pt-1">
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1 block">Contribution Amount</label>
+              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Contribution Amount</label>
               <input
                 type="number"
                 step="0.01"
@@ -407,7 +414,7 @@ export default function GoalsPage() {
                 value={contributeAmount}
                 onChange={(e) => setContributeAmount(e.target.value)}
                 placeholder="e.g. 5000"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
             </div>
 

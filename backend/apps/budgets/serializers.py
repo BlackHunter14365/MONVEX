@@ -61,10 +61,10 @@ class BudgetSerializer(serializers.ModelSerializer):
                 if cat:
                     ret['category'] = cat
 
-        if 'category' not in ret:
+        if not self.partial and 'category' not in ret:
             raise serializers.ValidationError({"category": "Category or category_name is required."})
 
-        if 'limit_amount' not in ret:
+        if not self.partial and 'limit_amount' not in ret:
             raise serializers.ValidationError({"limit_amount": "Limit amount is required."})
 
         return ret

@@ -117,7 +117,7 @@ export default function SubscriptionsPage() {
                 size="sm"
                 onClick={() => setIsAddOpen(true)}
                 leftIcon={<Plus className="h-3.5 w-3.5" />}
-                className="bg-[#172033] hover:bg-[#0F172A] text-white text-xs font-bold shadow-md"
+                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
               >
                 Add Subscription
               </Button>
@@ -129,10 +129,10 @@ export default function SubscriptionsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Monthly Recurring Burn</span>
-            <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
               <AnimatedValue value={totalMonthly} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Fixed commitments per month
             </span>
           </CardReveal>
@@ -142,7 +142,7 @@ export default function SubscriptionsPage() {
             <div className="text-xl sm:text-2xl font-black text-[#E11D48] tracking-tight">
               <AnimatedValue value={totalAnnual} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               12-month projected drain
             </span>
           </CardReveal>
@@ -162,7 +162,7 @@ export default function SubscriptionsPage() {
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
               <AnimatedValue value={totalMonthly * 0.25} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               By pruning unused services
             </span>
           </CardReveal>
@@ -171,16 +171,16 @@ export default function SubscriptionsPage() {
         {/* SUBSCRIPTIONS GRID */}
         <div className="editorial-card p-6 rounded-2xl space-y-4">
           <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-            <h3 className="text-sm font-black text-[#172033]">
+            <h3 className="text-sm font-black text-[#191522]">
               Active Recurring Services & Fixed Bills
             </h3>
-            <span className="text-xs font-mono font-bold text-[#5F6878]">
+            <span className="text-xs font-mono font-bold text-[#625D69]">
               {subscriptions.length} Tracked
             </span>
           </div>
 
           {subscriptions.length === 0 ? (
-            <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+            <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
               No recurring payments recorded. Click "Add Subscription" to track Netflix, Spotify, Rent, or Wi-Fi.
             </div>
           ) : (
@@ -188,22 +188,22 @@ export default function SubscriptionsPage() {
               {subscriptions.map((sub) => (
                 <div
                   key={sub.id}
-                  className="editorial-card p-5 rounded-xl space-y-3 flex flex-col justify-between hover:border-[#172033]/40 transition-all shadow-subtle"
+                  className="editorial-card p-5 rounded-xl space-y-3 flex flex-col justify-between hover:border-[#4056A1]/40 transition-all shadow-subtle"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-xl bg-[#172033] text-white flex items-center justify-center font-bold">
+                      <div className="h-9 w-9 rounded-xl bg-[#2A1F3D] text-white flex items-center justify-center font-bold">
                         <Repeat className="h-4 w-4 text-emerald-400" />
                       </div>
                       <div>
-                        <span className="text-xs font-black text-[#172033] block">{sub.name}</span>
-                        <span className="text-[10px] text-[#858D9A] font-mono">{sub.frequency}</span>
+                        <span className="text-xs font-black text-[#191522] block">{sub.name}</span>
+                        <span className="text-[10px] text-[#898390] font-mono">{sub.frequency}</span>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleDelete(sub.id)}
-                      className="text-[#858D9A] hover:text-[#E11D48] p-1 transition-all"
+                      className="text-[#898390] hover:text-[#E11D48] p-1 transition-all"
                       title="Remove subscription"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -212,13 +212,13 @@ export default function SubscriptionsPage() {
 
                   <div className="pt-2 border-t border-[#E4E2DC]/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-[#858D9A] block uppercase font-mono font-bold">Next Due</span>
-                      <span className="text-xs font-bold text-[#172033]">{sub.next_due_date || 'Upcoming'}</span>
+                      <span className="text-[10px] text-[#898390] block uppercase font-mono font-bold">Next Due</span>
+                      <span className="text-xs font-bold text-[#191522]">{sub.next_due_date || 'Upcoming'}</span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] text-[#858D9A] block uppercase font-mono font-bold">Amount</span>
-                      <span className="text-sm font-mono font-black text-[#172033]">
+                      <span className="text-[10px] text-[#898390] block uppercase font-mono font-bold">Amount</span>
+                      <span className="text-sm font-mono font-black text-[#191522]">
                         {formatCurrency(sub.amount)}
                       </span>
                     </div>
@@ -245,7 +245,7 @@ export default function SubscriptionsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
@@ -258,7 +258,7 @@ export default function SubscriptionsPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   required
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function SubscriptionsPage() {
                 <select
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 >
                   <option value="MONTHLY">Monthly</option>
                   <option value="YEARLY">Yearly / Annual</option>
@@ -284,7 +284,7 @@ export default function SubscriptionsPage() {
                 value={nextDueDate}
                 onChange={(e) => setNextDueDate(e.target.value)}
                 required
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 

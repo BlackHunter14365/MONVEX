@@ -7,28 +7,31 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://monvex-backe
 export class HttpClient {
   public getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('monvex_access_token');
+    return sessionStorage.getItem('monvex_access_token');
   }
 
   public setAccessToken(token: string) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('monvex_access_token', token);
+      sessionStorage.setItem('monvex_access_token', token);
     }
   }
 
   public setTokens(access: string, refresh: string) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('monvex_access_token', access);
-      localStorage.setItem('monvex_refresh_token', refresh);
+      sessionStorage.setItem('monvex_access_token', access);
+      sessionStorage.setItem('monvex_refresh_token', refresh);
+      // Clean up any legacy persistent tokens
+      localStorage.removeItem('monvex_access_token');
+      localStorage.removeItem('monvex_refresh_token');
     }
   }
 
   public clearTokens() {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('monvex_access_token');
-      localStorage.removeItem('monvex_refresh_token');
       sessionStorage.removeItem('monvex_access_token');
       sessionStorage.removeItem('monvex_refresh_token');
+      localStorage.removeItem('monvex_access_token');
+      localStorage.removeItem('monvex_refresh_token');
     }
   }
 

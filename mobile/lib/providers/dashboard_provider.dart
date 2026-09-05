@@ -3,6 +3,7 @@ import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../models/transaction.dart';
 import '../models/health_score.dart';
+import 'auth_provider.dart';
 
 class DashboardProvider extends ChangeNotifier {
   Map<String, dynamic>? _rawMetrics;
@@ -21,6 +22,25 @@ class DashboardProvider extends ChangeNotifier {
   double get monthlyExpense => (_rawMetrics?['monthly_expense'] as num?)?.toDouble() ?? 0.0;
   double get netWorth => (_rawMetrics?['net_worth'] as num?)?.toDouble() ?? (monthlyIncome - monthlyExpense);
   double get cashFlow => (_rawMetrics?['net_balance'] as num?)?.toDouble() ?? (monthlyIncome - monthlyExpense);
+
+  DashboardProvider() {
+    AuthProvider.registerLogoutCallback(resetState);
+  }
+
+  @override
+  void dispose() {
+    AuthProvider.unregisterLogoutCallback(resetState);
+    super.dispose();
+  }
+
+  void resetState() {
+    _rawMetrics = null;
+    _healthScore = null;
+    _recentTransactions = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   Future<void> fetchDashboard() async {
     _isLoading = true;
@@ -47,6 +67,32 @@ class DashboardProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>?> checkImpulseBuy({
+    required double amount,
+    required String category,
+    String? description,
+  }) async {
+    try {
+      final payload = <String, dynamic>{
+        'amount': amount,
+        'category': category,
+      };
+      if (description != null && description.isNotEmpty) {
+        payload['description'] = description;
+      }
+
+      final res = await ApiClient.post(ApiEndpoints.impulseBuyCheck, payload);
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+      return null;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return null;
     }
   }
 }

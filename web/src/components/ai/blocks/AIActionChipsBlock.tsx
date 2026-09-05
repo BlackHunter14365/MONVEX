@@ -56,7 +56,7 @@ export const AIActionChipsBlock: React.FC<Props> = ({ actions, onActionClick, di
 
   return (
     <div className="pt-2 my-2 space-y-1.5">
-      <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider block">
+      <span className="text-[10px] font-bold text-[#898390] uppercase tracking-wider block">
         Suggested Next Inquiries
       </span>
       <div className="flex flex-wrap gap-2">
@@ -66,11 +66,11 @@ export const AIActionChipsBlock: React.FC<Props> = ({ actions, onActionClick, di
             type="button"
             disabled={disabled}
             onClick={() => onActionClick(act.prompt)}
-            className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFFFF] hover:bg-[#F6F5F1] border border-[#E4E2DC] hover:border-[#172033]/30 text-xs font-semibold text-[#172033] shadow-2xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EEEAF7] hover:bg-[#E9EDFA] border border-[#625477]/20 hover:border-[#7184C4]/35 text-xs font-semibold text-[#191522] shadow-2xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
           >
             {renderIcon(act.icon)}
             <span>{act.label}</span>
-            <ArrowUpRight className="h-3 w-3 text-[#858D9A] group-hover:text-[#172033] transition-colors" />
+            <ArrowUpRight className="h-3 w-3 text-[#898390] group-hover:text-[#191522] transition-colors" />
           </button>
         ))}
       </div>

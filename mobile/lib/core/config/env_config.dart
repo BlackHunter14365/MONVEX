@@ -11,7 +11,7 @@ class EnvConfig {
   /// Production HTTPS endpoint
   static const String _prodUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://api.monvex.app/api/v1',
+    defaultValue: 'https://monvex-backend.onrender.com/api/v1',
   );
 
   /// Active environment mode: 'emulator' | 'lan' | 'production'

@@ -9,11 +9,44 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        /* MONVEX Reference Design Palette */
+        /* MONVEX Multi-Family Color Architecture */
+        plum: {
+          deep: '#2A1F3D',
+          rich: '#3B2D54',
+          soft: '#625477',
+          lavender: '#EEEAF7',
+          light: '#F6F3FA',
+        },
+        indigo: {
+          deep: '#26335F',
+          medium: '#4056A1',
+          soft: '#7184C4',
+          tint: '#E9EDFA',
+        },
+        cyan: {
+          bright: '#06B6D4',
+          soft: '#DDF7FA',
+        },
+        tint: {
+          lavender: '#EEEAF7',
+          plum: '#F6F3FA',
+          indigo: '#E9EDFA',
+          cyan: '#DDF7FA',
+          emerald: '#E8F7F1',
+          amber: '#FFF4DF',
+          rose: '#FDECEF',
+        },
+        'dark-surface': {
+          brand: '#2A1F3D',
+          indigo: '#26335F',
+          plum: '#33264A',
+          pressed: '#21182F',
+        },
         background: 'var(--mx-background)',
         sidebar: 'var(--mx-sidebar)',
         surface: {
           DEFAULT: 'var(--mx-surface)',
+          pure: 'var(--mx-surface-pure)',
           subtle: 'var(--mx-surface-subtle)',
           muted: 'var(--mx-surface-muted)',
           raised: 'var(--mx-surface-raised)',
@@ -35,16 +68,27 @@ module.exports = {
           DEFAULT: 'var(--mx-border)',
           strong: 'var(--mx-border-strong)',
           interactive: 'var(--mx-border-interactive)',
+          'plum-soft': 'var(--mx-border-plum-soft)',
+          'indigo-soft': 'var(--mx-border-indigo-soft)',
+          'cyan-soft': 'var(--mx-border-cyan-soft)',
         },
         accent: {
           DEFAULT: 'var(--mx-accent)',
           hover: 'var(--mx-accent-hover)',
+          active: 'var(--mx-accent-active)',
           soft: 'var(--mx-accent-soft)',
           blue: 'var(--mx-brand-blue)',
           'blue-soft': 'var(--mx-brand-blue-soft)',
         },
         brand: {
-          DEFAULT: '#172033',
+          DEFAULT: 'var(--mx-brand-primary)',
+          primary: 'var(--mx-brand-primary)',
+          hover: 'var(--mx-brand-primary-hover)',
+          active: 'var(--mx-brand-primary-active)',
+          surface: 'var(--mx-brand-surface)',
+          elevated: 'var(--mx-brand-surface-elevated)',
+          muted: 'var(--mx-brand-surface-muted)',
+          border: 'var(--mx-brand-border)',
           blue: '#2563EB',
           'blue-hover': '#1D4ED8',
         },

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
   ArrowRight,
@@ -44,6 +45,14 @@ import { Badge } from '@/components/ui/Badge';
 import { ContactModal } from '@/components/landing/ContactModal';
 import { AboutSection } from '@/components/landing/AboutSection';
 import { isTauri } from '@/lib/tauriBridge';
+import {
+  MotionCard,
+  CardReveal,
+  StaggerContainer,
+  StaggerItem,
+  AnimatedValue,
+} from '@/components/motion';
+import { MOTION_DURATIONS, MOTION_EASINGS } from '@/lib/motion';
 
 export default function LandingPage() {
   const windowsDownloadUrl =
@@ -85,7 +94,6 @@ export default function LandingPage() {
   // 1. What-If Simulator State
   const [selectedCategory, setSelectedCategory] = useState<'dining' | 'shopping' | 'subs' | 'travel'>('dining');
   const [reductionPct, setReductionPct] = useState(30);
-
 
   const categoryPresets = {
     dining: { name: 'Food & Dining', baseline: 20000, desc: 'Restaurants, delivery apps, cafes' },
@@ -199,9 +207,14 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F7F4] text-[#172033] flex flex-col selection:bg-[#172033] selection:text-white relative">
+    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col selection:bg-[#4056A1] selection:text-white relative">
       {/* ─── STICKY NAVBAR ───────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#E5E7EB] bg-[#F7F7F4]/90 backdrop-blur-md">
+      <motion.header
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: MOTION_EASINGS.PRIMARY }}
+        className="sticky top-0 z-50 w-full border-b border-[#E4E2DC] bg-[#F6F5F1]/90 backdrop-blur-md"
+      >
         <div className="mx-auto flex h-16 max-w-[1600px] w-full items-center justify-between px-4 sm:px-6 lg:px-12">
           {/* Brand Identity */}
           <Link href="/" className="flex items-center gap-3 group shrink-0">
@@ -209,30 +222,30 @@ export default function LandingPage() {
               <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black tracking-tight text-[#172033] leading-none">
+              <span className="text-sm font-black tracking-tight text-[#191522] leading-none">
                 MONVEX
               </span>
-              <span className="text-[9px] font-bold tracking-wider text-[#858D9A] uppercase mt-0.5">
+              <span className="text-[9px] font-bold tracking-wider text-[#898390] uppercase mt-0.5">
                 Financial Intelligence
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-5 lg:gap-8 text-xs font-semibold text-[#5F6878]">
-            <a href="#core-loop" className="hover:text-[#172033] transition-colors whitespace-nowrap">
+          <nav className="hidden md:flex items-center gap-5 lg:gap-8 text-xs font-semibold text-[#625D69]">
+            <a href="#core-loop" className="hover:text-[#191522] transition-colors whitespace-nowrap">
               Core Architecture
             </a>
-            <a href="#simulator" className="hover:text-[#172033] transition-colors whitespace-nowrap">
+            <a href="#simulator" className="hover:text-[#191522] transition-colors whitespace-nowrap">
               What-If Simulator
             </a>
-            <a href="#intelligence" className="hover:text-[#172033] transition-colors whitespace-nowrap">
+            <a href="#intelligence" className="hover:text-[#191522] transition-colors whitespace-nowrap">
               Intelligence System
             </a>
-            <a href="#desktop" className="hover:text-[#172033] transition-colors whitespace-nowrap">
+            <a href="#desktop" className="hover:text-[#191522] transition-colors whitespace-nowrap">
               {detectedPlatform === 'android' ? 'Android App' : isNativeDesktop ? 'Desktop Specs' : 'Windows App'}
             </a>
-            <a href="#about" className="hover:text-[#172033] transition-colors whitespace-nowrap">
+            <a href="#about" className="hover:text-[#191522] transition-colors whitespace-nowrap">
               About
             </a>
           </nav>
@@ -242,23 +255,29 @@ export default function LandingPage() {
             <button
               type="button"
               onClick={() => setIsContactOpen(true)}
-              className="text-xs font-bold text-[#5F6878] hover:text-[#172033] px-3 py-1.5 transition-colors cursor-pointer"
+              className="text-xs font-bold text-[#625D69] hover:text-[#191522] px-3 py-1.5 transition-colors cursor-pointer"
             >
               Contact Me
             </button>
             <Link
               href="/login"
-              className="text-xs font-bold text-[#5F6878] hover:text-[#172033] px-3 py-1.5 transition-colors"
+              className="text-xs font-bold text-[#625D69] hover:text-[#191522] px-3 py-1.5 transition-colors"
             >
               Sign In
             </Link>
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 rounded-xl bg-[#172033] hover:bg-[#0F172A] px-4 py-2 text-xs font-bold text-white shadow-xs transition-all active:translate-y-[1px]"
+            <motion.div
+              whileHover={{ scale: 1.015, y: -1 }}
+              whileTap={{ scale: 0.985 }}
+              transition={{ duration: 0.15 }}
             >
-              <span>Launch App</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors"
+              >
+                <span>Launch App</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </motion.div>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -266,7 +285,7 @@ export default function LandingPage() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#172033] hover:bg-[#E5E7EB] rounded-lg"
+              className="p-2 text-[#191522] hover:bg-[#E5E7EB] rounded-lg transition-colors"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -274,71 +293,79 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="sm:hidden border-b border-[#E5E7EB] bg-[#FFFFFF] px-4 pt-3 pb-5 space-y-3">
-            <a
-              href="#core-loop"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-xs font-bold text-[#172033] py-1.5"
+        {/* Mobile Dropdown Menu with Smooth AnimatePresence */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: MOTION_EASINGS.PRIMARY }}
+              className="sm:hidden border-b border-[#E4E2DC] bg-[#FFFFFF] px-4 pt-3 pb-5 space-y-3 overflow-hidden"
             >
-              Core Architecture
-            </a>
-            <a
-              href="#simulator"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-xs font-bold text-[#172033] py-1.5"
-            >
-              What-If Simulator
-            </a>
-            <a
-              href="#intelligence"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-xs font-bold text-[#172033] py-1.5"
-            >
-              Intelligence System
-            </a>
-            <a
-              href="#desktop"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-xs font-bold text-[#172033] py-1.5"
-            >
-              {detectedPlatform === 'android' ? 'Android App' : 'Windows Desktop App'}
-            </a>
-            <a
-              href="#about"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-xs font-bold text-[#172033] py-1.5"
-            >
-              About
-            </a>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setIsContactOpen(true);
-              }}
-              className="block w-full text-left text-xs font-bold text-[#2563EB] py-1.5"
-            >
-              Contact Me
-            </button>
-            <div className="pt-3 border-t border-[#E5E7EB] flex items-center gap-3">
-              <Link
-                href="/login"
-                className="w-1/2 text-center text-xs font-bold py-2 text-[#172033] border border-[#E5E7EB] rounded-lg"
+              <a
+                href="#core-loop"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-xs font-bold text-[#191522] py-1.5"
               >
-                Sign In
-              </Link>
-              <Link
-                href="/dashboard"
-                className="w-1/2 text-center text-xs font-bold py-2 bg-[#172033] text-white rounded-lg"
+                Core Architecture
+              </a>
+              <a
+                href="#simulator"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-xs font-bold text-[#191522] py-1.5"
               >
-                Launch App
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+                What-If Simulator
+              </a>
+              <a
+                href="#intelligence"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-xs font-bold text-[#191522] py-1.5"
+              >
+                Intelligence System
+              </a>
+              <a
+                href="#desktop"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-xs font-bold text-[#191522] py-1.5"
+              >
+                {detectedPlatform === 'android' ? 'Android App' : 'Windows Desktop App'}
+              </a>
+              <a
+                href="#about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-xs font-bold text-[#191522] py-1.5"
+              >
+                About
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsContactOpen(true);
+                }}
+                className="block w-full text-left text-xs font-bold text-[#2563EB] py-1.5"
+              >
+                Contact Me
+              </button>
+              <div className="pt-3 border-t border-[#E4E2DC] flex items-center gap-3">
+                <Link
+                  href="/login"
+                  className="w-1/2 text-center text-xs font-bold py-2 text-[#191522] border border-[#E4E2DC] rounded-lg"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="w-1/2 text-center text-xs font-bold py-2 bg-[#2A1F3D] text-white rounded-lg"
+                >
+                  Launch App
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
 
       {/* ─── HERO SECTION (EDITORIAL SPLIT 60/40 LAYOUT) ────────────────── */}
       <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full">
@@ -346,72 +373,116 @@ export default function LandingPage() {
           {/* Left Column: Editorial Value Proposition (~58%) */}
           <div className="lg:col-span-7 space-y-6 text-left">
             {/* Small Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#172033]/5 border border-[#172033]/10 text-[#172033]">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: 0.05, ease: MOTION_EASINGS.PRIMARY }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EEEAF7] border border-[#625477]/25 text-[#3B2D54]"
+            >
               <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB] animate-pulse" />
               <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
                 Financial Intelligence Platform
               </span>
-            </div>
+            </motion.div>
 
             {/* Main Editorial Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#172033] leading-[1.12]">
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.12, ease: MOTION_EASINGS.PRIMARY }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#191522] leading-[1.12]"
+            >
               Know where your money is going.{' '}
               <span className="text-[#2563EB] block sm:inline">
                 See what happens next.
               </span>
-            </h1>
+            </motion.h1>
 
             {/* High-Contrast Supporting Copy */}
-            <p className="text-sm sm:text-base text-[#475467] leading-relaxed max-w-2xl font-medium">
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.20, ease: MOTION_EASINGS.PRIMARY }}
+              className="text-sm sm:text-base text-[#475467] leading-relaxed max-w-2xl font-medium"
+            >
               MONVEX turns everyday financial activity into clear cash-flow analysis, spending intelligence, and forward-looking financial decisions.
-            </p>
+            </motion.p>
 
             {/* Action Group */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#172033] hover:bg-[#0F172A] px-6 py-3.5 text-xs font-bold text-white shadow-sm transition-all active:translate-y-[1px]"
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.30, delay: 0.28, ease: MOTION_EASINGS.PRIMARY }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2"
+            >
+              <motion.div
+                whileHover={{ scale: 1.015, y: -1 }}
+                whileTap={{ scale: 0.985 }}
+                transition={{ duration: 0.15 }}
               >
-                <span>Start with MONVEX</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              {isNativeDesktop ? (
                 <Link
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all active:translate-y-[1px]"
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] px-6 py-3.5 text-xs font-bold text-white shadow-sm transition-colors w-full sm:w-auto"
                 >
-                  <Cpu className="h-4 w-4 text-[#2563EB]" />
-                  <span>Open Workspace</span>
+                  <span>Start with MONVEX</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
+              </motion.div>
+
+              {isNativeDesktop ? (
+                <motion.div
+                  whileHover={{ scale: 1.015, y: -1 }}
+                  whileTap={{ scale: 0.985 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E4E2DC] px-6 py-3.5 text-xs font-bold text-[#191522] shadow-2xs transition-colors w-full sm:w-auto"
+                  >
+                    <Cpu className="h-4 w-4 text-[#2563EB]" />
+                    <span>Open Workspace</span>
+                  </Link>
+                </motion.div>
               ) : detectedPlatform === 'android' ? (
                 <div
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB] px-5 py-3.5 text-xs font-bold text-[#6B7280] shadow-2xs select-none cursor-default"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3F4F6] border border-[#E4E2DC] px-5 py-3.5 text-xs font-bold text-[#6B7280] shadow-2xs select-none cursor-default"
                   title="Android application is in closed preview — Public APK release coming soon"
                 >
                   <Smartphone className="h-4 w-4 text-[#A855F7]" />
                   <span>Android App — Coming Soon</span>
                 </div>
               ) : (
-                <a
-                  href={windowsDownloadUrl}
-                  download="MONVEX-Setup.exe"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E5E7EB] px-6 py-3.5 text-xs font-bold text-[#172033] shadow-2xs transition-all active:translate-y-[1px]"
+                <motion.div
+                  whileHover={{ scale: 1.015, y: -1 }}
+                  whileTap={{ scale: 0.985 }}
+                  transition={{ duration: 0.15 }}
                 >
-                  <Download className="h-4 w-4 text-[#2563EB]" />
-                  <span>Download for Windows</span>
-                </a>
+                  <a
+                    href={windowsDownloadUrl}
+                    download="MONVEX-Setup.exe"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E4E2DC] px-6 py-3.5 text-xs font-bold text-[#191522] shadow-2xs transition-colors w-full sm:w-auto"
+                  >
+                    <Download className="h-4 w-4 text-[#2563EB]" />
+                    <span>Download for Windows</span>
+                  </a>
+                </motion.div>
               )}
               <a
                 href="#desktop"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-3.5 text-xs font-bold text-[#5F6878] hover:text-[#172033] transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-3.5 text-xs font-bold text-[#625D69] hover:text-[#191522] transition-colors"
               >
                 <span>{detectedPlatform === 'android' ? 'Platform Details' : 'Desktop Specs'}</span>
-                <ChevronRight className="h-3.5 w-3.5 text-[#858D9A]" />
+                <ChevronRight className="h-3.5 w-3.5 text-[#898390]" />
               </a>
-            </div>
+            </motion.div>
 
             {/* Key System Confidence Badges */}
-            <div className="pt-4 border-t border-[#E5E7EB] flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-[#5F6878] font-medium">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.35, delay: 0.36 }}
+              className="pt-4 border-t border-[#E4E2DC] flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-[#625D69] font-medium"
+            >
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-[#059669]" />
                 <span>0 Mock Transactions</span>
@@ -424,14 +495,19 @@ export default function LandingPage() {
                 <CheckCircle2 className="h-4 w-4 text-[#059669]" />
                 <span>Zero-Trust Security Shield</span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Right Column: Realistic MONVEX Workspace Preview (~42%) */}
-          <div className="lg:col-span-5">
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white shadow-xl overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.45, delay: 0.22, ease: MOTION_EASINGS.PRIMARY }}
+            className="lg:col-span-5"
+          >
+            <div className="rounded-2xl border border-[#E4E2DC] bg-white shadow-xl overflow-hidden">
               {/* Window Bar */}
-              <div className="bg-[#172033] px-4 py-3 flex items-center justify-between text-white">
+              <div className="bg-[#2A1F3D] border-b border-[#3B2D54] px-4 py-3 flex items-center justify-between text-white">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1.5">
                     <div className="h-2.5 w-2.5 rounded-full bg-[#EF4444]/80" />
@@ -452,57 +528,57 @@ export default function LandingPage() {
               <div className="p-5 space-y-5 bg-[#FFFFFF]">
                 {/* 4 Core Financial Metrics */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3.5 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-1">
-                    <span className="font-mono text-[10px] font-bold text-[#858D9A] uppercase tracking-wider block">
+                  <div className="p-3.5 rounded-xl bg-[#E9EDFA] border border-[#7184C4]/30 space-y-1">
+                    <span className="font-mono text-[10px] font-bold text-[#4056A1] uppercase tracking-wider block">
                       Available Capital
                     </span>
                     <div className="flex items-baseline justify-between">
-                      <span className="font-mono text-xl font-extrabold text-[#172033]">
-                        ₹72,910
+                      <span className="font-mono text-xl font-extrabold text-[#26335F]">
+                        <AnimatedValue value={72910} currency="INR" startFromZero={true} duration={800} />
                       </span>
-                      <span className="text-[10px] font-bold text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-bold text-[#4056A1] bg-white px-1.5 py-0.5 rounded shadow-2xs">
                         +8.4%
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-1">
-                    <span className="font-mono text-[10px] font-bold text-[#858D9A] uppercase tracking-wider block">
+                  <div className="p-3.5 rounded-xl bg-[#E8F7F1] border border-[#A7F3D0] space-y-1">
+                    <span className="font-mono text-[10px] font-bold text-[#059669] uppercase tracking-wider block">
                       Retained Savings
                     </span>
                     <div className="flex items-baseline justify-between">
                       <span className="font-mono text-xl font-extrabold text-[#059669]">
-                        ₹54,100
+                        <AnimatedValue value={54100} currency="INR" startFromZero={true} duration={800} />
                       </span>
-                      <span className="text-[10px] font-mono font-bold text-[#5F6878]">
+                      <span className="text-[10px] font-mono font-bold text-[#059669] bg-white px-1.5 py-0.5 rounded shadow-2xs">
                         72.1% rate
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-0.5">
-                    <span className="font-mono text-[10px] font-bold text-[#858D9A] uppercase block">
+                  <div className="p-3 rounded-xl bg-[#DDF7FA] border border-[#06B6D4]/30 space-y-0.5">
+                    <span className="font-mono text-[10px] font-bold text-[#0891B2] uppercase block">
                       Monthly Inflow
                     </span>
-                    <span className="font-mono text-sm font-bold text-[#172033]">
-                      ₹75,000
+                    <span className="font-mono text-sm font-bold text-[#0E7490]">
+                      <AnimatedValue value={75000} currency="INR" startFromZero={true} duration={700} />
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-0.5">
-                    <span className="font-mono text-[10px] font-bold text-[#858D9A] uppercase block">
+                  <div className="p-3 rounded-xl bg-[#FDECEF] border border-[#FECDD3] space-y-0.5">
+                    <span className="font-mono text-[10px] font-bold text-[#E11D48] uppercase block">
                       Expenses / Burn
                     </span>
                     <span className="font-mono text-sm font-bold text-[#E11D48]">
-                      ₹20,900
+                      <AnimatedValue value={20900} currency="INR" startFromZero={true} duration={700} />
                     </span>
                   </div>
                 </div>
 
                 {/* Cash-Flow Trajectory Visualization */}
-                <div className="p-3.5 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-2">
+                <div className="p-3.5 rounded-xl bg-[#F6F3FA] border border-[#625477]/15 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#172033]">90-Day Liquidity Trajectory</span>
+                    <span className="font-bold text-[#191522]">90-Day Liquidity Trajectory</span>
                     <span className="font-mono text-[10px] text-[#059669] font-bold">Solvent (+₹32,400)</span>
                   </div>
                   {/* SVG Sparkline Curve */}
@@ -533,32 +609,32 @@ export default function LandingPage() {
 
                 {/* Real-time Ledger Stream */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-mono font-bold text-[#858D9A] uppercase tracking-wider px-1">
+                  <div className="flex items-center justify-between text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider px-1">
                     <span>Recent Reconciled Activity</span>
                     <span>Status</span>
                   </div>
                   <div className="space-y-1.5">
-                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E5E7EB] flex items-center justify-between text-xs">
+                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E4E2DC] flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5">
                         <div className="h-6 w-6 rounded-md bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-[10px]">
                           FD
                         </div>
                         <div>
-                          <span className="font-bold text-[#172033] block">Swiggy Gourmet</span>
-                          <span className="text-[10px] text-[#5F6878]">Food & Dining • Today</span>
+                          <span className="font-bold text-[#191522] block">Swiggy Gourmet</span>
+                          <span className="text-[10px] text-[#625D69]">Food & Dining • Today</span>
                         </div>
                       </div>
                       <span className="font-mono font-bold text-[#E11D48]">-₹840.00</span>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E5E7EB] flex items-center justify-between text-xs">
+                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E4E2DC] flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5">
                         <div className="h-6 w-6 rounded-md bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center font-bold text-[10px]">
                           IN
                         </div>
                         <div>
-                          <span className="font-bold text-[#172033] block">Monthly Salary Inflow</span>
-                          <span className="text-[10px] text-[#5F6878]">Primary Income • Aug 01</span>
+                          <span className="font-bold text-[#191522] block">Monthly Salary Inflow</span>
+                          <span className="text-[10px] text-[#625D69]">Primary Income • Aug 01</span>
                         </div>
                       </div>
                       <span className="font-mono font-bold text-[#059669]">+₹75,000.00</span>
@@ -575,173 +651,186 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ─── DECISION ENGINE: "FROM TRANSACTION TO DECISION" ─────────────── */}
-      <section id="core-loop" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E5E7EB]">
+      <section id="core-loop" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E4E2DC]">
         <div className="space-y-12">
           {/* Section Header */}
-          <div className="max-w-2xl space-y-2">
+          <CardReveal className="max-w-2xl space-y-2">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#2563EB]">
               Deterministic Progression
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#172033] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#191522] tracking-tight">
               From transaction to decision.
             </h2>
-            <p className="text-sm text-[#5F6878] font-medium leading-relaxed">
+            <p className="text-sm text-[#625D69] font-medium leading-relaxed">
               Every expense goes through a 6-stage analytical pipeline that converts raw activity into long-term wealth impact.
             </p>
-          </div>
+          </CardReveal>
 
           {/* Interactive 6-Stage Timeline Stepper */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-[#E5E7EB] pb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-[#E4E2DC] pb-4">
             {decisionStages.map((stage, idx) => (
-              <button
+              <motion.button
                 key={idx}
                 type="button"
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveStage(idx)}
                 className={cn(
-                  'p-3 text-left rounded-xl transition-all border text-xs',
+                  'p-3 text-left rounded-xl transition-all border text-xs cursor-pointer',
                   activeStage === idx
-                    ? 'bg-[#172033] text-white border-[#172033] shadow-sm'
-                    : 'bg-white text-[#5F6878] border-[#E5E7EB] hover:border-[#D6D4CD]'
+                    ? 'bg-[#4056A1] text-white border-[#26335F] shadow-sm'
+                    : 'bg-[#F1F0EC] text-[#625D69] border-[#E4E2DC] hover:bg-[#EEEAF7] hover:border-[#7184C4]/30 hover:text-[#191522]'
                 )}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className={cn('font-mono font-bold text-[11px]', activeStage === idx ? 'text-[#38BDF8]' : 'text-[#858D9A]')}>
+                  <span className={cn('font-mono font-bold text-[11px]', activeStage === idx ? 'text-[#93C5FD]' : 'text-[#898390]')}>
                     {stage.num}
                   </span>
-                  {activeStage === idx && <span className="h-1.5 w-1.5 rounded-full bg-[#38BDF8]" />}
+                  {activeStage === idx && <span className="h-1.5 w-1.5 rounded-full bg-[#93C5FD]" />}
                 </div>
                 <span className="font-bold block tracking-tight">{stage.title}</span>
-              </button>
+              </motion.button>
             ))}
           </div>
 
-          {/* Active Stage Narrative Showcase */}
-          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-10 shadow-sm">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-6 space-y-4">
-                <div className="inline-flex items-center gap-2">
-                  <span className="font-mono font-extrabold text-sm text-[#2563EB]">
-                    STAGE {decisionStages[activeStage].num}
-                  </span>
-                  <span className="text-[#858D9A]">•</span>
-                  <span className="text-xs font-bold text-[#5F6878] uppercase tracking-wider">
-                    {decisionStages[activeStage].badge}
-                  </span>
-                </div>
-
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#172033] tracking-tight">
-                  {decisionStages[activeStage].headline}
-                </h3>
-
-                <p className="text-xs sm:text-sm text-[#475467] leading-relaxed font-medium">
-                  {decisionStages[activeStage].desc}
-                </p>
-
-                <div className="pt-2 flex items-center gap-4 text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStage((prev) => (prev > 0 ? prev - 1 : decisionStages.length - 1))}
-                    className="text-[#5F6878] hover:text-[#172033]"
-                  >
-                    ← Previous Stage
-                  </button>
-                  <span className="text-[#E5E7EB]">|</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveStage((prev) => (prev < decisionStages.length - 1 ? prev + 1 : 0))}
-                    className="text-[#2563EB] hover:underline"
-                  >
-                    Next Stage →
-                  </button>
-                </div>
-              </div>
-
-              {/* Data Representation Card */}
-              <div className="lg:col-span-6">
-                <div className="p-6 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 text-xs">
-                    <span className="font-mono font-bold text-[#172033] uppercase">
-                      TELEMETRY OUTPUT • STAGE {decisionStages[activeStage].num}
+          {/* Active Stage Narrative Showcase with AnimatePresence */}
+          <div className="rounded-2xl border border-[#E4E2DC] bg-white p-6 sm:p-10 shadow-sm overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeStage}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.22, ease: MOTION_EASINGS.PRIMARY }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center"
+              >
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="font-mono font-extrabold text-sm text-[#2563EB]">
+                      STAGE {decisionStages[activeStage].num}
                     </span>
-                    <Badge variant="neutral" size="sm">Deterministic Engine</Badge>
+                    <span className="text-[#898390]">•</span>
+                    <span className="text-xs font-bold text-[#625D69] uppercase tracking-wider">
+                      {decisionStages[activeStage].badge}
+                    </span>
                   </div>
 
-                  <div className="space-y-3 font-mono text-xs">
-                    {Object.entries(decisionStages[activeStage].exampleData).map(([key, val]) => (
-                      <div key={key} className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-[#E5E7EB]">
-                        <span className="text-[#858D9A] uppercase text-[11px]">{key}</span>
-                        <span className="font-bold text-[#172033]">{val}</span>
-                      </div>
-                    ))}
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-[#191522] tracking-tight">
+                    {decisionStages[activeStage].headline}
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-[#475467] leading-relaxed font-medium">
+                    {decisionStages[activeStage].desc}
+                  </p>
+
+                  <div className="pt-2 flex items-center gap-4 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setActiveStage((prev) => (prev > 0 ? prev - 1 : decisionStages.length - 1))}
+                      className="text-[#625D69] hover:text-[#191522] transition-colors cursor-pointer"
+                    >
+                      ← Previous Stage
+                    </button>
+                    <span className="text-[#E5E7EB]">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveStage((prev) => (prev < decisionStages.length - 1 ? prev + 1 : 0))}
+                      className="text-[#2563EB] hover:underline cursor-pointer"
+                    >
+                      Next Stage →
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
+
+                {/* Data Representation Card */}
+                <div className="lg:col-span-6">
+                  <div className="p-6 rounded-xl bg-[#F6F3FA] border border-[#625477]/15 space-y-4">
+                    <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3 text-xs">
+                      <span className="font-mono font-bold text-[#191522] uppercase">
+                        TELEMETRY OUTPUT • STAGE {decisionStages[activeStage].num}
+                      </span>
+                      <Badge variant="neutral" size="sm">Deterministic Engine</Badge>
+                    </div>
+
+                    <div className="space-y-3 font-mono text-xs">
+                      {Object.entries(decisionStages[activeStage].exampleData).map(([key, val]) => (
+                        <div key={key} className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-[#E4E2DC]">
+                          <span className="text-[#898390] uppercase text-[11px]">{key}</span>
+                          <span className="font-bold text-[#191522]">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>
 
       {/* ─── WHAT-IF SIMULATOR SECTION ───────────────────────────────────── */}
-      <section id="simulator" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E5E7EB]">
+      <section id="simulator" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E4E2DC]">
         <div className="space-y-10">
-          <div className="max-w-2xl space-y-2">
+          <CardReveal className="max-w-2xl space-y-2">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#D97706]">
               Interactive Scenario Modeling
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#172033] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#191522] tracking-tight">
               What happens if you change one thing?
             </h2>
-            <p className="text-sm text-[#5F6878] font-medium leading-relaxed">
+            <p className="text-sm text-[#625D69] font-medium leading-relaxed">
               Test spending adjustments against deterministic cash flow projections and discover your compounded capital gain.
             </p>
-          </div>
+          </CardReveal>
 
-          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-10 shadow-sm space-y-8">
+          <MotionCard hoverEffect={false} className="rounded-2xl border border-[#E4E2DC] bg-white p-6 sm:p-10 shadow-sm space-y-8">
             {/* Category Selector Tabs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(['dining', 'shopping', 'subs', 'travel'] as const).map((catKey) => {
                 const info = categoryPresets[catKey];
                 const isActive = selectedCategory === catKey;
                 return (
-                  <button
+                  <motion.button
                     key={catKey}
                     type="button"
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedCategory(catKey)}
                     className={cn(
-                      'p-4 rounded-xl text-left border transition-all text-xs space-y-1',
+                      'p-4 rounded-xl text-left border transition-all text-xs space-y-1 cursor-pointer',
                       isActive
-                        ? 'bg-[#172033] text-white border-[#172033] shadow-xs'
-                        : 'bg-[#F7F7F4] text-[#172033] border-[#E5E7EB] hover:border-[#D6D4CD]'
+                        ? 'bg-[#E9EDFA] text-[#26335F] border-[#7184C4]/40 shadow-xs'
+                        : 'bg-[#F1F0EC] text-[#625D69] border-[#E4E2DC] hover:bg-[#EEEAF7] hover:text-[#191522]'
                     )}
                   >
-                    <span className={cn('font-mono text-[10px] font-bold uppercase block', isActive ? 'text-[#38BDF8]' : 'text-[#858D9A]')}>
+                    <span className={cn('font-mono text-[10px] font-bold uppercase block', isActive ? 'text-[#4056A1]' : 'text-[#898390]')}>
                       Baseline: {formatCurrency(info.baseline, 'INR')}
                     </span>
                     <span className="font-bold block text-sm">{info.name}</span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
 
             {/* Slider Control */}
-            <div className="p-6 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-4">
+            <div className="p-6 rounded-xl bg-[#F6F3FA] border border-[#625477]/15 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <span className="text-xs font-bold text-[#172033] block">
+                  <span className="text-xs font-bold text-[#191522] block">
                     Simulate Spending Cut on {currentCategory.name}
                   </span>
-                  <span className="text-[11px] text-[#5F6878]">
+                  <span className="text-[11px] text-[#625D69]">
                     {currentCategory.desc}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#858D9A]">Reduction:</span>
-                  <span className="font-mono text-base font-extrabold text-[#2563EB] bg-white px-3 py-1 rounded-lg border border-[#E5E7EB]">
+                  <span className="text-xs text-[#898390]">Reduction:</span>
+                  <span className="font-mono text-base font-extrabold text-[#2563EB] bg-white px-3 py-1 rounded-lg border border-[#E4E2DC]">
                     {reductionPct}%
                   </span>
                 </div>
@@ -754,57 +843,59 @@ export default function LandingPage() {
                 step="5"
                 value={reductionPct}
                 onChange={(e) => setReductionPct(parseInt(e.target.value))}
-                className="w-full h-2.5 bg-[#E5E7EB] rounded-lg appearance-none cursor-pointer accent-[#172033]"
+                className="w-full h-2.5 bg-[#E5E7EB] rounded-lg appearance-none cursor-pointer accent-[#4056A1]"
               />
 
-              <div className="flex justify-between text-[11px] font-mono text-[#858D9A]">
+              <div className="flex justify-between text-[11px] font-mono text-[#898390]">
                 <span>5% (Minor adjustment)</span>
                 <span>30% (Recommended)</span>
                 <span>60% (Aggressive FIRE)</span>
               </div>
             </div>
 
-            {/* Live Calculation Matrix */}
+            {/* Live Calculation Matrix with AnimatedValue */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-5 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-2">
-                <span className="font-mono text-[10px] font-bold text-[#858D9A] uppercase tracking-wider block">
+              <div className="p-5 rounded-xl bg-[#F1F0EC] border border-[#E4E2DC] space-y-2">
+                <span className="font-mono text-[10px] font-bold text-[#625D69] uppercase tracking-wider block">
                   Current Spending
                 </span>
-                <span className="font-mono text-2xl font-black text-[#172033] block">
-                  {formatCurrency(currentCategory.baseline, 'INR')} <span className="text-xs font-normal text-[#858D9A]">/ mo</span>
+                <span className="font-mono text-2xl font-black text-[#191522] block">
+                  <AnimatedValue value={currentCategory.baseline} currency="INR" />{' '}
+                  <span className="text-xs font-normal text-[#898390]">/ mo</span>
                 </span>
-                <span className="text-xs text-[#5F6878] font-medium block">
+                <span className="text-xs text-[#625D69] font-medium block">
                   Annual total: {formatCurrency(currentCategory.baseline * 12, 'INR')}
                 </span>
               </div>
 
-              <div className="p-5 rounded-xl bg-[#F7F7F4] border border-[#E5E7EB] space-y-2">
-                <span className="font-mono text-[10px] font-bold text-[#858D9A] uppercase tracking-wider block">
+              <div className="p-5 rounded-xl bg-[#E9EDFA] border border-[#7184C4]/30 space-y-2">
+                <span className="font-mono text-[10px] font-bold text-[#4056A1] uppercase tracking-wider block">
                   Simulated Spending
                 </span>
-                <span className="font-mono text-2xl font-black text-[#2563EB] block">
-                  {formatCurrency(simulatedMonthlyBurn, 'INR')} <span className="text-xs font-normal text-[#858D9A]">/ mo</span>
+                <span className="font-mono text-2xl font-black text-[#26335F] block">
+                  <AnimatedValue value={simulatedMonthlyBurn} currency="INR" />{' '}
+                  <span className="text-xs font-normal text-[#898390]">/ mo</span>
                 </span>
-                <span className="text-xs text-[#5F6878] font-medium block">
+                <span className="text-xs text-[#625D69] font-medium block">
                   Annual total: {formatCurrency(simulatedMonthlyBurn * 12, 'INR')}
                 </span>
               </div>
 
-              <div className="p-5 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] space-y-2">
+              <div className="p-5 rounded-xl bg-[#E8F7F1] border border-[#A7F3D0] space-y-2">
                 <span className="font-mono text-[10px] font-bold text-[#059669] uppercase tracking-wider block">
                   Annual Capital Retained
                 </span>
                 <span className="font-mono text-2xl font-black text-[#059669] block">
-                  +{formatCurrency(annualRetained, 'INR')}
+                  <AnimatedValue value={annualRetained} currency="INR" prefix="+" />
                 </span>
                 <span className="text-xs text-[#065F46] font-medium block">
-                  +{formatCurrency(monthlyRetained, 'INR')} saved each month
+                  +<AnimatedValue value={monthlyRetained} currency="INR" /> saved each month
                 </span>
               </div>
             </div>
 
             {/* 5-Year Compounded Impact Card */}
-            <div className="p-6 rounded-xl bg-[#172033] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-6 rounded-xl bg-[#2A1F3D] border border-[#3B2D54] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-[#34D399]" />
@@ -819,7 +910,7 @@ export default function LandingPage() {
 
               <div className="text-right sm:text-right shrink-0">
                 <span className="font-mono text-3xl font-black text-white block">
-                  +{formatCurrency(compoundFiveYear, 'INR')}
+                  <AnimatedValue value={compoundFiveYear} currency="INR" prefix="+" />
                 </span>
                 <span className="text-[10px] font-mono text-slate-400">
                   Principal: {formatCurrency(annualRetained * 5, 'INR')} • Returns: +{formatCurrency(compoundFiveYear - annualRetained * 5, 'INR')}
@@ -836,34 +927,37 @@ export default function LandingPage() {
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-          </div>
+          </MotionCard>
         </div>
       </section>
 
       {/* ─── INTELLIGENCE SYSTEM SECTION ─────────────────────────────────── */}
-      <section id="intelligence" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E5E7EB]">
+      <section id="intelligence" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E4E2DC]">
         <div className="space-y-10">
-          <div className="max-w-2xl space-y-2">
+          <CardReveal className="max-w-2xl space-y-2">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#059669]">
               Autonomous Financial Diagnosis
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#172033] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#191522] tracking-tight">
               Real intelligence, not generic advice.
             </h2>
-            <p className="text-sm text-[#5F6878] font-medium leading-relaxed">
+            <p className="text-sm text-[#625D69] font-medium leading-relaxed">
               MONVEX analyzes cross-category spending shifts and formulates precise, mathematically backed recommendations.
             </p>
-          </div>
+          </CardReveal>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left: Financial Diagnosis Showcase (~7 cols) */}
-            <div className="lg:col-span-7 rounded-2xl border border-[#E5E7EB] bg-white p-6 sm:p-8 shadow-sm space-y-6">
-              <div className="border-b border-[#E5E7EB] pb-4 flex items-center justify-between">
+            <MotionCard
+              hoverLift={-2}
+              className="lg:col-span-7 rounded-2xl border border-[#E4E2DC] bg-white p-6 sm:p-8 shadow-sm space-y-6"
+            >
+              <div className="border-b border-[#E4E2DC] pb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center font-bold">
                     <Sparkles className="h-4 w-4" />
                   </div>
-                  <span className="font-mono text-xs font-bold text-[#172033] uppercase">
+                  <span className="font-mono text-xs font-bold text-[#191522] uppercase">
                     MONVEX OBSERVATION • AUGUST 2026
                   </span>
                 </div>
@@ -871,24 +965,24 @@ export default function LandingPage() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-xl font-bold text-[#172033]">
+                <h3 className="text-xl font-bold text-[#191522]">
                   Your food spending increased 18% over the previous 30 days.
                 </h3>
-                <p className="text-xs text-[#5F6878] leading-relaxed">
+                <p className="text-xs text-[#625D69] leading-relaxed">
                   Discretionary dining out and delivery app orders accelerated from ₹520/day to ₹877/day during weekends.
                 </p>
               </div>
 
               {/* Contributor Breakdown */}
               <div className="space-y-3 pt-2">
-                <span className="font-mono text-[11px] font-bold text-[#858D9A] uppercase tracking-wider block">
+                <span className="font-mono text-[11px] font-bold text-[#898390] uppercase tracking-wider block">
                   Top Outflow Contributors
                 </span>
 
                 <div className="space-y-2.5">
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1">
-                      <span className="font-bold text-[#172033]">Food &amp; Dining (Restaurants + Delivery)</span>
+                      <span className="font-bold text-[#191522]">Food &amp; Dining (Restaurants + Delivery)</span>
                       <span className="font-mono font-bold text-[#E11D48]">+18.2% (₹18,420 / ₹15,000 budget)</span>
                     </div>
                     <div className="h-2 rounded-full bg-[#F0EFEA] overflow-hidden">
@@ -898,7 +992,7 @@ export default function LandingPage() {
 
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1">
-                      <span className="font-bold text-[#172033]">Transport &amp; Cab Rides</span>
+                      <span className="font-bold text-[#191522]">Transport &amp; Cab Rides</span>
                       <span className="font-mono font-bold text-[#D97706]">+12.0% (₹6,400 / ₹5,700 budget)</span>
                     </div>
                     <div className="h-2 rounded-full bg-[#F0EFEA] overflow-hidden">
@@ -908,7 +1002,7 @@ export default function LandingPage() {
 
                   <div>
                     <div className="flex justify-between text-xs font-medium mb-1">
-                      <span className="font-bold text-[#172033]">Entertainment &amp; Digital SaaS</span>
+                      <span className="font-bold text-[#191522]">Entertainment &amp; Digital SaaS</span>
                       <span className="font-mono font-bold text-[#2563EB]">+9.4% (₹4,800 / ₹4,500 budget)</span>
                     </div>
                     <div className="h-2 rounded-full bg-[#F0EFEA] overflow-hidden">
@@ -931,106 +1025,126 @@ export default function LandingPage() {
                   <span className="text-sm">+₹30,000.00 / yr</span>
                 </div>
               </div>
-            </div>
+            </MotionCard>
 
             {/* Right: Why This Matters / Deterministic Explainer (~5 cols) */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="p-6 rounded-2xl border border-[#E5E7EB] bg-white space-y-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#172033]">
-                  <Compass className="h-4 w-4 text-[#2563EB]" />
+              <MotionCard
+                index={0}
+                hoverLift={-2}
+                className="p-6 rounded-2xl border border-[#625477]/15 bg-[#F6F3FA] space-y-4 shadow-sm"
+              >
+                <div className="flex items-center gap-2 text-xs font-bold text-[#3B2D54]">
+                  <Compass className="h-4 w-4 text-[#4056A1]" />
                   <span>Why This Explainer is Different</span>
                 </div>
-                <p className="text-xs text-[#5F6878] leading-relaxed">
+                <p className="text-xs text-[#625D69] leading-relaxed">
                   Standard budget apps simply tell you that you spent too much. MONVEX isolates the exact causal factor, models the future cash-flow trajectory, and presents an achievable trade-off.
                 </p>
-              </div>
+              </MotionCard>
 
-              <div className="p-6 rounded-2xl border border-[#E5E7EB] bg-white space-y-4">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#172033]">
+              <MotionCard
+                index={1}
+                hoverLift={-2}
+                className="p-6 rounded-2xl border border-[#A7F3D0]/60 bg-[#E8F7F1]/60 space-y-4 shadow-sm"
+              >
+                <div className="flex items-center gap-2 text-xs font-bold text-[#065F46]">
                   <ShieldCheck className="h-4 w-4 text-[#059669]" />
                   <span>Privacy-Preserving Edge Intelligence</span>
                 </div>
-                <p className="text-xs text-[#5F6878] leading-relaxed">
+                <p className="text-xs text-[#625D69] leading-relaxed">
                   Your raw financial data is strictly partitioned and never trained on public models. Financial simulations run deterministically inside secure, user-isolated sessions.
                 </p>
-              </div>
+              </MotionCard>
 
-              <div className="p-5 rounded-2xl bg-[#172033] text-white flex items-center justify-between">
+              <MotionCard
+                index={2}
+                hoverLift={-2}
+                className="p-5 rounded-2xl bg-[#26335F] border border-[#4056A1]/40 text-white flex items-center justify-between shadow-sm"
+              >
                 <div>
                   <span className="text-xs font-bold block text-white">Experience Live AI Copilot</span>
                   <span className="text-[11px] text-slate-400">Natural language queries &amp; voice analysis</span>
                 </div>
                 <Link
                   href="/ai"
-                  className="px-3.5 py-2 rounded-xl bg-white text-[#172033] hover:bg-[#F7F7F4] text-xs font-bold transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-white text-[#191522] hover:bg-[#F7F7F4] text-xs font-bold transition-all"
                 >
                   Open Copilot →
                 </Link>
-              </div>
+              </MotionCard>
             </div>
           </div>
         </div>
       </section>
 
       {/* ─── WORKSPACE SHOWCASE (4 DISTINCT PRESENTATION MODULES) ───────── */}
-      <section id="workspace" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E5E7EB]">
+      <section id="workspace" className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full border-t border-[#E4E2DC]">
         <div className="space-y-12">
-          <div className="max-w-2xl space-y-2">
+          <CardReveal className="max-w-2xl space-y-2">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#2563EB]">
               Integrated System
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#172033] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#191522] tracking-tight">
               A workspace built for financial sovereignty.
             </h2>
-            <p className="text-sm text-[#5F6878] font-medium leading-relaxed">
+            <p className="text-sm text-[#625D69] font-medium leading-relaxed">
               Every financial dimension has a specialized UI surface engineered for clarity, speed, and mathematical control.
             </p>
-          </div>
+          </CardReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 1. Large Ledger Preview */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+            <MotionCard
+              index={0}
+              hoverLift={-3}
+              className="rounded-2xl border border-[#E4E2DC] bg-white p-6 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="h-4 w-4 text-[#2563EB]" />
-                  <span className="text-xs font-bold text-[#172033]">Multi-Wallet Financial Ledger</span>
+                  <span className="text-xs font-bold text-[#191522]">Multi-Wallet Financial Ledger</span>
                 </div>
                 <Badge variant="neutral" size="sm">Reconciled</Badge>
               </div>
 
               <div className="space-y-2 font-mono text-xs">
-                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E5E7EB] flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-[#172033] block">Apple Cloud Storage</span>
-                    <span className="text-[10px] text-[#5F6878]">Subscription • ICICI Credit Card</span>
+                    <span className="font-bold text-[#191522] block">Apple Cloud Storage</span>
+                    <span className="text-[10px] text-[#625D69]">Subscription • ICICI Credit Card</span>
                   </div>
                   <span className="font-bold text-[#E11D48]">-₹219.00</span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E5E7EB] flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-[#172033]">Consulting Dividend</span>
-                    <span className="text-[10px] text-[#5F6878]">Secondary Income • HDFC Salary</span>
+                    <span className="font-bold text-[#191522]">Consulting Dividend</span>
+                    <span className="text-[10px] text-[#625D69]">Secondary Income • HDFC Salary</span>
                   </div>
                   <span className="font-bold text-[#059669]">+₹18,500.00</span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E5E7EB] flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-[#172033]">HPCL Fuel Station</span>
-                    <span className="text-[10px] text-[#5F6878]">Transport • UPI Cash Wallet</span>
+                    <span className="font-bold text-[#191522]">HPCL Fuel Station</span>
+                    <span className="text-[10px] text-[#625D69]">Transport • UPI Cash Wallet</span>
                   </div>
                   <span className="font-bold text-[#E11D48]">-₹2,100.00</span>
                 </div>
               </div>
-            </div>
+            </MotionCard>
 
             {/* 2. Budget Velocity Visualization */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+            <MotionCard
+              index={1}
+              hoverLift={-3}
+              className="rounded-2xl border border-[#E4E2DC] bg-white p-6 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <PieChart className="h-4 w-4 text-[#D97706]" />
-                  <span className="text-xs font-bold text-[#172033]">Category Velocity &amp; Thresholds</span>
+                  <span className="text-xs font-bold text-[#191522]">Category Velocity &amp; Thresholds</span>
                 </div>
                 <Badge variant="success" size="sm">Cycle Day 21 / 30</Badge>
               </div>
@@ -1038,8 +1152,8 @@ export default function LandingPage() {
               <div className="space-y-4 text-xs">
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="font-bold text-[#172033]">Groceries &amp; Pantry</span>
-                    <span className="font-mono text-[#5F6878]">₹8,200 / ₹12,000 (68%)</span>
+                    <span className="font-bold text-[#191522]">Groceries &amp; Pantry</span>
+                    <span className="font-mono text-[#625D69]">₹8,200 / ₹12,000 (68%)</span>
                   </div>
                   <div className="h-2 rounded-full bg-[#F0EFEA] overflow-hidden">
                     <div className="h-full bg-[#059669] rounded-full" style={{ width: '68%' }} />
@@ -1048,8 +1162,8 @@ export default function LandingPage() {
 
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="font-bold text-[#172033]">Utilities &amp; Broadband</span>
-                    <span className="font-mono text-[#5F6878]">₹4,100 / ₹5,000 (82%)</span>
+                    <span className="font-bold text-[#191522]">Utilities &amp; Broadband</span>
+                    <span className="font-mono text-[#625D69]">₹4,100 / ₹5,000 (82%)</span>
                   </div>
                   <div className="h-2 rounded-full bg-[#F0EFEA] overflow-hidden">
                     <div className="h-full bg-[#D97706] rounded-full" style={{ width: '82%' }} />
@@ -1058,7 +1172,7 @@ export default function LandingPage() {
 
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="font-bold text-[#172033]">Dining Out</span>
+                    <span className="font-bold text-[#191522]">Dining Out</span>
                     <span className="font-mono text-[#E11D48] font-bold">₹18,420 / ₹15,000 (122%)</span>
                   </div>
                   <div className="h-2 rounded-full bg-[#F0EFEA] overflow-hidden">
@@ -1066,49 +1180,57 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </MotionCard>
 
             {/* 3. Goal Accumulation Trajectory */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+            <MotionCard
+              index={2}
+              hoverLift={-3}
+              className="rounded-2xl border border-[#E4E2DC] bg-white p-6 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-[#059669]" />
-                  <span className="text-xs font-bold text-[#172033]">Emergency Reserve Fund</span>
+                  <span className="text-xs font-bold text-[#191522]">Emergency Reserve Fund</span>
                 </div>
                 <span className="font-mono text-xs font-bold text-[#059669]">84% Reached</span>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-baseline justify-between font-mono">
-                  <span className="text-2xl font-black text-[#172033]">₹2,52,000</span>
-                  <span className="text-xs text-[#858D9A]">Target: ₹3,00,000</span>
+                  <span className="text-2xl font-black text-[#191522]">₹2,52,000</span>
+                  <span className="text-xs text-[#898390]">Target: ₹3,00,000</span>
                 </div>
 
                 <div className="h-2.5 rounded-full bg-[#F0EFEA] overflow-hidden">
                   <div className="h-full bg-[#059669] rounded-full" style={{ width: '84%' }} />
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#F7F7F4] text-xs text-[#5F6878] flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F7F4] text-xs text-[#625D69] flex items-center justify-between">
                   <span>ETA to 100% Completion:</span>
-                  <strong className="text-[#172033]">November 2026 (2.5 Months)</strong>
+                  <strong className="text-[#191522]">November 2026 (2.5 Months)</strong>
                 </div>
               </div>
-            </div>
+            </MotionCard>
 
             {/* 4. Cyber Defense & Data Isolation */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+            <MotionCard
+              index={3}
+              hoverLift={-3}
+              className="rounded-2xl border border-[#E4E2DC] bg-white p-6 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-[#2563EB]" />
-                  <span className="text-xs font-bold text-[#172033]">Zero-Trust Security &amp; Data Boundary</span>
+                  <span className="text-xs font-bold text-[#191522]">Zero-Trust Security &amp; Data Boundary</span>
                 </div>
                 <Badge variant="success" size="sm">WAF Active</Badge>
               </div>
 
-              <div className="space-y-2 text-xs text-[#5F6878]">
+              <div className="space-y-2 text-xs text-[#625D69]">
                 <div className="p-3 rounded-lg bg-[#F7F7F4] flex items-center justify-between">
                   <span>Active Query Scoping:</span>
-                  <span className="font-mono font-bold text-[#172033]">request.user ONLY</span>
+                  <span className="font-mono font-bold text-[#191522]">request.user ONLY</span>
                 </div>
                 <div className="p-3 rounded-lg bg-[#F7F7F4] flex items-center justify-between">
                   <span>Tamper-Evident Audit Trail:</span>
@@ -1119,7 +1241,7 @@ export default function LandingPage() {
                   <span className="font-mono font-bold text-[#2563EB]">Active WAF Layer</span>
                 </div>
               </div>
-            </div>
+            </MotionCard>
           </div>
         </div>
       </section>
@@ -1129,128 +1251,162 @@ export default function LandingPage() {
         <div id="apps" className="space-y-4">
           {/* Platform Toggle Tabs */}
           <div className="flex items-center justify-center sm:justify-start gap-2">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedPlatformTab('windows')}
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
                 selectedPlatformTab === 'windows'
-                  ? 'bg-[#172033] text-white shadow-xs'
-                  : 'bg-white text-[#5F6878] border border-[#E5E7EB] hover:text-[#172033]'
+                  ? 'bg-[#2A1F3D] text-white shadow-xs'
+                  : 'bg-white text-[#625D69] border border-[#E4E2DC] hover:text-[#191522]'
               )}
             >
               <Cpu className="h-3.5 w-3.5 text-[#38BDF8]" />
               <span>Windows (v2.0.0 Live)</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedPlatformTab('android')}
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
                 selectedPlatformTab === 'android'
-                  ? 'bg-[#172033] text-white shadow-xs'
-                  : 'bg-white text-[#5F6878] border border-[#E5E7EB] hover:text-[#172033]'
+                  ? 'bg-[#2A1F3D] text-white shadow-xs'
+                  : 'bg-white text-[#625D69] border border-[#E4E2DC] hover:text-[#191522]'
               )}
             >
               <Smartphone className="h-3.5 w-3.5 text-[#A855F7]" />
               <span>Android (Coming Soon)</span>
-            </button>
+            </motion.button>
           </div>
 
-          {selectedPlatformTab === 'windows' ? (
-            <div className="rounded-3xl border border-[#E5E7EB] bg-gradient-to-br from-white via-white to-[#F7F7F4] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
-              <div className="space-y-4 max-w-2xl text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20 text-[#2563EB]">
-                  <Cpu className="h-3.5 w-3.5" />
-                  <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
-                    Native Desktop Platform
-                  </span>
+          <AnimatePresence mode="wait">
+            {selectedPlatformTab === 'windows' ? (
+              <motion.div
+                key="windows"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.22, ease: MOTION_EASINGS.PRIMARY }}
+                className="rounded-3xl border border-[#E4E2DC] bg-gradient-to-br from-white via-white to-[#F7F7F4] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8"
+              >
+                <div className="space-y-4 max-w-2xl text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20 text-[#2563EB]">
+                    <Cpu className="h-3.5 w-3.5" />
+                    <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
+                      Native Desktop Platform
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#191522]">
+                    MONVEX for Windows
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
+                    Experience MONVEX as a native Windows desktop application. Includes instant global Command Center shortcuts (<kbd className="px-1.5 py-0.5 rounded bg-[#E5E7EB] font-mono text-[10px] text-[#191522] font-bold">Ctrl+K</kbd>), system tray quick transaction entry, low-latency performance, and native OS notifications.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#625D69] pt-1">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      Windows 10 / 11 (64-bit)
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      NSIS Installer
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      v2.0.0 Production Release
+                    </span>
+                  </div>
                 </div>
-                <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#172033]">
-                  MONVEX for Windows
-                </h2>
-                <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
-                  Experience MONVEX as a native Windows desktop application. Includes instant global Command Center shortcuts (<kbd className="px-1.5 py-0.5 rounded bg-[#E5E7EB] font-mono text-[10px] text-[#172033] font-bold">Ctrl+K</kbd>), system tray quick transaction entry, low-latency performance, and native OS notifications.
-                </p>
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#5F6878] pt-1">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    Windows 10 / 11 (64-bit)
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    NSIS Installer
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    v2.0.0 Production Release
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
-                {isNativeDesktop ? (
-                  <Link
-                    href="/dashboard"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
-                  >
-                    <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
-                    <span>Open Native Workspace</span>
-                  </Link>
-                ) : (
-                  <a
-                    href={windowsDownloadUrl}
-                    download="MONVEX-Setup.exe"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#172033] hover:bg-[#0F172A] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:translate-y-[1px]"
-                  >
-                    <Download className="h-4 w-4 text-[#38BDF8]" />
-                    <span>Download for Windows</span>
-                  </a>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-3xl border border-[#E5E7EB] bg-gradient-to-br from-white via-white to-[#FAF5FF] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
-              <div className="space-y-4 max-w-2xl text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#A855F7]/10 border border-[#A855F7]/20 text-[#7E22CE]">
-                  <Smartphone className="h-3.5 w-3.5" />
-                  <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
-                    Mobile Platform — Closed Preview
-                  </span>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+                  {isNativeDesktop ? (
+                    <motion.div
+                      whileHover={{ scale: 1.015, y: -1 }}
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ duration: 0.15 }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Link
+                        href="/dashboard"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                        <span>Open Native Workspace</span>
+                      </Link>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      whileHover={{ scale: 1.015, y: -1 }}
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ duration: 0.15 }}
+                      className="w-full sm:w-auto"
+                    >
+                      <a
+                        href={windowsDownloadUrl}
+                        download="MONVEX-Setup.exe"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <Download className="h-4 w-4 text-[#38BDF8]" />
+                        <span>Download for Windows</span>
+                      </a>
+                    </motion.div>
+                  )}
                 </div>
-                <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#172033]">
-                  MONVEX for Android
-                </h2>
-                <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
-                  Your financial intelligence on the go. High-speed transaction logging, voice dictation, camera receipt capture, and biometric security — tailored for Android phones.
-                </p>
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#5F6878] pt-1">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    Android 8.0+ (ARM64)
-                  </span>
-                  <span className="flex items-center gap-1.5 text-[#D97706]">
-                    <AlertTriangle className="h-3.5 w-3.5 text-[#D97706]" />
-                    Release Frozen / In Closed Preview
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                    Zero Mock Data
-                  </span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="android"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.22, ease: MOTION_EASINGS.PRIMARY }}
+                className="rounded-3xl border border-[#E4E2DC] bg-gradient-to-br from-white via-white to-[#FAF5FF] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8"
+              >
+                <div className="space-y-4 max-w-2xl text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#A855F7]/10 border border-[#A855F7]/20 text-[#7E22CE]">
+                    <Smartphone className="h-3.5 w-3.5" />
+                    <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
+                      Mobile Platform — Closed Preview
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#191522]">
+                    MONVEX for Android
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
+                    Your financial intelligence on the go. High-speed transaction logging, voice dictation, camera receipt capture, and biometric security — tailored for Android phones.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#625D69] pt-1">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      Android 8.0+ (ARM64)
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[#D97706]">
+                      <AlertTriangle className="h-3.5 w-3.5 text-[#D97706]" />
+                      Release Frozen / In Closed Preview
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      Zero Mock Data
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col items-center sm:items-end gap-2.5 w-full lg:w-auto shrink-0">
-                <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#1E293B] border border-slate-700 text-slate-300 px-8 py-4 text-xs sm:text-sm font-bold shadow-sm select-none cursor-default">
-                  <Smartphone className="h-4 w-4 text-[#A855F7]" />
-                  <span>Android App — Coming Soon</span>
+                <div className="flex flex-col items-center sm:items-end gap-2.5 w-full lg:w-auto shrink-0">
+                  <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#33264A] border border-[#4A3A68] text-[#D8D2E2] px-8 py-4 text-xs sm:text-sm font-bold shadow-sm select-none cursor-default">
+                    <Smartphone className="h-4 w-4 text-[#A855F7]" />
+                    <span>Android App — Coming Soon</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-[#64748B] text-center sm:text-right">
+                    Public APK release is currently frozen and not available for download.
+                  </span>
                 </div>
-                <span className="text-[11px] font-medium text-[#64748B] text-center sm:text-right">
-                  Public APK release is currently frozen and not available for download.
-                </span>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
@@ -1259,7 +1415,7 @@ export default function LandingPage() {
 
       {/* ─── CALL TO ACTION (CTA) ────────────────────────────────────────── */}
       <section className="py-20 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full">
-        <div className="rounded-3xl bg-[#172033] text-white p-8 sm:p-14 shadow-xl text-center space-y-6">
+        <CardReveal className="rounded-3xl bg-[#2A1F3D] text-white p-8 sm:p-14 shadow-xl text-center space-y-6">
           <div className="max-w-2xl mx-auto space-y-3">
             <span className="font-mono text-xs font-extrabold uppercase tracking-widest text-[#38BDF8]">
               Ready to Upgrade Your Financial Clarity?
@@ -1273,64 +1429,79 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <Link
-              href="/register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F7F7F4] text-[#172033] px-8 py-3.5 text-xs font-bold shadow-md transition-all active:translate-y-[1px]"
+            <motion.div
+              whileHover={{ scale: 1.015, y: -1 }}
+              whileTap={{ scale: 0.985 }}
+              transition={{ duration: 0.15 }}
+              className="w-full sm:w-auto"
             >
-              <span>Create Free Account</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsContactOpen(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-slate-700 text-white px-8 py-3.5 text-xs font-bold transition-all cursor-pointer"
+              <Link
+                href="/register"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F7F7F4] text-[#191522] px-8 py-3.5 text-xs font-bold shadow-md transition-colors"
+              >
+                <span>Create Free Account</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.015, y: -1 }}
+              whileTap={{ scale: 0.985 }}
+              transition={{ duration: 0.15 }}
+              className="w-full sm:w-auto"
             >
-              <span>Contact Me</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </button>
+              <button
+                type="button"
+                onClick={() => setIsContactOpen(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#33264A] hover:bg-[#3B2D54] border border-[#4A3A68] text-white px-8 py-3.5 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <span>Contact Me</span>
+                <ArrowUpRight className="h-4 w-4" />
+              </button>
+            </motion.div>
           </div>
-        </div>
+        </CardReveal>
       </section>
 
       {/* ─── FOOTER ──────────────────────────────────────────────────────── */}
-      <footer className="mt-auto border-t border-[#E5E7EB] bg-white py-12 px-4 sm:px-6 lg:px-12 text-xs text-[#5F6878]">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="mt-auto border-t border-[#E4E2DC] bg-white py-12 px-4 sm:px-6 lg:px-12 text-xs text-[#625D69]">
+        <CardReveal className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded-lg bg-[#172033] text-white flex items-center justify-center font-black text-xs">
+            <div className="h-7 w-7 rounded-lg bg-[#2A1F3D] text-white flex items-center justify-center font-black text-xs">
               M
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-[#172033]">MONVEX</span>
-              <span className="text-[10px] text-[#858D9A]">AI-powered personal financial intelligence.</span>
+              <span className="font-bold text-[#191522]">MONVEX</span>
+              <span className="text-[10px] text-[#898390]">AI-powered personal financial intelligence.</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-semibold">
-            <a href="#core-loop" className="hover:text-[#172033] transition-colors">Core Architecture</a>
-            <a href="#simulator" className="hover:text-[#172033] transition-colors">What-If Simulator</a>
-            <a href="#intelligence" className="hover:text-[#172033] transition-colors">Intelligence System</a>
-            <a href="#desktop" className="hover:text-[#172033] transition-colors">Apps & Desktop</a>
-            <a href="#about" className="hover:text-[#172033] transition-colors">About</a>
+            <a href="#core-loop" className="hover:text-[#191522] transition-colors">Core Architecture</a>
+            <a href="#simulator" className="hover:text-[#191522] transition-colors">What-If Simulator</a>
+            <a href="#intelligence" className="hover:text-[#191522] transition-colors">Intelligence System</a>
+            <a href="#desktop" className="hover:text-[#191522] transition-colors">Apps & Desktop</a>
+            <a href="#about" className="hover:text-[#191522] transition-colors">About</a>
             <button
               type="button"
               onClick={() => setIsContactOpen(true)}
-              className="hover:text-[#172033] transition-colors font-semibold cursor-pointer"
+              className="hover:text-[#191522] transition-colors font-semibold cursor-pointer"
             >
               Contact
             </button>
-            <Link href="/security" className="hover:text-[#172033] transition-colors">Security Center</Link>
-            <Link href="/login" className="hover:text-[#172033] transition-colors">Sign In</Link>
+            <Link href="/security" className="hover:text-[#191522] transition-colors">Security Center</Link>
+            <Link href="/login" className="hover:text-[#191522] transition-colors">Sign In</Link>
           </div>
 
           <div className="text-center md:text-right space-y-0.5">
-            <div className="font-semibold text-[11px] text-[#172033]">
+            <div className="font-semibold text-[11px] text-[#191522]">
               Built by Danish Ansari (Drix)
             </div>
-            <div className="font-mono text-[10px] text-[#858D9A]">
+            <div className="font-mono text-[10px] text-[#898390]">
               &copy; 2026 MONVEX. All rights reserved.
             </div>
           </div>
-        </div>
+        </CardReveal>
       </footer>
 
       {/* ─── CONTACT MODAL ────────────────────────────────────────────────── */}
@@ -1338,4 +1509,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

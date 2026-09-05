@@ -392,11 +392,11 @@ export default function AIPage() {
   const renderFormattedContent = (content: string) => {
     const lines = content.split('\n');
     return (
-      <div className="space-y-2.5 leading-relaxed text-[13.5px] text-[#1E293B]">
+      <div className="space-y-2.5 leading-relaxed text-[13.5px] text-[#191522]">
         {lines.map((line, idx) => {
           if (line.startsWith('### ')) {
             return (
-              <h4 key={idx} className="text-sm font-extrabold text-[#0F172A] pt-3 pb-1 tracking-tight flex items-center gap-1.5">
+              <h4 key={idx} className="text-sm font-extrabold text-[#191522] pt-3 pb-1 tracking-tight flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
                 <span>{line.replace('### ', '')}</span>
               </h4>
@@ -404,7 +404,7 @@ export default function AIPage() {
           }
           if (line.startsWith('## ')) {
             return (
-              <h3 key={idx} className="text-base font-black text-[#0F172A] pt-3 pb-1 tracking-tight">
+              <h3 key={idx} className="text-base font-black text-[#191522] pt-3 pb-1 tracking-tight">
                 {line.replace('## ', '')}
               </h3>
             );
@@ -417,7 +417,7 @@ export default function AIPage() {
                 <span
                   className="leading-relaxed"
                   dangerouslySetInnerHTML={{
-                    __html: cleanLine.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-[#0F172A] bg-blue-50/70 px-1 py-0.5 rounded">$1</strong>'),
+                    __html: cleanLine.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-[#191522] bg-blue-50/70 px-1 py-0.5 rounded">$1</strong>'),
                   }}
                 />
               </div>
@@ -434,7 +434,7 @@ export default function AIPage() {
                 <span
                   className="leading-relaxed"
                   dangerouslySetInnerHTML={{
-                    __html: rest.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-[#0F172A] bg-blue-50/70 px-1 py-0.5 rounded">$1</strong>'),
+                    __html: rest.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-[#191522] bg-blue-50/70 px-1 py-0.5 rounded">$1</strong>'),
                   }}
                 />
               </div>
@@ -448,7 +448,7 @@ export default function AIPage() {
               key={idx}
               className="leading-relaxed"
               dangerouslySetInnerHTML={{
-                __html: line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-[#0F172A]">$1</strong>'),
+                __html: line.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-[#191522]">$1</strong>'),
               }}
             />
           );

@@ -78,6 +78,7 @@ export class UnifiedApiClient {
   simulateDebt = (d: any) => this.transactions.simulateDebt(d);
   getReceipts = () => this.transactions.getReceipts();
   uploadReceipt = (d: any) => this.transactions.uploadReceipt(d);
+  uploadReceiptFile = (f: File) => this.transactions.uploadReceiptFile(f);
   confirmReceipt = (id: string, d?: any) => this.transactions.confirmReceipt(id, d);
   rejectReceipt = (id: string) => this.transactions.rejectReceipt(id);
   getDuplicateTransactions = () => this.transactions.getDuplicateTransactions();
@@ -86,6 +87,7 @@ export class UnifiedApiClient {
   clearAllNotifications = () => this.transactions.clearAllNotifications();
   getWhyExplanation = (cat?: string) => this.transactions.getWhyExplanation(cat);
   getMonthlyReport = () => this.transactions.getMonthlyReport();
+  downloadMonthlyReportPDF = (m?: string) => this.transactions.downloadMonthlyReportPDF(m);
   downloadTransactionsCSV = () => this.transactions.downloadTransactionsCSV();
 
   // Budgets proxies

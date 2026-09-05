@@ -20,12 +20,14 @@ from .views_extra import (
     ReceiptUploadView,
     ReceiptConfirmView,
     ReceiptRejectView,
+    ReceiptImageView,
     DuplicateTransactionsView,
     NotificationListView,
     NotificationMarkReadView,
     NotificationClearAllView,
     WhyExplainerView,
     MonthlyReportView,
+    MonthlyReportPDFView,
     UniversalSearchView
 )
 
@@ -56,6 +58,7 @@ urlpatterns = [
     path('receipts/upload/', ReceiptUploadView.as_view(), name='receipt_upload'),
     path('receipts/<uuid:pk>/confirm/', ReceiptConfirmView.as_view(), name='receipt_confirm'),
     path('receipts/<uuid:pk>/reject/', ReceiptRejectView.as_view(), name='receipt_reject'),
+    path('receipts/<uuid:pk>/image/', ReceiptImageView.as_view(), name='receipt_image'),
 
     # Smart Alerts & Notifications
     path('notifications/', NotificationListView.as_view(), name='notification_list'),
@@ -65,6 +68,7 @@ urlpatterns = [
     # Variance Attribution & Monthly Statement
     path('why/', WhyExplainerView.as_view(), name='why_explainer'),
     path('report/monthly/', MonthlyReportView.as_view(), name='monthly_report'),
+    path('report/pdf/', MonthlyReportPDFView.as_view(), name='monthly_report_pdf'),
 
     path('<uuid:pk>/', TransactionDetailView.as_view(), name='transaction_detail'),
 ]

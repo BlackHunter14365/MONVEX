@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'core/theme/monvex_theme.dart';
 import 'core/constants/colors.dart';
+import 'core/utils/haptics.dart';
 import 'providers/auth_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/account_provider.dart';
+import 'providers/money_hub_provider.dart';
+import 'providers/receipt_provider.dart';
 import 'providers/budget_provider.dart';
 import 'providers/goal_provider.dart';
 import 'providers/copilot_provider.dart';
@@ -14,10 +17,11 @@ import 'providers/search_provider.dart';
 
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
-import 'screens/transactions/transactions_screen.dart';
-import 'screens/accounts/accounts_screen.dart';
+import 'screens/money/money_hub_screen.dart';
+import 'screens/budgets_goals/budgets_goals_screen.dart';
+import 'screens/receipts/receipts_screen.dart';
 import 'screens/copilot/copilot_screen.dart';
-import 'screens/settings/settings_screen.dart';
+import 'screens/transactions/quick_entry_sheet.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +43,8 @@ class MonvexApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => AccountProvider()),
+        ChangeNotifierProvider(create: (_) => MoneyHubProvider()),
+        ChangeNotifierProvider(create: (_) => ReceiptProvider()),
         ChangeNotifierProvider(create: (_) => BudgetProvider()),
         ChangeNotifierProvider(create: (_) => GoalProvider()),
         ChangeNotifierProvider(create: (_) => CopilotProvider()),
@@ -87,7 +93,66 @@ class AuthGate extends StatelessWidget {
       return const LoginScreen();
     }
 
+    if (auth.isAppLocked) {
+      return const BiometricLockScreen();
+    }
+
     return const MainNavigationWrapper();
+  }
+}
+
+class BiometricLockScreen extends StatelessWidget {
+  const BiometricLockScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.fingerprint, size: 54, color: AppColors.primaryLight),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'MONVEX Vault Locked',
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Biometric authentication enabled. Tap below to verify your identity with Android Keystore.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.4),
+              ),
+              const SizedBox(height: 28),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                ),
+                onPressed: () {
+                  AppHaptics.success();
+                  auth.unlockApp();
+                },
+                icon: const Icon(Icons.lock_open, size: 18),
+                label: const Text('Unlock Vault', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -101,51 +166,83 @@ class MainNavigationWrapper extends StatefulWidget {
 class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    TransactionsScreen(),
-    AccountsScreen(),
-    CopilotScreen(),
-    SettingsScreen(),
+  late final List<Widget> _screens = [
+    const DashboardScreen(),
+    const MoneyHubScreen(),
+    const BudgetsGoalsScreen(),
+    const ReceiptsScreen(),
+    const CopilotScreen(),
   ];
+
+  void _openQuickEntrySheet() {
+    AppHaptics.medium();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => QuickEntrySheet(
+        onSwitchToReceiptScanner: () {
+          setState(() => _currentIndex = 3);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (idx) => setState(() => _currentIndex = idx),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Command',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'Ledger',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: 'Accounts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome_outlined),
-            activeIcon: Icon(Icons.auto_awesome),
-            label: 'Copilot',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.tune_outlined),
-            activeIcon: Icon(Icons.tune),
-            label: 'Hub',
-          ),
-        ],
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
+        floatingActionButton: _currentIndex != 3
+            ? FloatingActionButton(
+                backgroundColor: AppColors.primary,
+                onPressed: _openQuickEntrySheet,
+                child: const Icon(Icons.add, color: Colors.white),
+              )
+            : null,
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (idx) {
+            AppHaptics.selection();
+            setState(() => _currentIndex = idx);
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_outlined),
+              activeIcon: Icon(Icons.dashboard),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              activeIcon: Icon(Icons.account_balance_wallet),
+              label: 'Money',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.pie_chart_outline),
+              activeIcon: Icon(Icons.pie_chart),
+              label: 'Budgets',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.document_scanner_outlined),
+              activeIcon: Icon(Icons.document_scanner),
+              label: 'Receipts',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.auto_awesome_outlined),
+              activeIcon: Icon(Icons.auto_awesome),
+              label: 'Copilot',
+            ),
+          ],
+        ),
       ),
     );
   }

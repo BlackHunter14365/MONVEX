@@ -10,8 +10,9 @@ class TransactionModel {
   final String? accountName;
   final String source;
   final double? confidence;
+  final String currency;
 
-  TransactionModel({
+  const TransactionModel({
     required this.id,
     required this.amount,
     required this.type,
@@ -23,24 +24,59 @@ class TransactionModel {
     this.accountName,
     required this.source,
     this.confidence,
+    this.currency = 'INR',
   });
 
-  bool get isExpense => type == 'EXPENSE';
-  bool get isIncome => type == 'INCOME';
+  bool get isExpense => type.toUpperCase() == 'EXPENSE';
+  bool get isIncome => type.toUpperCase() == 'INCOME';
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    double parsedAmount = 0.0;
+    if (json['amount'] is num) {
+      parsedAmount = (json['amount'] as num).toDouble();
+    } else if (json['amount'] != null) {
+      parsedAmount = double.tryParse(json['amount'].toString()) ?? 0.0;
+    }
+
+    String catName = 'General';
+    String catColor = '#4056A1';
+    if (json['category_name'] != null) {
+      catName = json['category_name'].toString();
+    } else if (json['category'] is Map) {
+      catName = json['category']['name']?.toString() ?? 'General';
+      catColor = json['category']['color']?.toString() ?? '#4056A1';
+    }
+
+    if (json['category_color'] != null) {
+      catColor = json['category_color'].toString();
+    }
+
     return TransactionModel(
-      id: json['id'].toString(),
-      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      type: json['type'] ?? 'EXPENSE',
-      date: json['date'] ?? '',
-      categoryName: json['category_name'] ?? json['category']?['name'] ?? 'General',
-      categoryColor: json['category_color'] ?? json['category']?['color'] ?? '#6366F1',
-      merchantName: json['merchant_name'] ?? json['merchant'],
-      description: json['description'],
-      accountName: json['account_name'] ?? json['account']?['name'],
-      source: json['source'] ?? 'MANUAL',
-      confidence: json['confidence'] != null ? (json['confidence'] as num).toDouble() : null,
+      id: json['id']?.toString() ?? '',
+      amount: parsedAmount,
+      type: json['type']?.toString().toUpperCase() ?? 'EXPENSE',
+      date: json['date']?.toString() ?? DateTime.now().toIso8601String().split('T').first,
+      categoryName: catName,
+      categoryColor: catColor,
+      merchantName: json['merchant_name']?.toString() ?? json['merchant']?.toString(),
+      description: json['description']?.toString() ?? json['title']?.toString(),
+      accountName: json['account_name']?.toString() ?? (json['account'] is Map ? json['account']['name']?.toString() : null),
+      source: json['source']?.toString() ?? 'MANUAL',
+      confidence: json['confidence'] is num
+          ? (json['confidence'] as num).toDouble()
+          : double.tryParse(json['confidence']?.toString() ?? ''),
+      currency: json['currency']?.toString() ?? 'INR',
     );
   }
+
+  factory TransactionModel.empty() => TransactionModel(
+    id: '',
+    amount: 0.0,
+    type: 'EXPENSE',
+    date: DateTime.now().toIso8601String().split('T').first,
+    categoryName: 'General',
+    categoryColor: '#4056A1',
+    source: 'MANUAL',
+    currency: 'INR',
+  );
 }

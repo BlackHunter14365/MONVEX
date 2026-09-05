@@ -166,9 +166,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         profile.monthly_income = monthly_income
         profile.phone_number = phone_number
         profile.status = 'PENDING_VERIFICATION' if require_otp else 'ACTIVE'
-        profile.email_verified = False
+        profile.email_verified = not require_otp
         profile.is_verified = not require_otp
         profile.save()
+
+        if not require_otp:
+            from services.user_init_service import UserInitService
+            UserInitService.initialize_fresh_user_account(user)
+
         return user
 
 class VerificationCheckSerializer(serializers.Serializer):

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { queryClient } from '@/lib/query/queryClient';
 
 interface UserProfile {
   id: string;
@@ -58,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser();
 
     const handleAuthLogout = () => {
+      queryClient.clear();
       setUser(null);
       setIsLoading(false);
     };
@@ -74,11 +76,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (credentials: any) => {
+    queryClient.clear();
     await api.login(credentials);
     await refreshUser();
   };
 
   const loginWithGoogle = async (credential: string) => {
+    queryClient.clear();
     const res = await api.googleLogin(credential);
     if (res.access) {
       await refreshUser();
@@ -95,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (userData: any) => {
+    queryClient.clear();
     const res = await api.register(userData);
     if (res.access) {
       await refreshUser();
@@ -103,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    queryClient.clear();
     api.clearTokens();
     setUser(null);
     try {

@@ -14,6 +14,8 @@ import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import { useSpeechRecognition } from '@/lib/useSpeechRecognition';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/queryKeys';
 import { cn } from '@/lib/utils';
 
 interface AddTransactionModalProps {
@@ -30,6 +32,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   initialTransaction,
 }) => {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const isEdit = Boolean(initialTransaction && initialTransaction.id);
 
   // Mode: 'smart' (NLP/Voice) or 'manual'
@@ -151,6 +154,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         toast.success('Transaction recorded successfully.');
       }
 
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+
       if (onSuccess) onSuccess();
       onClose();
 
@@ -235,7 +243,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                   'absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-2 transition-all',
                   isListening
                     ? 'bg-[#E11D48] text-white shadow-md animate-pulse'
-                    : 'text-[#858D9A] hover:text-[#172033] hover:bg-white'
+                    : 'text-[#898390] hover:text-[#191522] hover:bg-white'
                 )}
                 title={isListening ? 'Stop Recording' : 'Voice Dictation (Microphone)'}
               >
@@ -311,26 +319,32 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 onChange={(e) => setCategoryName(e.target.value)}
                 className="w-full rounded-md bg-surface border border-border px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
               >
-                {categories.length > 0 ? (
-                  categories.map((c) => (
-                    <option key={c.id} value={c.name}>
+                {(() => {
+                  const renderedCategories = categories.length > 0 ? categories : [
+                    { id: 'cat-default-1', name: 'Food & Dining' },
+                    { id: 'cat-default-2', name: 'Groceries' },
+                    { id: 'cat-default-3', name: 'Transportation' },
+                    { id: 'cat-default-4', name: 'Housing & Rent' },
+                    { id: 'cat-default-5', name: 'Bills & Utilities' },
+                    { id: 'cat-default-6', name: 'Shopping' },
+                    { id: 'cat-default-7', name: 'Entertainment' },
+                    { id: 'cat-default-8', name: 'Health & Medical' },
+                    { id: 'cat-default-9', name: 'Salary & Income' },
+                    { id: 'cat-default-10', name: 'Investments & Returns' },
+                    { id: 'cat-default-11', name: 'Other Expense' },
+                  ];
+                  const seenNames = new Set<string>();
+                  const uniqueCategories = renderedCategories.filter((c: any) => {
+                    if (seenNames.has(c.name)) return false;
+                    seenNames.add(c.name);
+                    return true;
+                  });
+                  return uniqueCategories.map((c: any) => (
+                    <option key={c.id || c.name} value={c.name}>
                       {c.name}
                     </option>
-                  ))
-                ) : (
-                  <>
-                    <option value="Food & Dining">Food & Dining</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Housing & Rent">Housing & Rent</option>
-                    <option value="Utilities & Bills">Utilities & Bills</option>
-                    <option value="Shopping & Lifestyle">Shopping & Lifestyle</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Salary & Wages">Salary & Wages</option>
-                    <option value="Investments">Investments</option>
-                    <option value="General">General</option>
-                  </>
-                )}
+                  ));
+                })()}
               </select>
             </div>
           </div>

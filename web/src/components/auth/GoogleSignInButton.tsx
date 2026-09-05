@@ -233,7 +233,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           type="button"
           disabled
           aria-label="Signing you in with Google"
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-[#E4E2DC] bg-[#F6F5F1] text-[#172033] text-xs font-bold shadow-xs cursor-wait"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-[#E4E2DC] bg-[#F6F5F1] text-[#191522] text-xs font-bold shadow-xs cursor-wait"
         >
           <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
           <span>Signing you in with Google...</span>

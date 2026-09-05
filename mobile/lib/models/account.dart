@@ -8,7 +8,7 @@ class AccountModel {
   final String? mask;
   final bool isActive;
 
-  AccountModel({
+  const AccountModel({
     required this.id,
     required this.name,
     required this.type,
@@ -20,15 +20,21 @@ class AccountModel {
   });
 
   factory AccountModel.fromJson(Map<String, dynamic> json) {
+    double parseBalance(dynamic val) {
+      if (val is num) return val.toDouble();
+      if (val != null) return double.tryParse(val.toString()) ?? 0.0;
+      return 0.0;
+    }
+
     return AccountModel(
-      id: json['id'].toString(),
-      name: json['name'] ?? json['institution'] ?? 'Account',
-      type: json['type'] ?? 'CHECKING',
-      institution: json['institution'] ?? 'General',
-      balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
-      currency: json['currency'] ?? 'INR',
-      mask: json['mask'] ?? json['account_number_mask'],
-      isActive: json['is_active'] ?? true,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? json['institution']?.toString() ?? 'Account',
+      type: json['type']?.toString().toUpperCase() ?? 'CHECKING',
+      institution: json['institution']?.toString() ?? 'General',
+      balance: parseBalance(json['balance'] ?? json['value'] ?? json['current_balance']),
+      currency: json['currency']?.toString() ?? 'INR',
+      mask: json['mask']?.toString() ?? json['account_number_mask']?.toString(),
+      isActive: json['is_active'] as bool? ?? true,
     );
   }
 }

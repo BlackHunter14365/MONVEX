@@ -44,7 +44,8 @@ const PRESET_AVATARS = [
 ];
 
 const ACCENT_COLORS = [
-  { id: 'obsidian', name: 'Obsidian Navy', hex: '#172033', bgClass: 'bg-[#172033]' },
+  { id: 'obsidian', name: 'Deep Plum', hex: '#2A1F3D', bgClass: 'bg-[#2A1F3D]' },
+  { id: 'indigo', name: 'Medium Indigo', hex: '#4056A1', bgClass: 'bg-[#4056A1]' },
   { id: 'sapphire', name: 'Cyber Sapphire', hex: '#2563EB', bgClass: 'bg-[#2563EB]' },
   { id: 'emerald', name: 'Emerald Wealth', hex: '#059669', bgClass: 'bg-[#059669]' },
   { id: 'amber', name: 'Royal Amber', hex: '#D97706', bgClass: 'bg-[#D97706]' },
@@ -258,7 +259,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             size="sm"
             isLoading={isSaving}
             leftIcon={<Save className="h-3.5 w-3.5" />}
-            className="text-xs shadow-sm bg-[#172033] hover:bg-[#0F172A]"
+            className="text-xs shadow-sm bg-[#2A1F3D] hover:bg-[#3B2D54]"
           >
             Save Profile
           </Button>
@@ -271,7 +272,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
           <div className="flex flex-col sm:flex-row items-center gap-5">
             {/* Avatar Preview Surface */}
             <div className="relative group shrink-0">
-              <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg border-2 border-white bg-[#172033] flex items-center justify-center text-white text-2xl font-black relative ring-2 ring-slate-900/10">
+              <div className="h-20 w-20 rounded-2xl overflow-hidden shadow-lg border-2 border-white bg-[#2A1F3D] flex items-center justify-center text-white text-2xl font-black relative ring-2 ring-slate-900/10">
                 {avatarImage ? (
                   <img src={avatarImage} alt={displayName} className="h-full w-full object-cover" />
                 ) : selectedPreset ? (
@@ -292,7 +293,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-[#172033] text-white shadow-md hover:bg-[#2563EB] transition-all hover:scale-110"
+                className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-[#2A1F3D] text-white shadow-md hover:bg-[#2563EB] transition-all hover:scale-110"
                 title="Upload Photo"
               >
                 <Camera className="h-3.5 w-3.5" />
@@ -332,7 +333,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   </button>
                 )}
               </div>
-              <span className="text-[11px] text-[#858D9A] block">
+              <span className="text-[11px] text-[#898390] block">
                 Supports JPG, PNG, WEBP up to 5MB. Persists permanently in your profile.
               </span>
             </div>
@@ -340,7 +341,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
 
           {/* Preset Avatars Gallery */}
           <div className="space-y-2 pt-3 border-t border-[#E4E2DC]/80">
-            <span className="text-xs font-bold text-[#172033] block">Or choose a 3D preset style:</span>
+            <span className="text-xs font-bold text-[#191522] block">Or choose a 3D preset style:</span>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {PRESET_AVATARS.map((p) => {
                 const isSel = selectedPreset === p.id && !avatarImage;
@@ -352,7 +353,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                     className={cn(
                       'p-2.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1',
                       isSel
-                        ? 'border-[#172033] bg-[#172033]/5 ring-2 ring-[#172033]/20 shadow-sm'
+                        ? 'border-[#4056A1] bg-[#E9EDFA] ring-2 ring-[#4056A1]/25 shadow-sm'
                         : 'border-[#E4E2DC] bg-white hover:border-[#858D9A]'
                     )}
                   >
@@ -364,7 +365,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                     >
                       {p.emoji}
                     </div>
-                    <span className="text-[10px] font-bold text-[#172033] truncate max-w-full">
+                    <span className="text-[10px] font-bold text-[#191522] truncate max-w-full">
                       {p.label}
                     </span>
                   </button>
@@ -380,7 +381,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">First Name</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">First Name</label>
               <input
                 type="text"
                 value={firstName}
@@ -389,12 +390,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   setHasUnsavedChanges(true);
                 }}
                 placeholder="e.g. Demon"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Last Name</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Last Name</label>
               <input
                 type="text"
                 value={lastName}
@@ -403,12 +404,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   setHasUnsavedChanges(true);
                 }}
                 placeholder="e.g. 68"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Primary Phone</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Primary Phone</label>
               <input
                 type="text"
                 value={phoneNumber}
@@ -417,23 +418,23 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   setHasUnsavedChanges(true);
                 }}
                 placeholder="+91 98765 43210"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Verified Email</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Verified Email</label>
               <input
                 type="email"
                 disabled
                 value={user?.email || ''}
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#858D9A] cursor-not-allowed"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#898390] cursor-not-allowed"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172033] mb-1 block">Personal Tagline / Status Bio</label>
+            <label className="text-xs font-bold text-[#191522] mb-1 block">Personal Tagline / Status Bio</label>
             <input
               type="text"
               value={bio}
@@ -442,7 +443,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                 setHasUnsavedChanges(true);
               }}
               placeholder="e.g. Financial Freedom Builder • Portfolio Target ₹1 Cr"
-              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-semibold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
             />
           </div>
         </div>
@@ -464,8 +465,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   className={cn(
                     'flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-xs font-bold whitespace-nowrap',
                     isSel
-                      ? 'border-[#172033] bg-[#172033] text-white shadow-sm'
-                      : 'border-[#E4E2DC] bg-white text-[#5F6878] hover:text-[#172033]'
+                      ? 'border-[#2A1F3D] bg-[#2A1F3D] text-white shadow-sm'
+                      : 'border-[#E4E2DC] bg-white text-[#625D69] hover:text-[#191522]'
                   )}
                 >
                   <span className={cn('h-3.5 w-3.5 rounded-full shadow-xs', c.bgClass)} />
@@ -497,7 +498,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
               size="sm"
               isLoading={isSaving}
               leftIcon={saveSuccess ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-              className="bg-[#172033] hover:bg-[#0F172A] text-white font-bold px-5 shadow-md"
+              className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white font-bold px-5 shadow-md"
             >
               {saveSuccess ? 'Saved ✓' : 'Save & Apply Changes'}
             </Button>

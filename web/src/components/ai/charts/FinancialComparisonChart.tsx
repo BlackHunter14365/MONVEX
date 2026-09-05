@@ -22,7 +22,7 @@ export const FinancialComparisonChart: React.FC<Props> = ({ config }) => {
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-44 flex items-center justify-center text-xs text-[#858D9A] italic">
+      <div className="h-44 flex items-center justify-center text-xs text-[#898390] italic">
         No comparative variance data available.
       </div>
     );
@@ -47,7 +47,7 @@ export const FinancialComparisonChart: React.FC<Props> = ({ config }) => {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#172033',
+              backgroundColor: '#26335F',
               borderRadius: '12px',
               border: 'none',
               color: '#FFFFFF',

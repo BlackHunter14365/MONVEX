@@ -95,17 +95,17 @@ export default function DebtPage() {
             <div className="text-xl sm:text-2xl font-black text-[#E11D48] tracking-tight">
               <AnimatedValue value={debtOverview?.total_remaining_balance || 0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Across {debtOverview?.total_liabilities_count || 0} active loans
             </span>
           </CardReveal>
 
           <CardReveal index={1} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Total Monthly EMI Outflow</span>
-            <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
               <AnimatedValue value={debtOverview?.total_monthly_emi || 0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Fixed monthly obligation
             </span>
           </CardReveal>
@@ -139,7 +139,7 @@ export default function DebtPage() {
               <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                 <div className="flex items-center gap-2">
                   <Sliders className="h-4 w-4 text-[#2563EB]" />
-                  <h3 className="text-sm font-black text-[#172033]">
+                  <h3 className="text-sm font-black text-[#191522]">
                     Accelerated Prepayment Simulator
                   </h3>
                 </div>
@@ -159,7 +159,7 @@ export default function DebtPage() {
                         setSelectedEmi(item.monthly_emi);
                       }
                     }}
-                    className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033]"
+                    className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522]"
                   >
                     {debtOverview.items.map((i: any) => (
                       <option key={i.id} value={i.id}>
@@ -174,7 +174,7 @@ export default function DebtPage() {
               <div className="space-y-4 pt-2 border-t border-[#E4E2DC]/80">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#172033]">Extra Monthly Prepayment</span>
+                    <span className="font-bold text-[#191522]">Extra Monthly Prepayment</span>
                     <span className="font-mono font-bold text-[#059669]">
                       +{formatCurrency(extraPayment)} / mo
                     </span>
@@ -188,7 +188,7 @@ export default function DebtPage() {
                     onChange={(e) => setExtraPayment(Number(e.target.value))}
                     className="w-full accent-[#059669] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-[#858D9A] font-semibold">
+                  <div className="flex justify-between text-[10px] text-[#898390] font-semibold">
                     <span>+₹500/mo</span>
                     <span>+₹5,000/mo</span>
                     <span>+₹15,000/mo</span>
@@ -201,9 +201,9 @@ export default function DebtPage() {
                 <div className="p-5 rounded-2xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-xs font-mono">
                     <div className="p-3 rounded-xl bg-white border border-[#E4E2DC] space-y-1">
-                      <span className="text-[10px] text-[#858D9A] block font-sans font-bold uppercase">Standard Timeline</span>
-                      <div className="text-xs font-bold text-[#5F6878]">{simResult.baseline_payoff_date}</div>
-                      <span className="text-[10px] text-[#858D9A] block">Tenure: {simResult.baseline_tenure_months}M</span>
+                      <span className="text-[10px] text-[#898390] block font-sans font-bold uppercase">Standard Timeline</span>
+                      <div className="text-xs font-bold text-[#625D69]">{simResult.baseline_payoff_date}</div>
+                      <span className="text-[10px] text-[#898390] block">Tenure: {simResult.baseline_tenure_months}M</span>
                     </div>
 
                     <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
@@ -214,7 +214,7 @@ export default function DebtPage() {
                   </div>
 
                   <div className="p-3 rounded-xl bg-white border border-[#E4E2DC] flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#172033]">Total Interest Reduction:</span>
+                    <span className="font-bold text-[#191522]">Total Interest Reduction:</span>
                     <span className="font-mono font-black text-[#059669]">
                       Save {formatCurrency(simResult.interest_saved)}!
                     </span>
@@ -228,13 +228,13 @@ export default function DebtPage() {
           <div className="lg:col-span-6 space-y-4">
             <div className="editorial-card p-6 rounded-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-                <h3 className="text-sm font-black text-[#172033]">
+                <h3 className="text-sm font-black text-[#191522]">
                   Active Loan Liabilities ({debtOverview?.items?.length || 0})
                 </h3>
               </div>
 
               {(debtOverview?.items || []).length === 0 ? (
-                <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+                <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
                   No active loans found. Add your loan in the Net Worth / Liabilities section to track amortization.
                 </div>
               ) : (
@@ -246,8 +246,8 @@ export default function DebtPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-xs font-black text-[#172033] block">{loan.name}</span>
-                          <span className="text-[11px] text-[#858D9A] font-mono">
+                          <span className="text-xs font-black text-[#191522] block">{loan.name}</span>
+                          <span className="text-[11px] text-[#898390] font-mono">
                             {loan.lender || 'Lending Institution'} • {loan.interest_rate_pct}% APR
                           </span>
                         </div>
@@ -258,7 +258,7 @@ export default function DebtPage() {
 
                       {/* Progress bar */}
                       <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] text-[#858D9A] font-mono font-bold">
+                        <div className="flex justify-between text-[10px] text-[#898390] font-mono font-bold">
                           <span>Principal Paid: {loan.progress_pct}%</span>
                           <span>Monthly EMI: {formatCurrency(loan.monthly_emi)}</span>
                         </div>

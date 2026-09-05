@@ -16,6 +16,20 @@ export function useCreateTransactionMutation() {
   });
 }
 
+export function useUpdateTransactionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.updateTransaction(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+    },
+  });
+}
+
 export function useDeleteTransactionMutation() {
   const queryClient = useQueryClient();
 

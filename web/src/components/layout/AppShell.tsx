@@ -10,6 +10,7 @@ import { AddTransactionModal } from '@/components/finance/AddTransactionModal';
 import { CommandCenter } from '@/components/search/CommandCenter';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { PageTransition } from '@/components/motion';
 import { cn } from '@/lib/utils';
 
 export interface AppShellProps {
@@ -82,11 +83,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
         <main
           className={cn(
-            'flex-1 w-full max-w-[1720px] mx-auto',
+            'flex-1 w-full max-w-[1720px] mx-auto flex flex-col',
             isAIPage ? 'p-0 lg:p-8' : 'p-4 sm:p-6 lg:p-8'
           )}
         >
-          {children}
+          <PageTransition key={pathname}>
+            {children}
+          </PageTransition>
         </main>
       </div>
 

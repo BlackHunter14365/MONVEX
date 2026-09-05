@@ -64,7 +64,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={isReduced ? { opacity: 1 } : 'visible'}
             exit={isReduced ? { opacity: 0 } : 'exit'}
             variants={backdropVariants}
-            className="fixed inset-0 bg-[#172033]/45 backdrop-blur-xs"
+            className="fixed inset-0 bg-[#191522]/40 backdrop-blur-xs"
             onClick={onClose}
           />
 
@@ -75,7 +75,7 @@ export const Modal: React.FC<ModalProps> = ({
             exit={isReduced ? { opacity: 0 } : 'exit'}
             variants={modalVariants}
             className={cn(
-              'relative w-full max-h-[90vh] flex flex-col rounded-2xl bg-white border border-[#E4E2DC] p-6 shadow-2xl z-10 text-[#172033] overflow-hidden transform-gpu',
+              'relative w-full max-h-[90vh] flex flex-col rounded-2xl bg-white border border-[#E4E2DC] p-6 shadow-2xl z-10 text-[#191522] overflow-hidden transform-gpu',
               maxWidthStyles[maxWidth],
               className
             )}
@@ -85,19 +85,19 @@ export const Modal: React.FC<ModalProps> = ({
               <div className="flex items-start justify-between pb-3.5 border-b border-[#E4E2DC] shrink-0 mb-4">
                 <div className="space-y-0.5 min-w-0 pr-4">
                   {title && (
-                    <h3 className="text-base font-bold text-[#172033] tracking-tight truncate">
+                    <h3 className="text-base font-bold text-[#191522] tracking-tight truncate">
                       {title}
                     </h3>
                   )}
                   {modalDesc && (
-                    <p className="text-xs font-medium text-[#5F6878] leading-relaxed">
+                    <p className="text-xs font-medium text-[#625D69] leading-relaxed">
                       {modalDesc}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="text-[#858D9A] hover:text-[#172033] p-1.5 rounded-lg hover:bg-[#F0EFEA] transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-[#172033]/20 focus-visible:outline-none"
+                  className="text-[#898390] hover:text-[#191522] p-1.5 rounded-lg hover:bg-[#EEEAF7]/70 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/25 focus-visible:outline-none"
                   aria-label="Close modal"
                 >
                   <X className="h-4 w-4" />

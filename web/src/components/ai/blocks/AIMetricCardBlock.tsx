@@ -27,7 +27,7 @@ export const AIMetricCardBlock: React.FC<Props> = ({ metrics }) => {
             className="rounded-2xl border border-[#E4E2DC] bg-[#FFFFFF] p-3.5 shadow-xs space-y-1.5 flex flex-col justify-between"
           >
             <div className="flex items-center justify-between gap-1.5">
-              <span className="text-[11px] font-bold text-[#5F6878] truncate uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-[#625D69] truncate uppercase tracking-wider">
                 {m.title}
               </span>
               {m.delta && (
@@ -54,7 +54,7 @@ export const AIMetricCardBlock: React.FC<Props> = ({ metrics }) => {
             </div>
 
             <div>
-              <div className="text-lg sm:text-xl font-black text-[#172033] tracking-tight">
+              <div className="text-lg sm:text-xl font-black text-[#191522] tracking-tight">
                 {isNumeric ? (
                   <AnimatedValue
                     value={Number(m.value)}
@@ -67,7 +67,7 @@ export const AIMetricCardBlock: React.FC<Props> = ({ metrics }) => {
                 )}
               </div>
               {m.subtitle && (
-                <span className="text-[10.5px] text-[#858D9A] font-medium block truncate pt-0.5">
+                <span className="text-[10.5px] text-[#898390] font-medium block truncate pt-0.5">
                   {m.subtitle}
                 </span>
               )}

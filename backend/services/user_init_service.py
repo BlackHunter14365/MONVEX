@@ -26,16 +26,19 @@ class UserInitService:
     @classmethod
     def initialize_fresh_user_account(cls, user: User):
         """
-        Sets up personalized categories for a new user.
-        Leaves accounts, transactions, budgets, and goals completely empty.
+        Initializes a fresh multi-tenant user account.
+        Seeds standard categories for the user so they own their default categories.
+        Leaves accounts, transactions, budgets, and goals completely empty for the new user.
         """
-        # Create standard categories specifically for this user
         for cat_data in cls.DEFAULT_CATEGORIES:
+            is_income = cat_data["name"] in ["Salary & Income", "Investments", "Investments & Returns", "Other Income"]
             Category.objects.get_or_create(
                 user=user,
                 name=cat_data["name"],
                 defaults={
+                    "type": "INCOME" if is_income else "EXPENSE",
                     "icon": cat_data["icon"],
-                    "color": cat_data["color"]
+                    "color": cat_data["color"],
+                    "is_system_default": False,
                 }
             )

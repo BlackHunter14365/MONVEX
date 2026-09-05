@@ -5,7 +5,11 @@ Handles Net Worth, Debt/EMI Planner, Receipt OCR & Confirmation, Duplicate Detec
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models import Q
+from django.conf import settings
+from django.http import HttpResponse, Http404
+import os
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -23,6 +27,7 @@ from services.receipt_service import ReceiptService
 from services.why_explainer_service import WhyExplainerService
 from services.finance_service import FinanceService
 from services.budget_service import BudgetService
+from services.pdf_report_service import PDFReportService
 
 
 # =========================================================================
@@ -144,8 +149,19 @@ class ReceiptListView(generics.ListAPIView):
 
 class ReceiptUploadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
+        # 1. Real File Upload via FormData
+        if 'file' in request.FILES or 'receipt' in request.FILES:
+            file_obj = request.FILES.get('file') or request.FILES.get('receipt')
+            try:
+                receipt = ReceiptService.process_receipt_file(request.user, file_obj)
+                return Response(ReceiptSerializer(receipt).data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. JSON Payload / Pre-parsed Entity Fallback
         merchant_name = request.data.get('merchant_name', 'D-Mart Supermarket')
         total_amount = float(request.data.get('total_amount', 1850.0))
         subtotal = float(request.data.get('subtotal', total_amount * 0.95))
@@ -170,6 +186,52 @@ class ReceiptUploadView(APIView):
         )
 
         return Response(ReceiptSerializer(receipt).data, status=status.HTTP_201_CREATED)
+
+
+class ReceiptImageView(APIView):
+    """
+    Streams receipt document bytes strictly to the authenticated owner.
+    Guarantees multi-tenant isolation, prevents directory traversal,
+    and supports pluggable local or private object storage.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            receipt = Receipt.objects.get(pk=pk, user=request.user)
+        except Receipt.DoesNotExist:
+            return Response({"error": "Receipt not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not receipt.image_url:
+            return Response({"error": "No image attached to this receipt"}, status=status.HTTP_404_NOT_FOUND)
+
+        from services.storage_service import StorageService
+        provider = StorageService.get_provider()
+
+        presigned = provider.get_presigned_url(receipt.image_url, expiry_seconds=900)
+        if presigned:
+            from django.shortcuts import redirect
+            return redirect(presigned)
+
+        try:
+            file_bytes = provider.read(receipt.image_url)
+        except (FileNotFoundError, ValidationError):
+            return Response({"error": "Receipt image file not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": f"Failed to retrieve receipt image: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        ext = os.path.splitext(receipt.image_url)[1].lower()
+        content_type = 'image/jpeg'
+        if ext == '.png':
+            content_type = 'image/png'
+        elif ext == '.webp':
+            content_type = 'image/webp'
+        elif ext == '.pdf':
+            content_type = 'application/pdf'
+
+        response = HttpResponse(file_bytes, content_type=content_type)
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class ReceiptConfirmView(APIView):
@@ -350,6 +412,49 @@ class MonthlyReportView(APIView):
         }
 
         return Response({"success": True, "report": report})
+
+
+class MonthlyReportPDFView(APIView):
+    """
+    Streams official server-generated PDF financial statements using ReportLab.
+    Enforces user isolation, date filtering, and ₹0.00 mathematical precision.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        month_str = request.query_params.get('month')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+
+        start_date = None
+        end_date = None
+        if start_date_str:
+            try:
+                start_date = date.fromisoformat(start_date_str)
+            except ValueError:
+                pass
+        if end_date_str:
+            try:
+                end_date = date.fromisoformat(end_date_str)
+            except ValueError:
+                pass
+
+        try:
+            pdf_bytes = PDFReportService.generate_monthly_statement(
+                user=user,
+                month_str=month_str,
+                start_date=start_date,
+                end_date=end_date
+            )
+        except Exception as e:
+            return Response({"error": f"Failed to generate PDF statement: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        filename = f"monvex_statement_{month_str or date.today().strftime('%Y-%m')}.pdf"
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 # =========================================================================

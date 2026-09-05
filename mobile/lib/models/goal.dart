@@ -8,7 +8,7 @@ class GoalModel {
   final String status;
   final String? category;
 
-  GoalModel({
+  const GoalModel({
     required this.id,
     required this.title,
     required this.targetAmount,
@@ -19,22 +19,40 @@ class GoalModel {
     this.category,
   });
 
+  String get name => title;
   double get remainingAmount => (targetAmount - currentAmount).clamp(0.0, double.infinity);
+  bool get isCompleted => currentAmount >= targetAmount;
+
+  int? get daysRemaining {
+    if (targetDate == null || targetDate!.isEmpty) return null;
+    try {
+      final dt = DateTime.parse(targetDate!);
+      return dt.difference(DateTime.now()).inDays;
+    } catch (_) {
+      return null;
+    }
+  }
 
   factory GoalModel.fromJson(Map<String, dynamic> json) {
-    final target = (json['target_amount'] as num?)?.toDouble() ?? 1.0;
-    final current = (json['current_amount'] as num?)?.toDouble() ?? 0.0;
-    final progress = (json['progress_percentage'] as num?)?.toDouble() ?? (target > 0 ? (current / target) * 100 : 0.0);
+    double parseNum(dynamic val) {
+      if (val is num) return val.toDouble();
+      if (val != null) return double.tryParse(val.toString()) ?? 0.0;
+      return 0.0;
+    }
+
+    final target = parseNum(json['target_amount'] ?? json['target'] ?? 1.0);
+    final current = parseNum(json['current_amount'] ?? json['current'] ?? 0.0);
+    final progress = parseNum(json['progress_percentage'] ?? (target > 0 ? (current / target) * 100 : 0.0));
 
     return GoalModel(
-      id: json['id'].toString(),
-      title: json['title'] ?? json['name'] ?? 'Savings Goal',
-      targetAmount: target,
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? json['name']?.toString() ?? 'Savings Goal',
+      targetAmount: target > 0 ? target : 1.0,
       currentAmount: current,
-      targetDate: json['deadline'] ?? json['target_date'],
+      targetDate: json['deadline']?.toString() ?? json['target_date']?.toString(),
       progressPercentage: progress.clamp(0.0, 100.0),
-      status: json['status'] ?? 'ACTIVE',
-      category: json['category'],
+      status: json['status']?.toString() ?? (current >= target ? 'COMPLETED' : 'ACTIVE'),
+      category: json['category']?.toString(),
     );
   }
 }

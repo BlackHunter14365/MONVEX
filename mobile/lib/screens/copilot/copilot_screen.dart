@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
+import '../../core/utils/haptics.dart';
 import '../../models/ai_message.dart';
 import '../../providers/copilot_provider.dart';
 
@@ -38,6 +39,7 @@ class _CopilotScreenState extends State<CopilotScreen> {
     final text = textOverride ?? _controller.text;
     if (text.trim().isEmpty) return;
 
+    AppHaptics.medium();
     _controller.clear();
     context.read<CopilotProvider>().sendMessage(text);
     _scrollToBottom();
@@ -55,13 +57,16 @@ class _CopilotScreenState extends State<CopilotScreen> {
           children: [
             Icon(Icons.auto_awesome, color: AppColors.primaryLight, size: 20),
             SizedBox(width: 8),
-            Text('MONVEX Copilot', style: TextStyle(fontWeight: FontWeight.w800)),
+            Text('MONVEX AI Copilot', style: TextStyle(fontWeight: FontWeight.w800)),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
-            onPressed: () => copilot.clearConversation(),
+            onPressed: () {
+              AppHaptics.selection();
+              copilot.clearConversation();
+            },
           ),
         ],
       ),
@@ -75,9 +80,9 @@ class _CopilotScreenState extends State<CopilotScreen> {
               children: [
                 _buildPromptChip("Where did I overspend this month?"),
                 const SizedBox(width: 8),
-                _buildPromptChip("What if I save ₹5,000 more?"),
+                _buildPromptChip("What if I save \$200 more?"),
                 const SizedBox(width: 8),
-                _buildPromptChip("Can I afford ₹50,000 purchase?"),
+                _buildPromptChip("Can I afford a \$1,200 laptop?"),
                 const SizedBox(width: 8),
                 _buildPromptChip("Calculate my financial health score"),
               ],
@@ -98,16 +103,16 @@ class _CopilotScreenState extends State<CopilotScreen> {
 
           // Loading indicator
           if (copilot.isLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
               child: Row(
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     height: 14,
                     width: 14,
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryLight),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Text(
                     'Analyzing financial telemetry...',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 12, fontStyle: FontStyle.italic),
@@ -135,7 +140,7 @@ class _CopilotScreenState extends State<CopilotScreen> {
                     controller: _controller,
                     style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Ask about spending, cash flow, budgets...',
+                      hintText: 'Ask about spending, runway, impulse buys...',
                       filled: true,
                       fillColor: AppColors.surfaceElevated,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -166,7 +171,10 @@ class _CopilotScreenState extends State<CopilotScreen> {
 
   Widget _buildPromptChip(String text) {
     return GestureDetector(
-      onTap: () => _handleSend(text),
+      onTap: () {
+        AppHaptics.light();
+        _handleSend(text);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
@@ -191,7 +199,7 @@ class _CopilotScreenState extends State<CopilotScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.82,
+          maxWidth: MediaQuery.of(context).size.width * 0.84,
         ),
         decoration: BoxDecoration(
           color: isUser ? AppColors.primary : AppColors.surface,

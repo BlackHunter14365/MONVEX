@@ -44,13 +44,24 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenAddTransaction }) =>
             key={item.href}
             href={item.href}
             className={cn(
-              'flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 py-1 px-1.5 rounded-xl text-[10px] font-bold transition-all',
+              'flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 py-1 px-1.5 rounded-xl text-[10px] font-bold transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none',
               isActive
-                ? 'text-[#172033] bg-white shadow-xs border border-[#E4E2DC]'
-                : 'text-[#858D9A] hover:text-[#172033]'
+                ? item.name === 'AI Copilot'
+                  ? 'text-[#191522] bg-[#E9EDFA] shadow-xs border border-[#7184C4]/30'
+                  : 'text-[#191522] bg-[#EEEAF7] shadow-xs border border-[#625477]/20'
+                : 'text-[#898390] hover:text-[#191522]'
             )}
           >
-            <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-[#2563EB]' : 'text-[#858D9A]')} />
+            <Icon
+              className={cn(
+                'h-4 w-4 shrink-0',
+                isActive
+                  ? item.name === 'AI Copilot'
+                    ? 'text-[#4056A1]'
+                    : 'text-[#2A1F3D]'
+                  : 'text-[#898390]'
+              )}
+            />
             <span className="truncate max-w-[50px]">{item.name}</span>
           </Link>
         );
@@ -59,7 +70,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenAddTransaction }) =>
       {onOpenAddTransaction && (
         <button
           onClick={onOpenAddTransaction}
-          className="flex flex-col items-center justify-center h-10 w-10 rounded-xl bg-[#172033] text-white shadow-md active:scale-95 transition-transform shrink-0"
+          className="flex flex-col items-center justify-center h-10 w-10 rounded-xl bg-[#2A1F3D] text-white shadow-md active:scale-95 transition-transform shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
           aria-label="Add transaction"
           title="Add Transaction"
         >
@@ -70,11 +81,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({ onOpenAddTransaction }) =>
       {/* Full Menu / Drawer Trigger */}
       <button
         onClick={handleOpenDrawer}
-        className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 py-1 px-1.5 rounded-xl text-[10px] font-bold text-[#858D9A] hover:text-[#172033] transition-all"
+        className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 py-1 px-1.5 rounded-xl text-[10px] font-bold text-[#898390] hover:text-[#191522] transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
         aria-label="Open full menu"
         title="More Features"
       >
-        <Menu className="h-4 w-4 text-[#858D9A]" />
+        <Menu className="h-4 w-4 text-[#898390]" />
         <span>Menu</span>
       </button>
     </nav>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/haptics.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../shared/widgets/monvex_card.dart';
@@ -9,6 +10,8 @@ import '../../shared/widgets/health_score_gauge.dart';
 import '../../shared/widgets/transaction_tile.dart';
 import '../../shared/widgets/empty_state_view.dart';
 import '../search/search_sheet.dart';
+import '../settings/settings_screen.dart';
+import '../transactions/quick_entry_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,12 +21,24 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _obscureBalance = false;
+  final _impulseAmtCtrl = TextEditingController();
+  String _impulseCategory = 'Shopping';
+  bool _isEvaluatingImpulse = false;
+  Map<String, dynamic>? _impulseResult;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardProvider>().fetchDashboard();
     });
+  }
+
+  @override
+  void dispose() {
+    _impulseAmtCtrl.dispose();
+    super.dispose();
   }
 
   String _getGreeting() {
@@ -60,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.textSecondary),
             onPressed: () {
+              AppHaptics.light();
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -69,10 +85,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
           IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+            onPressed: () {
+              AppHaptics.light();
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
-            onPressed: () => context.read<DashboardProvider>().fetchDashboard(),
+            onPressed: () {
+              AppHaptics.selection();
+              context.read<DashboardProvider>().fetchDashboard();
+            },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () {
+          AppHaptics.medium();
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => const QuickEntrySheet(),
+          );
+        },
       ),
       body: dashboard.isLoading && dashboard.rawMetrics == null
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
@@ -128,24 +167,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 18),
 
-                    // Net Balance & Cashflow Card
+                    // Net Balance & Cashflow Card with Privacy Toggle
                     MonvexCard(
                       padding: const EdgeInsets.all(18),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'NET FINANCIAL POSITION',
-                            style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.0,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'NET FINANCIAL POSITION',
+                                style: TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                                icon: Icon(
+                                  _obscureBalance ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  size: 18,
+                                  color: AppColors.textMuted,
+                                ),
+                                onPressed: () {
+                                  AppHaptics.selection();
+                                  setState(() => _obscureBalance = !_obscureBalance);
+                                },
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            Formatters.currency(dashboard.netWorth),
+                            _obscureBalance ? '••••••••' : Formatters.currency(dashboard.netWorth),
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 28,
@@ -167,6 +224,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 14),
+
+                    // Impulse Buy / Affordability Simulator Card
+                    _buildImpulseBuySimulator(),
                     const SizedBox(height: 14),
 
                     // Health Score Card
@@ -274,6 +335,169 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildImpulseBuySimulator() {
+    return MonvexCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.bolt, color: AppColors.warning, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Instant Affordability Check',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.warningBg,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'PRE-SPEND AI',
+                  style: TextStyle(color: AppColors.warning, fontSize: 9, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Test purchase impact against your runway & monthly budget before you buy.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: _impulseAmtCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    hintText: 'Amount (\$)',
+                    prefixIcon: Icon(Icons.attach_money, size: 18),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 4,
+                child: DropdownButtonFormField<String>(
+                  value: _impulseCategory,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  dropdownColor: AppColors.surfaceElevated,
+                  items: const [
+                    DropdownMenuItem(value: 'Shopping', child: Text('Shopping', style: TextStyle(fontSize: 12))),
+                    DropdownMenuItem(value: 'Electronics', child: Text('Electronics', style: TextStyle(fontSize: 12))),
+                    DropdownMenuItem(value: 'Dining', child: Text('Dining', style: TextStyle(fontSize: 12))),
+                    DropdownMenuItem(value: 'Entertainment', child: Text('Fun', style: TextStyle(fontSize: 12))),
+                    DropdownMenuItem(value: 'Travel', child: Text('Travel', style: TextStyle(fontSize: 12))),
+                  ],
+                  onChanged: (v) => setState(() => _impulseCategory = v ?? 'Shopping'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+                onPressed: _isEvaluatingImpulse
+                    ? null
+                    : () async {
+                        final amt = double.tryParse(_impulseAmtCtrl.text);
+                        if (amt == null || amt <= 0) return;
+
+                        setState(() => _isEvaluatingImpulse = true);
+                        AppHaptics.medium();
+
+                        final res = await context.read<DashboardProvider>().checkImpulseBuy(
+                              amount: amt,
+                              category: _impulseCategory,
+                            );
+
+                        if (mounted) {
+                          setState(() {
+                            _impulseResult = res;
+                            _isEvaluatingImpulse = false;
+                          });
+                          AppHaptics.success();
+                        }
+                      },
+                child: _isEvaluatingImpulse
+                    ? const SizedBox(
+                        height: 14,
+                        width: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.check, size: 18),
+              ),
+            ],
+          ),
+          if (_impulseResult != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _impulseResult!['can_afford'] == true ? AppColors.incomeBg : AppColors.expenseBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _impulseResult!['can_afford'] == true
+                      ? AppColors.income.withOpacity(0.3)
+                      : AppColors.expense.withOpacity(0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _impulseResult!['can_afford'] == true ? Icons.check_circle : Icons.warning_amber_rounded,
+                        color: _impulseResult!['can_afford'] == true ? AppColors.income : AppColors.expense,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _impulseResult!['can_afford'] == true ? 'Affordable Purchase' : 'Caution / High Risk',
+                        style: TextStyle(
+                          color: _impulseResult!['can_afford'] == true ? AppColors.income : AppColors.expense,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _impulseResult!['recommendation'] ??
+                        _impulseResult!['advice'] ??
+                        'Solvency simulation indicates purchase fits within planned liquid reserve.',
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, height: 1.3),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

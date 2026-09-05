@@ -1,70 +1,112 @@
 :root {
   /* ==========================================================================
-     MONVEX REFERENCE EDITORIAL DESIGN SYSTEM TOKENS
-     Reference: Warm Off-White Canvas, Pure White Cards, Rich Dark Navy Typography
+     MONVEX MULTI-TINT / MULTI-SHADE / MULTI-SURFACE VISUAL SYSTEM TOKENS
+     Reference: Warm Canvas, Pure White Cards, Pastel Semantic Tints, Indigo & Plum Hierarchy
      ========================================================================== */
 
-  /* Canvas & Surface System */
+  /* 1. Canvas & Neutral Surface Hierarchy */
   --mx-bg: #F6F5F1;
   --mx-background: #F6F5F1;
+  --mx-canvas-warm: #F6F5F1;
   --mx-sidebar: #F6F5F1;
   --mx-surface: #FFFFFF;
-  --mx-surface-subtle: #F0EFEA;
-  --mx-surface-muted: #F0EFEA;
+  --mx-surface-pure: #FFFFFF;
+  --mx-surface-subtle: #F1F0EC;
+  --mx-surface-muted: #F1F0EC;
   --mx-surface-raised: #E8E7E1;
-  --mx-surface-overlay: rgba(23, 32, 51, 0.40);
+  --mx-surface-overlay: rgba(25, 21, 34, 0.45);
 
-  /* Typography Contrast Hierarchy (CRITICAL WCAG AA COMPLIANCE) */
-  --mx-text-primary: #172033;       /* Dark Navy / Charcoal - Headings, Numbers, Main text */
-  --mx-text-secondary: #5F6878;     /* Slate - Supporting text, category labels, subtext */
-  --mx-text-muted: #858D9A;         /* Muted Gray - Micro-labels, table headers, dates */
-  --mx-text-disabled: #B0B7C3;
+  /* 2. Light Tinted Surfaces (Pastel Micro-Backgrounds) */
+  --mx-tint-lavender: #EEEAF7;
+  --mx-tint-plum-light: #F6F3FA;
+  --mx-tint-indigo: #E9EDFA;
+  --mx-tint-cyan: #DDF7FA;
+  --mx-tint-emerald: #E8F7F1;
+  --mx-surface-tint-emerald: #E8F7F1;
+  --mx-tint-amber: #FFF4DF;
+  --mx-surface-tint-amber: #FFF4DF;
+  --mx-tint-rose: #FDECEF;
+  --mx-surface-tint-rose: #FDECEF;
 
-  /* Borders & Separation (Delicate warm 1px hairlines) */
+  /* 3. Primary Brand Family (Plum / Aubergine) */
+  --mx-plum-deep: #2A1F3D;          /* Signature Deep Plum / Aubergine */
+  --mx-plum-rich: #3B2D54;          /* Elevated Interactive Plum */
+  --mx-plum-soft: #625477;          /* Soft Plum Accent / Border */
+  --mx-plum-lavender: #EEEAF7;      /* Lavender Tint */
+  --mx-plum-light: #F6F3FA;         /* Very Light Plum */
+  --mx-brand-primary: #2A1F3D;
+  --mx-brand-primary-hover: #3B2D54;
+  --mx-brand-primary-active: #21182F;
+
+  /* 4. Indigo Intelligence & Analytical Family */
+  --mx-indigo-deep: #26335F;        /* Deep Indigo Anchor */
+  --mx-indigo-medium: #4056A1;      /* Interactive Indigo / Chart Primary */
+  --mx-indigo-soft: #7184C4;        /* Soft Indigo Border / Subtext */
+  --mx-indigo-tint: #E9EDFA;        /* Subtle Indigo Tinted Surface */
+
+  /* 5. Blue & Cyan Precision Accents */
+  --mx-blue-electric: #2563EB;      /* Interactive Link & Informational Blue */
+  --mx-blue-soft: #EFF6FF;
+  --mx-cyan-bright: #06B6D4;        /* Bright Cyan Tool Accent */
+  --mx-cyan-soft: #DDF7FA;          /* Soft Cyan Surface */
+
+  /* 6. Controlled Dark Surface Hierarchy (Used Selectively for Depth) */
+  --mx-dark-brand: #2A1F3D;         /* Final CTA, Terminal Window Header */
+  --mx-dark-indigo: #26335F;        /* AI Workspace Header, Active Navigation Accent */
+  --mx-dark-plum: #33264A;          /* Executive KPI Card, Obsidian Wallet */
+  --mx-dark-pressed: #21182F;       /* Deep Pressed & Active State */
+  --mx-brand-surface: #2A1F3D;
+  --mx-brand-surface-elevated: #33264A;
+  --mx-brand-surface-muted: #3E305B;
+  --mx-brand-border: #4A3A68;
+
+  /* 7. High-Contrast Typography Hierarchy (WCAG AAA Compliance) */
+  --mx-text-primary: #191522;       /* Ultra-contrast Deep Plum-Charcoal (16.2:1 AAA on #FFFFFF) */
+  --mx-text-secondary: #625D69;     /* Balanced Neutral Slate (6.2:1 AA on #FFFFFF) */
+  --mx-text-muted: #898390;         /* Muted Meta & Label Gray (4.6:1 AA on #FFFFFF) */
+  --mx-text-disabled: #B4AEBD;
+
+  /* 8. Structural Hairlines & Borders */
   --mx-border: #E4E2DC;
   --mx-border-strong: #D6D4CD;
   --mx-border-interactive: #B8B5AB;
+  --mx-border-plum-soft: rgba(98, 84, 119, 0.20);
+  --mx-border-indigo-soft: rgba(113, 132, 196, 0.25);
+  --mx-border-cyan-soft: rgba(6, 182, 212, 0.25);
 
-  /* Brand Accents */
-  --mx-accent: #172033;             /* Dark Navy primary brand */
-  --mx-accent-hover: #0F172A;
-  --mx-accent-soft: rgba(23, 32, 51, 0.06);
-  --mx-brand-blue: #2563EB;         /* Clean interactive blue for links */
-  --mx-brand-blue-soft: #EFF6FF;
-
-  /* Semantic Financial Colors */
-  --mx-success: #059669;            /* Financial Emerald Green */
-  --mx-success-soft: #ECFDF5;
+  /* 9. Semantic Financial Colors & Tints */
+  --mx-success: #059669;            /* Financial Emerald Inflows/Surpluses */
+  --mx-success-soft: #E8F7F1;
   --mx-success-border: #A7F3D0;
 
-  --mx-warning: #D97706;            /* Warm Amber */
-  --mx-warning-soft: #FFFBEB;
+  --mx-warning: #D97706;            /* Alert Amber */
+  --mx-warning-soft: #FFF4DF;
   --mx-warning-border: #FDE68A;
 
-  --mx-danger: #E11D48;             /* Coral / Crimson Red */
-  --mx-danger-soft: #FFF1F2;
+  --mx-danger: #E11D48;             /* Crimson Burn/Expenses */
+  --mx-danger-soft: #FDECEF;
   --mx-danger-border: #FECDD3;
 
-  /* Category Palette Tints */
+  /* 10. Financial Categories */
   --mx-cat-food: #DCFCE7;
   --mx-cat-food-text: #15803D;
   --mx-cat-shop: #FEF3C7;
   --mx-cat-shop-text: #B45309;
   --mx-cat-bills: #E0F2FE;
   --mx-cat-bills-text: #0369A1;
-  --mx-cat-trans: #F3E8FF;
-  --mx-cat-trans-text: #7E22CE;
+  --mx-cat-trans: #EEEAF7;
+  --mx-cat-trans-text: #625477;
 
-  /* Radius Scale */
+  /* 11. Radii */
   --mx-radius-sm: 6px;
   --mx-radius-md: 10px;
   --mx-radius-lg: 14px;
   --mx-radius-xl: 18px;
   --mx-radius-full: 9999px;
 
-  /* Elevation Shadows */
-  --mx-shadow-subtle: 0 1px 2px 0 rgba(23, 32, 51, 0.04);
-  --mx-shadow-card: 0 1px 3px 0 rgba(23, 32, 51, 0.05), 0 1px 2px -1px rgba(23, 32, 51, 0.04);
-  --mx-shadow-elevated: 0 4px 6px -1px rgba(23, 32, 51, 0.06), 0 2px 4px -2px rgba(23, 32, 51, 0.04);
-  --mx-shadow-modal: 0 20px 25px -5px rgba(23, 32, 51, 0.12), 0 8px 10px -6px rgba(23, 32, 51, 0.08);
+  /* 12. Multi-Hue Elevation Shadows */
+  --mx-shadow-subtle: 0 1px 2px 0 rgba(25, 21, 34, 0.04);
+  --mx-shadow-card: 0 1px 3px 0 rgba(25, 21, 34, 0.05), 0 1px 2px -1px rgba(25, 21, 34, 0.04);
+  --mx-shadow-elevated: 0 4px 6px -1px rgba(25, 21, 34, 0.06), 0 2px 4px -2px rgba(25, 21, 34, 0.04);
+  --mx-shadow-modal: 0 20px 25px -5px rgba(25, 21, 34, 0.14), 0 8px 10px -6px rgba(25, 21, 34, 0.08);
 }

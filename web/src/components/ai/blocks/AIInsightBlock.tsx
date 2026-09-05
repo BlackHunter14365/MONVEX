@@ -34,16 +34,16 @@ export const AIInsightBlock: React.FC<Props> = ({ insights }) => {
         };
       default:
         return {
-          bg: 'bg-blue-50/60 border-blue-200/70',
-          text: 'text-blue-900',
-          icon: <TrendingUp className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />,
+          bg: 'bg-[#EEEAF7]/70 border-[#625477]/20',
+          text: 'text-[#3B2D54]',
+          icon: <TrendingUp className="h-4 w-4 text-[#4056A1] shrink-0 mt-0.5" />,
         };
     }
   };
 
   return (
     <div className="space-y-2 my-3">
-      <span className="text-[10.5px] font-bold text-[#858D9A] uppercase tracking-wider block">
+      <span className="text-[10.5px] font-bold text-[#898390] uppercase tracking-wider block">
         Key Variance Drivers & Telemetry Insights
       </span>
       {insights.map((ins, idx) => {

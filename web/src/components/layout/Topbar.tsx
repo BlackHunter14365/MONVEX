@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -12,14 +12,13 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
-  Zap,
   TrendingUp,
   Sparkles,
-  Command,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { UserProfileModal } from '@/components/profile/UserProfileModal';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 interface TopbarProps {
   onOpenAddTransaction?: () => void;
@@ -40,6 +39,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [presetData, setPresetData] = useState<any>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   const loadUserCustomizations = () => {
     if (!user) return;
@@ -69,6 +71,41 @@ export const Topbar: React.FC<TopbarProps> = ({
     return () => window.removeEventListener('monvex:profile-updated', handleProfileUpdated);
   }, [user]);
 
+  // Click-outside and Escape listener to dismiss overlays
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        setIsDropdownOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsDropdownOpen(false);
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Close menus on route change
+  useEffect(() => {
+    setIsDropdownOpen(false);
+    setIsNotificationsOpen(false);
+  }, [pathname]);
+
   const getPageTitle = () => {
     if (pathname.includes('/transactions')) return 'Transactions';
     if (pathname.includes('/budgets')) return 'Budgets';
@@ -89,11 +126,11 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   const handleLogout = async () => {
+    setIsDropdownOpen(false);
     await logout();
     router.replace('/login');
   };
 
-  // Format today's date in natural reference format: Friday, Aug 21, 2026
   const todayFormatted = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
@@ -118,16 +155,16 @@ export const Topbar: React.FC<TopbarProps> = ({
               window.dispatchEvent(new Event('monvex:open-mobile-drawer'));
             }
           }}
-          className="lg:hidden p-2 rounded-xl text-[#172033] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0"
+          className="lg:hidden p-2 rounded-xl text-[#191522] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
           aria-label="Open navigation menu"
         >
           <Menu className="h-4 w-4" />
         </button>
 
-        <h1 className="text-sm sm:text-lg font-bold text-[#172033] tracking-tight truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
+        <h1 className="text-sm sm:text-lg font-bold text-[#191522] tracking-tight truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
           {getPageTitle()}
         </h1>
-        <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[10px] font-bold shrink-0">
+        <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E8F7F1] text-[#059669] border border-[#A7F3D0] text-[10px] font-bold shrink-0">
           <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
           Live
         </span>
@@ -140,14 +177,14 @@ export const Topbar: React.FC<TopbarProps> = ({
             window.dispatchEvent(new Event('monvex:open-command-center'));
           }
         }}
-        className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white/80 hover:bg-white border border-[#E4E2DC] hover:border-[#D6D4CD] text-xs text-[#858D9A] hover:text-[#172033] transition-all shadow-2xs group max-w-[140px] sm:max-w-xs sm:w-64"
+        className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white/90 hover:bg-white border border-[#E4E2DC] hover:border-[#7184C4]/40 text-xs text-[#625D69] hover:text-[#191522] transition-all shadow-2xs group max-w-[140px] sm:max-w-xs sm:w-64 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
         title="Open Universal Command Center (Ctrl+K / Cmd+K)"
         aria-label="Search MONVEX (Ctrl+K)"
       >
-        <Search className="h-3.5 w-3.5 text-[#858D9A] group-hover:text-[#172033] shrink-0" />
+        <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522] shrink-0" />
         <span className="hidden sm:inline font-medium">Search MONVEX...</span>
         <span className="sm:hidden font-medium text-[11px] truncate">Search...</span>
-        <kbd className="ml-auto hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-sm bg-[#F6F5F1] border border-[#E4E2DC] text-[10px] font-mono font-bold text-[#5F6878]">
+        <kbd className="ml-auto hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-sm bg-[#F6F5F1] border border-[#E4E2DC] text-[10px] font-mono font-bold text-[#625D69]">
           ⌘K
         </kbd>
       </button>
@@ -155,18 +192,20 @@ export const Topbar: React.FC<TopbarProps> = ({
       {/* Right Controls */}
       <div className="flex items-center gap-3 sm:gap-4">
         {/* Formatted Date */}
-        <span className="hidden md:inline-block text-xs font-medium text-[#858D9A]">
+        <span className="hidden md:inline-block text-xs font-medium text-[#898390]">
           {todayFormatted}
         </span>
 
         {/* Notification Bell with Dropdown */}
-        <div className="relative">
+        <div ref={notificationsRef} className="relative">
           <button
             onClick={() => {
-              setIsNotificationsOpen(!isNotificationsOpen);
+              setIsNotificationsOpen((prev) => !prev);
               setIsDropdownOpen(false);
             }}
-            className="relative p-2 rounded-lg text-[#5F6878] hover:text-[#172033] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all"
+            aria-expanded={isNotificationsOpen}
+            aria-haspopup="true"
+            className="relative p-2 rounded-lg text-[#625D69] hover:text-[#191522] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
@@ -176,27 +215,32 @@ export const Topbar: React.FC<TopbarProps> = ({
           </button>
 
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-xl liquid-glass p-3 shadow-xl border border-[#E4E2DC] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white p-3.5 shadow-2xl border border-[#E4E2DC] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC] mb-2">
-                <span className="text-xs font-bold text-[#172033]">Telemetry Notifications</span>
-                <span className="text-[10px] font-bold text-[#2563EB]">Mark read</span>
+                <span className="text-xs font-bold text-[#191522]">Telemetry Notifications</span>
+                <span
+                  onClick={() => setIsNotificationsOpen(false)}
+                  className="text-[10px] font-bold text-[#4056A1] hover:underline cursor-pointer"
+                >
+                  Mark read
+                </span>
               </div>
               <div className="space-y-2">
-                <div className="p-2.5 rounded-lg bg-white/90 border border-[#E4E2DC] text-xs">
+                <div className="p-2.5 rounded-lg bg-[#E8F7F1]/80 border border-[#A7F3D0] text-xs">
                   <div className="flex items-center gap-1.5 text-[#059669] font-bold">
                     <TrendingUp className="h-3.5 w-3.5" />
                     <span>Monthly Surplus on Track</span>
                   </div>
-                  <p className="text-[11px] text-[#5F6878] mt-1">
+                  <p className="text-[11px] text-[#065F46] mt-1 font-medium leading-relaxed">
                     Your savings rate is +28.4% above last month’s baseline.
                   </p>
                 </div>
-                <div className="p-2.5 rounded-lg bg-white/90 border border-[#E4E2DC] text-xs">
-                  <div className="flex items-center gap-1.5 text-[#2563EB] font-bold">
-                    <ShieldCheck className="h-3.5 w-3.5" />
+                <div className="p-2.5 rounded-lg bg-[#E9EDFA]/80 border border-[#7184C4]/30 text-xs">
+                  <div className="flex items-center gap-1.5 text-[#26335F] font-bold">
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#4056A1]" />
                     <span>Security Engine Active</span>
                   </div>
-                  <p className="text-[11px] text-[#5F6878] mt-1">
+                  <p className="text-[11px] text-[#334155] mt-1 font-medium leading-relaxed">
                     Zero anomalous outbound spikes detected across current cycle.
                   </p>
                 </div>
@@ -209,7 +253,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         {onOpenAddTransaction && (
           <button
             onClick={onOpenAddTransaction}
-            className="hidden sm:flex items-center gap-1.5 rounded-lg bg-[#172033] hover:bg-[#0F172A] py-2 px-3.5 text-xs font-bold text-white transition-all shadow-sm active:translate-y-[1px]"
+            className="hidden sm:flex items-center gap-1.5 rounded-lg bg-[#2A1F3D] hover:bg-[#3B2D54] active:bg-[#21182F] py-2 px-3.5 text-xs font-bold text-white transition-all shadow-subtle active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add transaction</span>
@@ -218,15 +262,17 @@ export const Topbar: React.FC<TopbarProps> = ({
 
         {/* User Profile Dropdown Pill */}
         {user ? (
-          <div className="relative">
+          <div ref={dropdownRef} className="relative">
             <button
               onClick={() => {
-                setIsDropdownOpen(!isDropdownOpen);
+                setIsDropdownOpen((prev) => !prev);
                 setIsNotificationsOpen(false);
               }}
-              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 hover:border-[#D6D4CD] transition-all shadow-sm group"
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden bg-[#172033] text-white text-xs font-bold uppercase shadow-xs">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden bg-[#2A1F3D] text-white text-xs font-bold uppercase shadow-xs">
                 {avatarImage ? (
                   <img src={avatarImage} alt={user.username} className="h-full w-full object-cover" />
                 ) : presetData ? (
@@ -237,20 +283,20 @@ export const Topbar: React.FC<TopbarProps> = ({
                   user.username.slice(0, 1)
                 )}
               </div>
-              <span className="hidden sm:inline text-xs font-bold text-[#172033] max-w-[120px] truncate">
+              <span className="hidden sm:inline text-xs font-bold text-[#191522] max-w-[120px] truncate">
                 {user.username}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-[#858D9A] hidden sm:inline group-hover:text-[#172033]" />
+              <ChevronDown className="h-3.5 w-3.5 text-[#898390] hidden sm:inline group-hover:text-[#191522]" />
             </button>
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl liquid-glass py-2 shadow-2xl border border-white/80 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white py-2 shadow-2xl border border-[#E4E2DC] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="px-4 py-2 border-b border-[#E4E2DC]/80 mb-1">
-                  <span className="text-xs font-black text-[#172033] block truncate">
+                  <span className="text-xs font-black text-[#191522] block truncate">
                     {user.username}
                   </span>
-                  <span className="text-[10px] text-[#858D9A] block truncate font-medium mt-0.5">
+                  <span className="text-[10px] text-[#898390] block truncate font-medium mt-0.5">
                     {user.email}
                   </span>
                 </div>
@@ -260,7 +306,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                     setIsDropdownOpen(false);
                     setIsProfileOpen(true);
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#172033] hover:bg-white/80 transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#191522] hover:bg-[#F6F5F1] transition-colors text-left"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
                   <span>Profile Setup & Avatar</span>
@@ -269,7 +315,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 <Link
                   href="/settings"
                   onClick={() => setIsDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#5F6878] hover:text-[#172033] hover:bg-white/80 transition-colors"
+                  className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#625D69] hover:text-[#191522] hover:bg-[#F6F5F1] transition-colors"
                 >
                   <Settings className="h-3.5 w-3.5" />
                   <span>Preferences & Security</span>
@@ -290,7 +336,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         ) : (
           <Link
             href="/login"
-            className="rounded-xl bg-[#172033] px-4 py-2 text-xs font-bold text-white shadow-sm"
+            className="rounded-xl bg-[#2A1F3D] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#3B2D54] transition-colors"
           >
             Sign in
           </Link>

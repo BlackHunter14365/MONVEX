@@ -175,7 +175,7 @@ export default function SecurityPage() {
                 onClick={handleRunVulnerabilityScan}
                 isLoading={isScanning}
                 leftIcon={<Play className="h-3.5 w-3.5" />}
-                className="bg-[#172033] hover:bg-[#0F172A] text-white text-xs font-bold shadow-md"
+                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
               >
                 Run Security Audit
               </Button>
@@ -193,7 +193,7 @@ export default function SecurityPage() {
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
               {overview?.security_status || 'Hardened'}
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Multi-layer WAF & CSP Active
             </span>
           </CardReveal>
@@ -207,7 +207,7 @@ export default function SecurityPage() {
               <span className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight">
                 <AnimatedValue value={overview?.health_score || 98} type="number" decimals={0} />
               </span>
-              <span className="text-xs font-bold text-[#858D9A]">/ 100</span>
+              <span className="text-xs font-bold text-[#898390]">/ 100</span>
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
               ✓ Optimal Configuration
@@ -219,10 +219,10 @@ export default function SecurityPage() {
               <span className="swiss-eyebrow block">Attacks Intercepted</span>
               <ShieldAlert className="h-4 w-4 text-[#E11D48]" />
             </div>
-            <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
               <AnimatedValue value={overview?.total_blocked_attacks ?? 3} type="number" decimals={0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               SQLi & XSS Payloads Blocked
             </span>
           </CardReveal>
@@ -232,10 +232,10 @@ export default function SecurityPage() {
               <span className="swiss-eyebrow block">Audit Trail Events</span>
               <Activity className="h-4 w-4 text-[#7C3AED]" />
             </div>
-            <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
               <AnimatedValue value={overview?.total_audit_events ?? auditLogs.length} type="number" decimals={0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               Tamper-Proof Event Records
             </span>
           </CardReveal>
@@ -251,12 +251,12 @@ export default function SecurityPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-[#172033]">
+                    <h3 className="text-base font-black text-[#191522]">
                       Automated Security Posture Audit Results
                     </h3>
                     <Badge variant="success" size="sm">Score: {scanResults.overall_score}</Badge>
                   </div>
-                  <span className="text-xs text-[#5F6878] font-medium">
+                  <span className="text-xs text-[#625D69] font-medium">
                     Execution Latency: {scanResults.duration_ms}ms • Timestamp: {scanResults.timestamp}
                   </span>
                 </div>
@@ -271,12 +271,12 @@ export default function SecurityPage() {
               {scanResults.results.map((test: any) => (
                 <div key={test.id} className="p-3.5 rounded-2xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-[#172033] truncate pr-2">{test.title}</span>
+                    <span className="text-xs font-black text-[#191522] truncate pr-2">{test.title}</span>
                     <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-100/60 px-1.5 py-0.5 rounded">
                       PASS ({test.latency_ms}ms)
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#5F6878] leading-relaxed">
+                  <p className="text-[11px] text-[#625D69] leading-relaxed">
                     {test.details}
                   </p>
                 </div>
@@ -288,7 +288,7 @@ export default function SecurityPage() {
         {/* 3. ACTIVE SECURITY SHIELDS (6 Defense Layers) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-[#172033] tracking-tight uppercase">
+            <h2 className="text-sm font-black text-[#191522] tracking-tight uppercase">
               Active Enterprise Cyber Shields (6/6 Enforced)
             </h2>
             <span className="text-xs font-bold text-[#059669] flex items-center gap-1">
@@ -301,14 +301,14 @@ export default function SecurityPage() {
             {(overview?.shields || []).map((shield: SecurityShieldItem) => (
               <div
                 key={shield.id}
-                className="editorial-card p-5 rounded-xl space-y-2.5 flex flex-col justify-between hover:border-[#172033]/40 transition-all shadow-subtle"
+                className="editorial-card p-5 rounded-xl space-y-2.5 flex flex-col justify-between hover:border-[#4056A1]/40 transition-all shadow-subtle"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-xl bg-[#172033] text-white flex items-center justify-center font-black shadow-xs">
+                    <div className="h-8 w-8 rounded-xl bg-[#2A1F3D] text-white flex items-center justify-center font-black shadow-xs">
                       <ShieldCheck className="h-4 w-4 text-emerald-400" />
                     </div>
-                    <span className="text-xs font-black text-[#172033] block">
+                    <span className="text-xs font-black text-[#191522] block">
                       {shield.name}
                     </span>
                   </div>
@@ -317,11 +317,11 @@ export default function SecurityPage() {
                   </span>
                 </div>
 
-                <p className="text-xs text-[#5F6878] leading-relaxed font-medium">
+                <p className="text-xs text-[#625D69] leading-relaxed font-medium">
                   {shield.description}
                 </p>
 
-                <div className="pt-2 border-t border-[#E4E2DC]/80 flex items-center justify-between text-[10px] font-mono font-bold text-[#858D9A]">
+                <div className="pt-2 border-t border-[#E4E2DC]/80 flex items-center justify-between text-[10px] font-mono font-bold text-[#898390]">
                   <span>Threat Vector: {shield.threat_level}</span>
                   <span className="text-[#059669]">Enforced</span>
                 </div>
@@ -336,11 +336,11 @@ export default function SecurityPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-[#2563EB]" />
-                <h3 className="text-sm font-black text-[#172033]">
+                <h3 className="text-sm font-black text-[#191522]">
                   Connected Devices & Active Sessions
                 </h3>
               </div>
-              <p className="text-xs text-[#5F6878] font-medium">
+              <p className="text-xs text-[#625D69] font-medium">
                 Monitor verified devices and trigger instantaneous token invalidation if suspicious activity occurs.
               </p>
             </div>
@@ -368,12 +368,12 @@ export default function SecurityPage() {
             ]).map((sess: any, idx: number) => (
               <div key={idx} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-[#F6F5F1] text-[#172033] flex items-center justify-center font-bold">
+                  <div className="h-9 w-9 rounded-xl bg-[#F6F5F1] text-[#191522] flex items-center justify-center font-bold">
                     <Smartphone className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-[#172033] block">
+                      <span className="text-xs font-black text-[#191522] block">
                         {sess.device}
                       </span>
                       {sess.is_current && (
@@ -382,7 +382,7 @@ export default function SecurityPage() {
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-[#858D9A] font-mono">
+                    <span className="text-[11px] text-[#898390] font-mono">
                       IP: {sess.ip} • {sess.location} • {sess.last_active}
                     </span>
                   </div>
@@ -400,10 +400,10 @@ export default function SecurityPage() {
         <div className="editorial-card p-6 rounded-2xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E2DC] pb-4">
             <div>
-              <h3 className="text-sm font-black text-[#172033]">
+              <h3 className="text-sm font-black text-[#191522]">
                 Real-Time Security Event Audit Stream
               </h3>
-              <p className="text-xs text-[#5F6878] font-medium">
+              <p className="text-xs text-[#625D69] font-medium">
                 Tamper-evident system log tracking authentication attempts, WAF payload interceptions, and scans.
               </p>
             </div>
@@ -421,7 +421,7 @@ export default function SecurityPage() {
                   onClick={() => setLogFilter(f.id as any)}
                   className={cn(
                     'px-2.5 py-1 rounded-lg text-xs font-bold transition-all',
-                    logFilter === f.id ? 'bg-white text-[#172033] shadow-xs' : 'text-[#858D9A] hover:text-[#172033]'
+                    logFilter === f.id ? 'bg-white text-[#191522] shadow-xs' : 'text-[#898390] hover:text-[#191522]'
                   )}
                 >
                   {f.label}
@@ -431,7 +431,7 @@ export default function SecurityPage() {
           </div>
 
           {filteredLogs.length === 0 ? (
-            <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+            <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
               No security audit events recorded matching current filter criteria.
             </div>
           ) : (
@@ -450,7 +450,7 @@ export default function SecurityPage() {
                 <tbody>
                   {filteredLogs.slice(0, 15).map((log) => (
                     <tr key={log.id}>
-                      <td className="text-xs font-mono text-[#5F6878] whitespace-nowrap">
+                      <td className="text-xs font-mono text-[#625D69] whitespace-nowrap">
                         {new Date(log.created_at).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -458,16 +458,16 @@ export default function SecurityPage() {
                         })}
                       </td>
                       <td>
-                        <span className="text-xs font-extrabold text-[#172033] font-mono">
+                        <span className="text-xs font-extrabold text-[#191522] font-mono">
                           {log.event_type}
                         </span>
                       </td>
                       <td>{getSeverityBadge(log.severity)}</td>
-                      <td className="font-mono text-xs text-[#5F6878]">{log.source_ip}</td>
+                      <td className="font-mono text-xs text-[#625D69]">{log.source_ip}</td>
                       <td className="font-mono text-xs text-[#2563EB] truncate max-w-[150px]">
                         {log.endpoint || '/'}
                       </td>
-                      <td className="text-xs font-medium text-[#1E293B] max-w-[280px]">
+                      <td className="text-xs font-medium text-[#191522] max-w-[280px]">
                         {log.description}
                       </td>
                     </tr>

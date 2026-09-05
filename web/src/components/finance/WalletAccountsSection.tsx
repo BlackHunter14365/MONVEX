@@ -29,6 +29,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
 import { AnimatedValue } from '@/components/motion';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/queryKeys';
 
 export interface AccountItem {
   id: string;
@@ -61,6 +63,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 }) => {
   const { user } = useAuth();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const [accounts, setAccounts] = useState<AccountItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -266,6 +269,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     setIsDeletingId(id);
     try {
       await api.deleteAsset(id);
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
       setAccounts((prev) => prev.filter((a) => a.id !== id));
       if (selectedAccountId === id) {
         setSelectedAccountId(null);
@@ -321,6 +326,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
       setIsTransferModalOpen(false);
       setTransferAmount('');
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
       toast.success(`✓ Transferred ${formatCurrency(amt, userCurrency)} successfully!`);
     } catch (err: any) {
       toast.error(err?.message || 'Transfer failed.');
@@ -422,6 +429,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       setAccounts((prev) => [...prev, newAcc]);
       setSelectedAccountId(newAcc.id);
       setIsAddModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
       toast.success(`✓ "${newAcc.name}" linked and saved to ledger!`);
 
       setNewBankName('');
@@ -437,7 +446,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
   const getCardThemeClasses = (theme: string, isSelected: boolean) => {
     let bg = '';
-    const ringClass = isSelected ? 'ring-2 ring-[#172033] scale-[1.02] shadow-xl' : 'opacity-95 hover:opacity-100 hover:scale-[1.01]';
+    const ringClass = isSelected ? 'ring-2 ring-[#4056A1] scale-[1.02] shadow-xl' : 'opacity-95 hover:opacity-100 hover:scale-[1.01]';
 
     switch (theme) {
       case 'emerald':
@@ -451,7 +460,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         break;
       case 'obsidian':
       default:
-        bg = 'bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#090D16]';
+        bg = 'bg-gradient-to-br from-[#2A1F3D] via-[#3B2D54] to-[#21182F]';
         break;
     }
 
@@ -464,17 +473,17 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E2DC]/80 pb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#172033] text-white shadow-md">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#2A1F3D] text-white shadow-md">
               <Wallet className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-base sm:text-lg font-black text-[#172033] tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-[#191522] tracking-tight">
               Wallets, Bank Accounts & Cards Hub
             </h2>
             <span className="brutalist-tag-emerald text-xs py-0.5 px-2.5">
               {accounts.length} {accounts.length === 1 ? 'Active Account' : 'Active Accounts'}
             </span>
           </div>
-          <p className="text-xs text-[#5F6878] font-medium">
+          <p className="text-xs text-[#625D69] font-medium">
             Multi-institution liquidity, instant fund transfer bridge, and AI impulse affordability simulator.
           </p>
         </div>
@@ -502,8 +511,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold shadow-xs transition-all',
                 showAllNumbers
-                  ? 'bg-[#172033] text-white border-[#172033]'
-                  : 'bg-white border-[#E4E2DC] text-[#5F6878] hover:text-[#172033]'
+                  ? 'bg-[#2A1F3D] text-white border-[#2A1F3D]'
+                  : 'bg-white border-[#E4E2DC] text-[#625D69] hover:text-[#191522]'
               )}
               title={showAllNumbers ? 'Hide all card numbers' : 'Show all card numbers'}
             >
@@ -517,7 +526,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
             size="sm"
             onClick={() => setIsAddModalOpen(true)}
             leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="bg-[#172033] hover:bg-[#0F172A] text-white text-xs font-bold shadow-md"
+            className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
           >
             Link Account
           </Button>
@@ -528,7 +537,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       {isLoading ? (
         <div className="py-16 flex flex-col items-center justify-center gap-3">
           <Loader2 className="h-7 w-7 animate-spin text-[#2563EB]" />
-          <span className="text-xs font-bold text-[#5F6878]">Loading verified financial accounts...</span>
+          <span className="text-xs font-bold text-[#625D69]">Loading verified financial accounts...</span>
         </div>
       ) : loadError ? (
         <div className="p-6 rounded-2xl bg-[#FFF1F2] border border-[#FECDD3] text-center space-y-3">
@@ -541,12 +550,12 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       ) : accounts.length === 0 ? (
         /* Empty State */
         <div className="p-8 sm:p-12 rounded-2xl border-2 border-dashed border-[#E4E2DC] bg-[#FAFAF7] text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-white border border-[#E4E2DC] flex items-center justify-center text-[#172033] shadow-xs">
-            <Wallet className="h-6 w-6 text-[#172033]" />
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-white border border-[#E4E2DC] flex items-center justify-center text-[#191522] shadow-xs">
+            <Wallet className="h-6 w-6 text-[#191522]" />
           </div>
           <div className="max-w-md mx-auto space-y-1.5">
-            <h3 className="text-sm font-black text-[#172033]">No accounts linked yet</h3>
-            <p className="text-xs text-[#5F6878] leading-relaxed">
+            <h3 className="text-sm font-black text-[#191522]">No accounts linked yet</h3>
+            <p className="text-xs text-[#625D69] leading-relaxed">
               Connect your first bank account, wallet, or card to start tracking your capital and unlock AI velocity insights.
             </p>
           </div>
@@ -555,7 +564,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
             size="sm"
             onClick={() => setIsAddModalOpen(true)}
             leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="bg-[#172033] hover:bg-[#0F172A] text-white text-xs font-bold shadow-sm"
+            className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm"
           >
             Link Your First Account
           </Button>
@@ -570,7 +579,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="swiss-eyebrow block">Select Account / Card to Inspect:</span>
-                <span className="text-[10.5px] text-[#858D9A] font-semibold">
+                <span className="text-[10.5px] text-[#898390] font-semibold">
                   {showAllNumbers ? '🔓 Numbers Revealed' : '🔒 Protected Mode (Click 👁️ to reveal)'}
                 </span>
               </div>
@@ -686,7 +695,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                           ? 'bg-[#2563EB]'
                           : selectedAccount.theme === 'amber'
                           ? 'bg-[#D97706]'
-                          : 'bg-[#172033]'
+                          : 'bg-[#2A1F3D]'
                       )}
                     >
                       {selectedAccount.type === 'CREDIT' ? (
@@ -700,14 +709,14 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-black text-[#172033]">
+                        <h3 className="text-xs font-black text-[#191522]">
                           {selectedAccount.name}
                         </h3>
                         <Badge variant={selectedAccount.isFrozen ? 'danger' : 'success'} size="sm">
                           {selectedAccount.isFrozen ? 'Frozen' : 'Active'}
                         </Badge>
                       </div>
-                      <span className="text-[10px] text-[#5F6878] font-mono block">
+                      <span className="text-[10px] text-[#625D69] font-mono block">
                         {selectedAccount.bankName} • Account: •••• {selectedAccount.accountNumber}
                       </span>
                     </div>
@@ -721,7 +730,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                         'px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 border shadow-xs',
                         selectedAccount.isFrozen
                           ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-                          : 'bg-white border-[#E4E2DC] text-[#5F6878] hover:text-[#172033]'
+                          : 'bg-white border-[#E4E2DC] text-[#625D69] hover:text-[#191522]'
                       )}
                     >
                       {selectedAccount.isFrozen ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
@@ -748,14 +757,14 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-0.5">
                     <span className="swiss-eyebrow block text-[9px]">Verified Balance</span>
-                    <span className="text-sm font-black text-[#172033] tabular-nums block truncate">
+                    <span className="text-sm font-black text-[#191522] tabular-nums block truncate">
                       {formatCurrency(selectedAccount.balance, userCurrency)}
                     </span>
                   </div>
 
                   <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-0.5">
                     <span className="swiss-eyebrow block text-[9px]">Account Type</span>
-                    <span className="text-xs font-black text-[#172033] block truncate">
+                    <span className="text-xs font-black text-[#191522] block truncate">
                       {selectedAccount.type}
                     </span>
                   </div>
@@ -769,7 +778,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                   </div>
 
                   {realTransactions.length === 0 ? (
-                    <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+                    <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
                       No transactions recorded yet in your financial ledger.
                     </div>
                   ) : (
@@ -790,10 +799,10 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                                 {isInc ? <ArrowDownRight className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <span className="text-xs font-bold text-[#172033] block truncate">
+                                <span className="text-xs font-bold text-[#191522] block truncate">
                                   {tx.merchant_name || tx.description || 'Transaction'}
                                 </span>
-                                <span className="text-[9px] text-[#858D9A] block truncate">
+                                <span className="text-[9px] text-[#898390] block truncate">
                                   {tx.date || 'Today'} • {tx.category_name || tx.category || 'General'}
                                 </span>
                               </div>
@@ -802,7 +811,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                             <span
                               className={cn(
                                 'text-xs font-black tabular-nums shrink-0',
-                                isInc ? 'text-[#059669]' : 'text-[#172033]'
+                                isInc ? 'text-[#059669]' : 'text-[#191522]'
                               )}
                             >
                               {isInc ? '+' : '-'}{formatCurrency(amountNum, userCurrency)}
@@ -822,7 +831,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               ========================================================================= */}
           <div className="lg:col-span-5 space-y-5">
             {/* 1. Real-Time Cash Velocity & Runway Gauge */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#172033] to-[#0F172A] text-white shadow-xl space-y-4 relative overflow-hidden">
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#2A1F3D] to-[#21182F] text-white shadow-xl space-y-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
@@ -885,49 +894,51 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               <div className="flex items-center justify-between border-b border-[#E4E2DC]/80 pb-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-[#2563EB]" />
-                  <h3 className="text-xs font-black text-[#172033] tracking-tight">AI Impulse Buy Simulator</h3>
+                  <h3 className="text-xs font-black text-[#191522] tracking-tight">AI Impulse Buy Simulator</h3>
                 </div>
-                <span className="text-[10px] font-bold text-[#858D9A]">Test Before You Buy</span>
+                <span className="text-[10px] font-bold text-[#898390]">Test Before You Buy</span>
               </div>
 
               {accounts.length === 0 ? (
-                <div className="py-6 text-center text-xs text-[#5F6878]">
+                <div className="py-6 text-center text-xs text-[#625D69]">
                   Add an account to enable personalized affordability analysis.
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#172033] block">What do you want to buy?</label>
-                    <div className="flex gap-2">
+                    <label className="text-[11px] font-bold text-[#191522] block">What do you want to buy?</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         value={impulseItem}
                         onChange={(e) => setImpulseItem(e.target.value)}
                         placeholder="e.g. Sony WH-1000XM5"
-                        className="flex-1 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                        className="flex-1 min-w-0 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                       />
-                      <input
-                        type="number"
-                        value={impulseAmount}
-                        onChange={(e) => setImpulseAmount(e.target.value)}
-                        placeholder="Price"
-                        className="w-24 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
-                      />
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleRunImpulseTest()}
-                        className="bg-[#172033] text-white px-3 font-bold text-xs"
-                      >
-                        Test
-                      </Button>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={impulseAmount}
+                          onChange={(e) => setImpulseAmount(e.target.value)}
+                          placeholder="Price"
+                          className="w-24 sm:w-28 min-w-0 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                        />
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleRunImpulseTest()}
+                          className="bg-[#4056A1] hover:bg-[#26335F] text-white px-3 font-bold text-xs shrink-0 whitespace-nowrap"
+                        >
+                          Check Affordability
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
                   {/* Quick Preset Buttons */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-bold text-[#858D9A]">Quick:</span>
+                    <span className="text-[10px] font-bold text-[#898390]">Quick:</span>
                     {[
                       { label: 'AirPods (2,500)', item: 'AirPods Pro', cost: 2500 },
                       { label: 'Laptop (65,000)', item: 'Work Laptop', cost: 65000 },
@@ -941,7 +952,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                           setImpulseAmount(String(pre.cost));
                           handleRunImpulseTest(pre.item, pre.cost);
                         }}
-                        className="px-2 py-1 rounded-lg bg-[#F6F5F1] hover:bg-[#EAE8E0] text-[10px] font-bold text-[#172033] transition-colors border border-[#E4E2DC]"
+                        className="px-2 py-1 rounded-lg bg-[#F6F5F1] hover:bg-[#EAE8E0] text-[10px] font-bold text-[#191522] transition-colors border border-[#E4E2DC]"
                       >
                         {pre.label}
                       </button>
@@ -993,36 +1004,36 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       >
         <form onSubmit={handleAddAccountSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-bold text-[#172033] mb-1 block">Account / Card Label</label>
+            <label className="text-xs font-bold text-[#191522] mb-1 block">Account / Card Label</label>
             <input
               type="text"
               required
               value={newAccountName}
               onChange={(e) => setNewAccountName(e.target.value)}
               placeholder="e.g. Salary Checking or Primary Credit"
-              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Institution / Bank</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Institution / Bank</label>
               <input
                 type="text"
                 required
                 value={newBankName}
                 onChange={(e) => setNewBankName(e.target.value)}
                 placeholder="e.g. Chase Bank, HDFC, PayPal"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Account Type</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Account Type</label>
               <select
                 value={newAccountType}
                 onChange={(e) => setNewAccountType(e.target.value as any)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               >
                 <option value="CHECKING">Checking / Salary</option>
                 <option value="SAVINGS">Savings / High-Yield</option>
@@ -1035,7 +1046,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Current Balance ({userCurrency})</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Current Balance ({userCurrency})</label>
               <input
                 type="number"
                 step="any"
@@ -1043,28 +1054,28 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                 value={newBalance}
                 onChange={(e) => setNewBalance(e.target.value)}
                 placeholder="e.g. 50000"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">Last 4 Digits (Optional)</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Last 4 Digits (Optional)</label>
               <input
                 type="text"
                 maxLength={4}
                 value={newLastFour}
                 onChange={(e) => setNewLastFour(e.target.value.replace(/\D/g, ''))}
                 placeholder="e.g. 8821"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172033] mb-1 block">Card Visual Theme</label>
+            <label className="text-xs font-bold text-[#191522] mb-1 block">Card Visual Theme</label>
             <div className="grid grid-cols-4 gap-2">
               {[
-                { id: 'obsidian', label: 'Obsidian', color: 'bg-slate-900' },
+                { id: 'obsidian', label: 'Deep Plum', color: 'bg-[#2A1F3D]' },
                 { id: 'sapphire', label: 'Sapphire', color: 'bg-blue-600' },
                 { id: 'emerald', label: 'Emerald', color: 'bg-emerald-600' },
                 { id: 'amber', label: 'Amber', color: 'bg-amber-600' },
@@ -1076,8 +1087,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                   className={cn(
                     'p-2 rounded-xl border text-center text-xs font-bold transition-all flex items-center justify-center gap-1.5',
                     newTheme === th.id
-                      ? 'border-[#172033] bg-[#172033] text-white shadow-sm'
-                      : 'border-[#E4E2DC] bg-white text-[#5F6878]'
+                      ? 'border-[#2A1F3D] bg-[#2A1F3D] text-white shadow-sm'
+                      : 'border-[#E4E2DC] bg-white text-[#625D69]'
                   )}
                 >
                   <span className={cn('h-2.5 w-2.5 rounded-full', th.color)} />
@@ -1091,7 +1102,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
             <Button type="button" variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingNew} className="bg-[#172033] text-white font-bold">
+            <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingNew} className="bg-[#2A1F3D] text-white font-bold">
               Link Account
             </Button>
           </div>
@@ -1109,11 +1120,11 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         <form onSubmit={handleExecuteTransfer} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">From Account</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">From Account</label>
               <select
                 value={transferFrom}
                 onChange={(e) => setTransferFrom(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -1124,11 +1135,11 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#172033] mb-1 block">To Account</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">To Account</label>
               <select
                 value={transferTo}
                 onChange={(e) => setTransferTo(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -1140,7 +1151,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           </div>
 
           <div>
-            <label className="text-xs font-bold text-[#172033] mb-1 block">Transfer Amount ({userCurrency})</label>
+            <label className="text-xs font-bold text-[#191522] mb-1 block">Transfer Amount ({userCurrency})</label>
             <input
               type="number"
               step="any"
@@ -1148,7 +1159,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               value={transferAmount}
               onChange={(e) => setTransferAmount(e.target.value)}
               placeholder="e.g. 15000"
-              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2.5 text-sm font-black text-[#172033] focus:outline-none focus:border-[#172033] shadow-sm"
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2.5 text-sm font-black text-[#191522] focus:outline-none focus:border-[#4056A1] shadow-sm"
             />
           </div>
 
@@ -1161,7 +1172,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               variant="primary"
               size="sm"
               isLoading={isTransferring}
-              className="bg-[#172033] text-white font-bold px-5"
+              className="bg-[#2A1F3D] text-white font-bold px-5"
             >
               Execute Transfer
             </Button>

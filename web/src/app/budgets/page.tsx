@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { Modal } from '@/components/ui/Modal';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { api } from '@/lib/api';
@@ -37,7 +39,7 @@ export default function BudgetsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const { data: rawBudgets, isLoading: isBudgetsLoading } = useBudgetsQuery();
+  const { data: rawBudgets, isLoading: isBudgetsLoading, isError: isBudgetsError, refetch } = useBudgetsQuery();
   const { data: rawCategories, isLoading: isCategoriesLoading } = useCategoriesQuery();
 
   const createBudgetMutation = useCreateBudgetMutation();
@@ -136,7 +138,7 @@ export default function BudgetsPage() {
     if (lower.includes('trans') || lower.includes('travel') || lower.includes('cab')) {
       return { icon: Car, bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', barColor: 'bg-[#8B5CF6]' };
     }
-    return { icon: CreditCard, bg: 'bg-[#F0EFEA]', text: 'text-[#5F6878]', barColor: 'bg-[#172033]' };
+    return { icon: CreditCard, bg: 'bg-[#F0EFEA]', text: 'text-[#625D69]', barColor: 'bg-[#2A1F3D]' };
   };
 
   return (
@@ -147,7 +149,11 @@ export default function BudgetsPage() {
           description="Stay on track with your monthly spending across all key spending categories."
           actionSlot={
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setEditingBudget(null);
+                setBudgetAmount('');
+                setIsModalOpen(true);
+              }}
               variant="primary"
               size="sm"
               leftIcon={<Plus className="h-3.5 w-3.5" />}
@@ -164,11 +170,11 @@ export default function BudgetsPage() {
               {isLoading ? (
                 <Skeleton className="h-8 w-28" />
               ) : (
-                <div className="swiss-metric text-2xl text-[#172033]">
+                <div className="swiss-metric text-2xl text-[#191522]">
                   <AnimatedValue value={totalAllocated} currency={user?.currency} />
                 </div>
               )}
-              <span className="text-[11px] font-semibold text-[#858D9A] block">Monthly target limit</span>
+              <span className="text-[11px] font-semibold text-[#898390] block">Monthly target limit</span>
             </div>
 
             <div className="space-y-1.5">
@@ -209,6 +215,12 @@ export default function BudgetsPage() {
               <Skeleton className="h-44 w-full rounded-2xl" />
               <Skeleton className="h-44 w-full rounded-2xl" />
             </div>
+          ) : isBudgetsError && budgets.length === 0 ? (
+            <ErrorState
+              title="Unable to load budgets"
+              description="Failed to retrieve your category allocations. Check your network connection or try again."
+              onRetry={() => refetch()}
+            />
           ) : budgets.length === 0 ? (
             <EmptyState
               title="No budgets created yet"
@@ -242,46 +254,50 @@ export default function BudgetsPage() {
                             <Icon className="h-4 w-4" />
                           </div>
                           <div>
-                            <h3 className="text-xs font-bold text-[#172033] block leading-tight">
+                            <h3 className="text-xs font-bold text-[#191522] block leading-tight">
                               {b.category_name || b.name}
                             </h3>
-                            <span className="text-[10px] font-semibold text-[#858D9A] uppercase">
+                            <span className="text-[10px] font-semibold text-[#898390] uppercase">
                               {b.period || 'Monthly'}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => {
-                              setEditingBudget(b);
-                              setCategoryName(b.category_name || b.name || 'Food & Dining');
-                              setBudgetAmount(String(b.limit_amount ?? b.amount ?? ''));
-                              setPeriod(b.period || 'MONTHLY');
-                              setIsModalOpen(true);
-                            }}
-                            className="text-[#858D9A] hover:text-[#2563EB] p-1 rounded-lg hover:bg-[#EFF6FF] transition-colors"
-                            title="Edit budget limit"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBudget(b.id)}
-                            className="text-[#858D9A] hover:text-[#E11D48] p-1 rounded-lg hover:bg-[#FFF1F2] transition-colors"
-                            title="Remove budget"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <Tooltip content="Edit budget limit">
+                            <button
+                              onClick={() => {
+                                setEditingBudget(b);
+                                setCategoryName(b.category_name || b.name || 'Food & Dining');
+                                setBudgetAmount(String(b.limit_amount ?? b.amount ?? ''));
+                                setPeriod(b.period || 'MONTHLY');
+                                setIsModalOpen(true);
+                              }}
+                              className="text-[#898390] hover:text-[#2563EB] p-1.5 rounded-lg hover:bg-[#EFF6FF] transition-colors"
+                              aria-label="Edit budget"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                          </Tooltip>
+                          <Tooltip content="Remove budget">
+                            <button
+                              onClick={() => handleDeleteBudget(b.id)}
+                              className="text-[#898390] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] transition-colors"
+                              aria-label="Remove budget"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </Tooltip>
                         </div>
                       </div>
 
                       {/* Amounts */}
                       <div className="space-y-0.5">
                         <div className="flex items-baseline justify-between text-xs font-bold">
-                          <span className="text-[#172033] tabular-nums">
+                          <span className="text-[#191522] tabular-nums">
                             {formatCurrency(spent, user?.currency)}
                           </span>
-                          <span className="text-[#5F6878] font-medium tabular-nums">
+                          <span className="text-[#625D69] font-medium tabular-nums">
                             of {formatCurrency(limit, user?.currency)}
                           </span>
                         </div>
@@ -302,14 +318,14 @@ export default function BudgetsPage() {
                     {/* Bottom Metadata */}
                     <div className="pt-3 border-t border-[#E4E2DC] flex items-center justify-between text-[11px]">
                       <div>
-                        <span className="text-[#858D9A] block">Remaining</span>
+                        <span className="text-[#898390] block">Remaining</span>
                         <span className={cn('font-bold', isOver ? 'text-[#E11D48]' : 'text-[#059669]')}>
                           {isOver ? 'Over by ' : ''}{formatCurrency(remaining, user?.currency)}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[#858D9A] block">Month-end projection</span>
-                        <span className="font-bold text-[#172033]">
+                        <span className="text-[#898390] block">Month-end projection</span>
+                        <span className="font-bold text-[#191522]">
                           {formatCurrency(projected, user?.currency)}
                         </span>
                       </div>
@@ -334,19 +350,19 @@ export default function BudgetsPage() {
         >
           <form onSubmit={handleSaveBudget} className="space-y-4 pt-1">
             {errorMsg && (
-              <div className="p-3 rounded-lg bg-[#FFF1F2] border border-[#FECDD3] text-[#E11D48] text-xs flex items-center gap-2">
+              <div role="alert" className="p-3 rounded-xl bg-[#FDECEF] border border-[#FECDD3] text-[#E11D48] text-xs flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1 block">Category</label>
+              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Category</label>
               <select
                 value={categoryName}
                 disabled={Boolean(editingBudget)}
                 onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#172033] focus:border-[#172033] focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-semibold text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed transition-all"
               >
                 {categories.length > 0 ? (
                   categories.map((c) => (
@@ -370,7 +386,7 @@ export default function BudgetsPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1 block">
+              <label className="text-xs font-semibold text-[#625D69] mb-1 block">
                 Monthly Spending Limit
               </label>
               <input
@@ -380,7 +396,7 @@ export default function BudgetsPage() {
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
                 placeholder="e.g. 8000"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
             </div>
 

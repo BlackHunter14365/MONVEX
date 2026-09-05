@@ -58,5 +58,33 @@ class SecureStorageService {
       return false;
     }
   }
+
+  static const String _biometricsKey = 'monvex_biometrics_enabled';
+
+  static Future<bool> isBiometricsEnabled() async {
+    try {
+      final val = await _storage.read(key: _biometricsKey);
+      return val == 'true';
+    } catch (e) {
+      debugPrint('[SecureStorage] Error reading biometrics state: $e');
+      return false;
+    }
+  }
+
+  static Future<void> setBiometricsEnabled(bool enabled) async {
+    try {
+      await _storage.write(key: _biometricsKey, value: enabled ? 'true' : 'false');
+    } catch (e) {
+      debugPrint('[SecureStorage] Error writing biometrics state: $e');
+    }
+  }
+
+  static Future<void> clearAll() async {
+    try {
+      await _storage.deleteAll();
+    } catch (e) {
+      debugPrint('[SecureStorage] Error clearing all secure storage: $e');
+    }
+  }
 }
 

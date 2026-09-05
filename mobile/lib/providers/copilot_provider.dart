@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../models/ai_message.dart';
+import 'auth_provider.dart';
 
 class CopilotProvider extends ChangeNotifier {
   final List<AiMessageModel> _messages = [
@@ -18,6 +19,20 @@ class CopilotProvider extends ChangeNotifier {
   List<AiMessageModel> get messages => _messages;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  CopilotProvider() {
+    AuthProvider.registerLogoutCallback(resetState);
+  }
+
+  @override
+  void dispose() {
+    AuthProvider.unregisterLogoutCallback(resetState);
+    super.dispose();
+  }
+
+  void resetState() {
+    clearConversation();
+  }
 
   Future<void> sendMessage(String text) async {
     final cleanText = text.trim();
@@ -80,6 +95,8 @@ class CopilotProvider extends ChangeNotifier {
         toolsUsed: ['Financial Intelligence Engine'],
       ),
     );
+    _isLoading = false;
+    _errorMessage = null;
     notifyListeners();
   }
 }

@@ -11,7 +11,7 @@ class UserProfile {
   final bool hasGoogleAuth;
   final bool hasPasswordAuth;
 
-  UserProfile({
+  const UserProfile({
     required this.id,
     required this.username,
     required this.email,
@@ -32,18 +32,27 @@ class UserProfile {
   }
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    // Check if profile is nested
+    final profile = json['profile'] is Map ? json['profile'] as Map<String, dynamic> : null;
+
+    double parseIncome(dynamic val) {
+      if (val is num) return val.toDouble();
+      if (val != null) return double.tryParse(val.toString()) ?? 0.0;
+      return 0.0;
+    }
+
     return UserProfile(
       id: json['id']?.toString() ?? '',
-      username: json['username'] ?? '',
-      email: json['email'] ?? '',
-      firstName: json['first_name'],
-      lastName: json['last_name'],
-      phoneNumber: json['phone_number'],
-      currency: json['currency'] ?? 'INR',
-      monthlyIncome: (json['monthly_income'] as num?)?.toDouble() ?? 0.0,
-      isVerified: json['is_verified'] ?? false,
-      hasGoogleAuth: json['has_google_auth'] ?? false,
-      hasPasswordAuth: json['has_password_auth'] ?? true,
+      username: json['username']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      firstName: json['first_name']?.toString() ?? profile?['first_name']?.toString(),
+      lastName: json['last_name']?.toString() ?? profile?['last_name']?.toString(),
+      phoneNumber: json['phone_number']?.toString() ?? profile?['phone_number']?.toString(),
+      currency: json['currency']?.toString() ?? profile?['currency']?.toString() ?? 'INR',
+      monthlyIncome: parseIncome(json['monthly_income'] ?? profile?['monthly_income']),
+      isVerified: (json['is_verified'] ?? profile?['is_verified']) as bool? ?? false,
+      hasGoogleAuth: (json['has_google_auth'] ?? profile?['has_google_auth']) as bool? ?? false,
+      hasPasswordAuth: (json['has_password_auth'] ?? profile?['has_password_auth']) as bool? ?? true,
     );
   }
 }

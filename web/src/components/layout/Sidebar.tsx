@@ -124,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
               <div className="flex items-center gap-2.5 min-w-0">
                 {/* User Avatar with Online Dot */}
                 <div className="relative shrink-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md ring-2 ring-white/90 bg-[#172033] text-white text-xs font-black">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md ring-2 ring-white/90 bg-[#2A1F3D] text-white text-xs font-black">
                     {avatarImage ? (
                       <img src={avatarImage} alt="Profile" className="h-full w-full object-cover" />
                     ) : (
@@ -136,17 +136,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
 
                 {/* Name & Low-Opacity Username */}
                 <div className="min-w-0 flex-1">
-                  <span className="text-xs font-bold text-[#172033] block truncate leading-tight group-hover:text-[#2563EB] transition-colors">
+                  <span className="text-xs font-bold text-[#191522] block truncate leading-tight group-hover:text-[#2563EB] transition-colors">
                     {fullName}
                   </span>
-                  <span className="text-[10.5px] font-semibold text-[#172033]/55 block truncate mt-0.5">
+                  <span className="text-[10.5px] font-semibold text-[#191522]/55 block truncate mt-0.5">
                     @{user?.username || 'user'}
                   </span>
                 </div>
               </div>
 
               {/* Action Chevron */}
-              <div className="p-1 rounded-lg text-[#858D9A] group-hover:text-[#172033] group-hover:bg-white transition-all shrink-0">
+              <div className="p-1 rounded-lg text-[#898390] group-hover:text-[#191522] group-hover:bg-white transition-all shrink-0">
                 <Sliders className="h-3.5 w-3.5" />
               </div>
             </button>
@@ -161,13 +161,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                   window.dispatchEvent(new Event('monvex:open-command-center'));
                 }
               }}
-              className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold bg-[#FAF9F6] text-[#5F6878] hover:text-[#172033] hover:bg-white border border-[#E4E2DC] transition-all shadow-2xs group mb-2"
+              className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold bg-[#FAF9F6] text-[#625D69] hover:text-[#191522] hover:bg-[#EEEAF7]/50 border border-[#E4E2DC] transition-all shadow-2xs group mb-2"
             >
               <div className="flex items-center gap-2">
-                <Search className="h-3.5 w-3.5 text-[#858D9A] group-hover:text-[#172033]" />
+                <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522]" />
                 <span className="text-[11px]">Command Center</span>
               </div>
-              <kbd className="px-1.5 py-0.5 rounded-sm bg-white border border-[#E4E2DC] text-[9px] font-mono text-[#858D9A] font-bold">
+              <kbd className="px-1.5 py-0.5 rounded-sm bg-white border border-[#E4E2DC] text-[9px] font-mono text-[#898390] font-bold">
                 ⌘K
               </kbd>
             </button>
@@ -188,21 +188,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                     className={cn(
                       'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
                       isActive
-                        ? 'bg-white/95 text-[#172033] shadow-sm border border-[#E4E2DC] scale-[1.01]'
-                        : 'text-[#5F6878] hover:text-[#172033] hover:bg-white/60'
+                        ? 'bg-[#EEEAF7] text-[#191522] shadow-2xs border border-[#625477]/20 scale-[1.01]'
+                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
                     )}
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon
                         className={cn(
                           'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#172033]' : 'text-[#858D9A]'
+                          isActive ? 'text-[#2A1F3D]' : 'text-[#898390]'
                         )}
                       />
                       <span>{item.name}</span>
                     </div>
                     {isActive && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#172033]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#2A1F3D]" />
                     )}
                   </Link>
                 );
@@ -225,21 +225,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                     className={cn(
                       'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
                       isActive
-                        ? 'bg-white/95 text-[#172033] shadow-sm border border-[#E4E2DC]'
-                        : 'text-[#5F6878] hover:text-[#172033] hover:bg-white/60'
+                        ? 'bg-[#E9EDFA] text-[#191522] shadow-2xs border border-[#7184C4]/25 scale-[1.01]'
+                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
                     )}
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon
                         className={cn(
                           'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#2563EB]' : 'text-[#858D9A]'
+                          isActive ? 'text-[#4056A1]' : 'text-[#898390]'
                         )}
                       />
                       <span>{item.name}</span>
                     </div>
                     {item.badge && (
-                      <span className="brutalist-tag-emerald text-[9px] py-0 px-1.5">
+                      <span className="brutalist-tag-indigo text-[9px] py-0 px-1.5">
                         {item.badge}
                       </span>
                     )}
@@ -264,15 +264,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                     className={cn(
                       'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
                       isActive
-                        ? 'bg-white/95 text-[#172033] shadow-sm border border-[#E4E2DC]'
-                        : 'text-[#5F6878] hover:text-[#172033] hover:bg-white/60'
+                        ? 'bg-[#F6F3FA] text-[#191522] shadow-2xs border border-[#625477]/20 scale-[1.01]'
+                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
                     )}
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon
                         className={cn(
                           'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#059669]' : 'text-[#858D9A]'
+                          isActive ? 'text-[#3B2D54]' : 'text-[#898390]'
                         )}
                       />
                       <span>{item.name}</span>
@@ -298,15 +298,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                     className={cn(
                       'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
                       isActive
-                        ? 'bg-white/95 text-[#172033] shadow-sm border border-[#E4E2DC]'
-                        : 'text-[#5F6878] hover:text-[#172033] hover:bg-white/60'
+                        ? 'bg-[#F1F0EC] text-[#191522] shadow-2xs border border-[#E4E2DC] scale-[1.01]'
+                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
                     )}
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon
                         className={cn(
                           'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#172033]' : 'text-[#858D9A]'
+                          isActive ? 'text-[#191522]' : 'text-[#898390]'
                         )}
                       />
                       <span>{item.name}</span>
@@ -324,15 +324,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
         </div>
 
         {/* Bottom Status Card */}
-        <div className="p-3.5 m-3 rounded-xl bg-white/70 border border-[#E4E2DC]/80 shadow-sm space-y-2">
+        <div className="p-3.5 m-3 rounded-xl bg-white/80 border border-[#E4E2DC] shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#172033]">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[#191522]">
               <ShieldCheck className="h-3.5 w-3.5 text-[#059669]" />
               <span>Vault Protected</span>
             </div>
             <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse" />
           </div>
-          <p className="text-[10px] text-[#5F6878] font-medium leading-tight">
+          <p className="text-[10px] text-[#625D69] font-medium leading-tight">
             256-bit AES cryptographic isolation active.
           </p>
         </div>

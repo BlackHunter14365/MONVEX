@@ -56,8 +56,11 @@ class TransactionService:
         if not category_name:
             category_name = 'Other Expense' if category_type == 'EXPENSE' else 'Other Income'
 
-        # Look for system default or user's custom category
-        category = Category.objects.filter(name__iexact=category_name).first()
+        # Look for system default first
+        category = Category.objects.filter(name__iexact=category_name, is_system_default=True).first()
+        if not category:
+            # Look for user custom category
+            category = Category.objects.filter(name__iexact=category_name, user=user).first()
         if not category:
             category = Category.objects.create(
                 user=user,

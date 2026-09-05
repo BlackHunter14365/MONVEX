@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../models/goal.dart';
+import 'auth_provider.dart';
 
 class GoalProvider extends ChangeNotifier {
   List<GoalModel> _goals = [];
@@ -11,6 +12,23 @@ class GoalProvider extends ChangeNotifier {
   List<GoalModel> get goals => _goals;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  GoalProvider() {
+    AuthProvider.registerLogoutCallback(resetState);
+  }
+
+  @override
+  void dispose() {
+    AuthProvider.unregisterLogoutCallback(resetState);
+    super.dispose();
+  }
+
+  void resetState() {
+    _goals = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   Future<void> fetchGoals() async {
     _isLoading = true;
@@ -35,6 +53,30 @@ class GoalProvider extends ChangeNotifier {
       if (res is Map<String, dynamic>) {
         final g = GoalModel.fromJson(res);
         _goals.add(g);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> contributeToGoal(String goalId, double amount) async {
+    try {
+      final res = await ApiClient.post('${ApiEndpoints.goals}$goalId/contribute/', {
+        'amount': amount,
+      });
+      if (res is Map<String, dynamic>) {
+        final updatedGoal = GoalModel.fromJson(res);
+        final idx = _goals.indexWhere((g) => g.id == goalId);
+        if (idx >= 0) {
+          _goals[idx] = updatedGoal;
+        } else {
+          _goals.add(updatedGoal);
+        }
         notifyListeners();
         return true;
       }

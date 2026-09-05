@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search,
-  Filter,
   Plus,
   Trash2,
   Edit2,
   Calendar,
-  ArrowUpDown,
   Download,
   Utensils,
   ShoppingBag,
@@ -21,8 +19,10 @@ import {
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton, TableSkeletonRow } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { AddTransactionModal } from '@/components/finance/AddTransactionModal';
 import { api } from '@/lib/api';
@@ -37,7 +37,7 @@ export default function TransactionsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const { data: rawTransactions, isLoading, refetch } = useTransactionsQuery();
+  const { data: rawTransactions, isLoading, isError, refetch } = useTransactionsQuery();
   const deleteMutation = useDeleteTransactionMutation();
 
   const transactions = Array.isArray(rawTransactions)
@@ -128,7 +128,7 @@ export default function TransactionsPage() {
     if (lower.includes('trans') || lower.includes('travel') || lower.includes('cab')) {
       return { badgeBg: 'bg-[#F3E8FF]', badgeText: 'text-[#7E22CE]' };
     }
-    return { badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#5F6878]' };
+    return { badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#625D69]' };
   };
 
   // Merchant Logo Resolver
@@ -143,28 +143,35 @@ export default function TransactionsPage() {
     }
     if (lower.includes('amazon')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#172033] text-amber-400 text-xs font-black shadow-sm shrink-0">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2A1F3D] text-amber-400 text-xs font-black shadow-sm shrink-0">
           a
         </div>
       );
     }
     if (lower.includes('uber') || lower.includes('ola')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#000000] text-white text-[10px] font-black shadow-sm shrink-0">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black text-white text-xs font-black shadow-sm shrink-0">
           U
         </div>
       );
     }
-    if (lower.includes('dmart') || lower.includes('blinkit')) {
+    if (lower.includes('netflix') || lower.includes('spotify')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#15803D] text-white text-xs font-black shadow-sm shrink-0">
-          D
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#E11D48] text-white text-xs font-black shadow-sm shrink-0">
+          N
+        </div>
+      );
+    }
+    if (lower.includes('apple') || lower.includes('icloud')) {
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#191522] text-white text-xs font-black shadow-sm shrink-0">
+          
         </div>
       );
     }
     return (
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F0EFEA] text-[#172033] text-xs font-bold shadow-sm shrink-0">
-        {(merchantName || categoryName || 'T').slice(0, 1).toUpperCase()}
+      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEEAF7] text-[#3B2D54] text-xs font-black shadow-sm border border-[#625477]/20 shrink-0">
+        {(merchantName || categoryName || 'TX').slice(0, 1).toUpperCase()}
       </div>
     );
   };
@@ -174,25 +181,26 @@ export default function TransactionsPage() {
       <div className="space-y-6">
         <PageHeader
           title="Transactions"
-          description="Keep track of your income and spending with automatic categorization, live telemetry, and CSV export."
+          description="Detailed record of all inflows, outflows, merchant categories, and deterministic accounting telemetry."
           actionSlot={
             <div className="flex items-center gap-2">
-              <Button
-                onClick={handleExportCSV}
-                isLoading={isExporting}
-                variant="outline"
-                size="sm"
-                leftIcon={<Download className="h-3.5 w-3.5" />}
-              >
-                Export CSV
-              </Button>
+              <Tooltip content="Export complete ledger as CSV">
+                <Button
+                  onClick={handleExportCSV}
+                  variant="outline"
+                  size="sm"
+                  isLoading={isExporting}
+                  leftIcon={<Download className="h-3.5 w-3.5" />}
+                  className="hidden sm:inline-flex"
+                >
+                  Export CSV
+                </Button>
+              </Tooltip>
+
               <Button
                 onClick={() => {
                   setEditingTx(null);
                   setIsAddModalOpen(true);
-                  if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new Event('monvex:open-add-transaction'));
-                  }
                 }}
                 variant="primary"
                 size="sm"
@@ -208,13 +216,13 @@ export default function TransactionsPage() {
         <CardReveal index={0} className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-[#E4E2DC] shadow-subtle">
           {/* Search Input */}
           <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search merchant or description..."
-              className="w-full pl-10 pr-3.5 py-2 rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] text-xs font-semibold text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none transition-all"
+              className="w-full pl-10 pr-3.5 py-2 rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] text-xs font-semibold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
             />
           </div>
 
@@ -227,10 +235,10 @@ export default function TransactionsPage() {
                   key={t}
                   onClick={() => setTypeFilter(t)}
                   className={cn(
-                    'px-3 py-1.5 rounded-md text-xs font-bold transition-all',
+                    'px-3 py-1.5 rounded-md text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none',
                     typeFilter === t
-                      ? 'bg-[#172033] text-white shadow-sm'
-                      : 'text-[#5F6878] hover:text-[#172033]'
+                      ? 'bg-[#2A1F3D] text-white shadow-sm'
+                      : 'text-[#625D69] hover:text-[#191522]'
                   )}
                 >
                   {t === 'ALL' ? 'All' : t === 'EXPENSE' ? 'Expenses' : 'Income'}
@@ -242,7 +250,7 @@ export default function TransactionsPage() {
             <select
               value={sortBy}
               onChange={(e: any) => setSortBy(e.target.value)}
-              className="rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#172033] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none"
+              className="rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none"
             >
               <option value="date_desc">Newest first</option>
               <option value="amount_desc">Highest amount</option>
@@ -251,15 +259,21 @@ export default function TransactionsPage() {
           </div>
         </CardReveal>
 
-        {/* Transactions Table Card */}
+        {/* Transactions Container */}
         <CardReveal index={1} className="editorial-card overflow-hidden">
           {isLoading ? (
-            <div className="p-6 space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+            <div className="p-4 sm:p-6 space-y-1">
+              <TableSkeletonRow />
+              <TableSkeletonRow />
+              <TableSkeletonRow />
+              <TableSkeletonRow />
             </div>
+          ) : isError && transactions.length === 0 ? (
+            <ErrorState
+              title="Unable to load transactions"
+              description="Failed to communicate with the accounting database. Check your connection or retry."
+              onRetry={() => refetch()}
+            />
           ) : filtered.length === 0 ? (
             <EmptyState
               title="No transactions found"
@@ -275,51 +289,48 @@ export default function TransactionsPage() {
               }}
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="ref-table">
-                <thead>
-                  <tr>
-                    <th className="w-[14%]">Date</th>
-                    <th className="w-[32%]">Merchant</th>
-                    <th className="w-[18%]">Category</th>
-                    <th className="w-[12%]">Source</th>
-                    <th className="w-[14%] text-right">Amount</th>
-                    <th className="w-[10%] text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((tx: any) => {
-                    const isExp = tx.type === 'EXPENSE';
-                    const catStyles = getCategoryStyles(tx.category_name);
+            <>
+              {/* 1. Mobile Adaptive Stacked Card View (sm:hidden) */}
+              <div className="sm:hidden divide-y divide-[#F0EFEA]">
+                {filtered.map((tx: any) => {
+                  const isExp = tx.type === 'EXPENSE';
+                  const catStyles = getCategoryStyles(tx.category_name);
 
-                    return (
-                      <tr key={tx.id}>
-                        <td className="text-xs font-semibold text-[#5F6878] whitespace-nowrap">
-                          {new Date(tx.date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-3">
-                            {getMerchantLogo(tx.merchant_name, tx.category_name)}
-                            <div className="min-w-0">
-                              <span className="font-bold text-xs text-[#172033] block truncate max-w-[280px]">
-                                {tx.merchant_name || tx.description || 'Transaction'}
-                              </span>
-                              {tx.description && tx.merchant_name && (
-                                <span className="text-[11px] text-[#858D9A] block truncate max-w-[280px]">
-                                  {tx.description}
-                                </span>
-                              )}
-                            </div>
+                  return (
+                    <div key={`mob-${tx.id}`} className="p-4 space-y-2.5 hover:bg-[#FAF9F6] transition-colors">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {getMerchantLogo(tx.merchant_name, tx.category_name)}
+                          <div className="min-w-0">
+                            <span className="font-bold text-xs text-[#191522] block truncate">
+                              {tx.merchant_name || tx.description || 'Transaction'}
+                            </span>
+                            <span className="text-[11px] text-[#898390] block">
+                              {new Date(tx.date).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </span>
                           </div>
-                        </td>
-                        <td>
+                        </div>
+
+                        <div
+                          className={cn(
+                            'font-black text-sm tabular-nums whitespace-nowrap text-right',
+                            isExp ? 'text-[#E11D48]' : 'text-[#059669]'
+                          )}
+                        >
+                          {isExp ? '- ' : '+ '}
+                          {formatCurrency(tx.amount, user?.currency)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-2">
                           <span
                             className={cn(
-                              'inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold border',
+                              'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border',
                               catStyles.badgeBg,
                               catStyles.badgeText,
                               'border-[#E4E2DC]/80'
@@ -327,45 +338,130 @@ export default function TransactionsPage() {
                           >
                             {tx.category_name || 'General'}
                           </span>
-                        </td>
-                        <td>
-                          <span className="font-mono text-[11px] font-bold text-[#858D9A] px-2 py-0.5 rounded bg-[#F6F5F1] border border-[#E4E2DC]">
+                          <span className="font-mono text-[10px] font-bold text-[#898390] px-1.5 py-0.5 rounded bg-[#F6F5F1] border border-[#E4E2DC]">
                             {tx.source || 'MANUAL'}
                           </span>
-                        </td>
-                        <td
-                          className={cn(
-                            'text-right font-black text-xs sm:text-sm tabular-nums whitespace-nowrap',
-                            isExp ? 'text-[#E11D48]' : 'text-[#059669]'
-                          )}
-                        >
-                          {isExp ? '- ' : '+ '}
-                          {formatCurrency(tx.amount, user?.currency)}
-                        </td>
-                        <td className="text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => setEditingTx(tx)}
-                              className="text-[#858D9A] hover:text-[#2563EB] p-1.5 rounded-lg hover:bg-[#EFF6FF] border border-transparent hover:border-[#BFDBFE] transition-all"
-                              title="Edit transaction"
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setEditingTx(tx)}
+                            className="text-[#898390] hover:text-[#2563EB] p-1.5 rounded-lg hover:bg-[#EFF6FF] transition-all"
+                            aria-label="Edit transaction"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(tx.id)}
+                            className="text-[#898390] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] transition-all"
+                            aria-label="Delete transaction"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 2. Desktop High-Density Table View (hidden sm:block) */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="ref-table">
+                  <thead>
+                    <tr>
+                      <th className="w-[14%]">Date</th>
+                      <th className="w-[32%]">Merchant</th>
+                      <th className="w-[18%]">Category</th>
+                      <th className="w-[12%]">Source</th>
+                      <th className="w-[14%] text-right">Amount</th>
+                      <th className="w-[10%] text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((tx: any) => {
+                      const isExp = tx.type === 'EXPENSE';
+                      const catStyles = getCategoryStyles(tx.category_name);
+
+                      return (
+                        <tr key={tx.id}>
+                          <td className="text-xs font-semibold text-[#625D69] whitespace-nowrap">
+                            {new Date(tx.date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          <td>
+                            <div className="flex items-center gap-3">
+                              {getMerchantLogo(tx.merchant_name, tx.category_name)}
+                              <div className="min-w-0">
+                                <span className="font-bold text-xs text-[#191522] block truncate max-w-[280px]">
+                                  {tx.merchant_name || tx.description || 'Transaction'}
+                                </span>
+                                {tx.description && tx.merchant_name && (
+                                  <span className="text-[11px] text-[#898390] block truncate max-w-[280px]">
+                                    {tx.description}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span
+                              className={cn(
+                                'inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold border',
+                                catStyles.badgeBg,
+                                catStyles.badgeText,
+                                'border-[#E4E2DC]/80'
+                              )}
                             >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(tx.id)}
-                              className="text-[#858D9A] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] border border-transparent hover:border-[#FECDD3] transition-all"
-                              title="Delete transaction"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                              {tx.category_name || 'General'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="font-mono text-[11px] font-bold text-[#898390] px-2 py-0.5 rounded bg-[#F6F5F1] border border-[#E4E2DC]">
+                              {tx.source || 'MANUAL'}
+                            </span>
+                          </td>
+                          <td
+                            className={cn(
+                              'text-right font-black text-xs sm:text-sm tabular-nums whitespace-nowrap',
+                              isExp ? 'text-[#E11D48]' : 'text-[#059669]'
+                            )}
+                          >
+                            {isExp ? '- ' : '+ '}
+                            {formatCurrency(tx.amount, user?.currency)}
+                          </td>
+                          <td className="text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Tooltip content="Edit transaction record">
+                                <button
+                                  onClick={() => setEditingTx(tx)}
+                                  className="text-[#898390] hover:text-[#2563EB] p-1.5 rounded-lg hover:bg-[#EFF6FF] border border-transparent hover:border-[#BFDBFE] transition-all"
+                                  aria-label="Edit transaction"
+                                >
+                                  <Edit2 className="h-3.5 w-3.5" />
+                                </button>
+                              </Tooltip>
+                              <Tooltip content="Delete transaction record">
+                                <button
+                                  onClick={() => handleDelete(tx.id)}
+                                  className="text-[#898390] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] border border-transparent hover:border-[#FECDD3] transition-all"
+                                  aria-label="Delete transaction"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </Tooltip>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardReveal>
 

@@ -17,8 +17,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'monvex-insecure-dev-key-super-secret-12345
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
-    host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,.onrender.com').split(',') if host.strip()
+    host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com').split(',') if host.strip()
 ]
+if 'testserver' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('testserver')
 
 # Application definition
 INSTALLED_APPS = [
@@ -113,6 +115,9 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'OPTIONS': {
+                'timeout': 30,
+            },
         }
     }
 
@@ -141,6 +146,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB limit
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10MB limit
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

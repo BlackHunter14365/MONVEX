@@ -143,8 +143,8 @@ export default function NotificationsPage() {
               className={cn(
                 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap',
                 filterType === tab.id
-                  ? 'bg-[#172033] text-white shadow-xs'
-                  : 'text-[#5F6878] hover:text-[#172033] hover:bg-[#F6F5F1]'
+                  ? 'bg-[#2A1F3D] text-white shadow-xs'
+                  : 'text-[#625D69] hover:text-[#191522] hover:bg-[#F6F5F1]'
               )}
             >
               {tab.label}
@@ -155,16 +155,16 @@ export default function NotificationsPage() {
         {/* NOTIFICATIONS STREAM */}
         <div className="editorial-card p-6 rounded-2xl space-y-4">
           <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-            <h3 className="text-sm font-black text-[#172033]">
+            <h3 className="text-sm font-black text-[#191522]">
               Active Alerts & Security Notifications
             </h3>
-            <span className="text-xs font-mono font-bold text-[#5F6878]">
+            <span className="text-xs font-mono font-bold text-[#625D69]">
               {notifications.filter((n) => !n.is_read).length} Unread
             </span>
           </div>
 
           {notifications.length === 0 ? (
-            <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+            <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
               No alerts matching your current filter. Your finances are running smoothly!
             </div>
           ) : (
@@ -176,7 +176,7 @@ export default function NotificationsPage() {
                     'p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3',
                     notif.is_read
                       ? 'bg-white/60 border-[#E4E2DC] opacity-75'
-                      : 'bg-white border-[#172033]/30 shadow-xs ring-1 ring-[#172033]/10'
+                      : 'bg-white border-[#2A1F3D]/30 shadow-xs ring-1 ring-[#2A1F3D]/10'
                   )}
                 >
                   <div className="flex items-start gap-3.5">
@@ -185,15 +185,15 @@ export default function NotificationsPage() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-[#172033]">
+                        <span className="text-xs font-black text-[#191522]">
                           {notif.title}
                         </span>
                         {getSeverityBadge(notif.severity)}
                       </div>
-                      <p className="text-xs text-[#5F6878] leading-relaxed font-medium">
+                      <p className="text-xs text-[#625D69] leading-relaxed font-medium">
                         {notif.message}
                       </p>
-                      <span className="text-[10px] text-[#858D9A] font-mono block">
+                      <span className="text-[10px] text-[#898390] font-mono block">
                         {new Date(notif.created_at).toLocaleString([], {
                           dateStyle: 'medium',
                           timeStyle: 'short',
@@ -206,7 +206,7 @@ export default function NotificationsPage() {
                     {notif.action_url && (
                       <a
                         href={notif.action_url}
-                        className="px-3 py-1.5 rounded-xl bg-[#F6F5F1] hover:bg-[#172033] hover:text-white text-xs font-bold text-[#172033] transition-all"
+                        className="px-3 py-1.5 rounded-xl bg-[#F6F5F1] hover:bg-[#2A1F3D] hover:text-white text-xs font-bold text-[#191522] transition-all"
                       >
                         View
                       </a>
@@ -214,7 +214,7 @@ export default function NotificationsPage() {
                     {!notif.is_read && (
                       <button
                         onClick={() => handleMarkRead(notif.id)}
-                        className="p-1.5 rounded-xl hover:bg-[#F6F5F1] text-[#858D9A] hover:text-[#059669] transition-all"
+                        className="p-1.5 rounded-xl hover:bg-[#F6F5F1] text-[#898390] hover:text-[#059669] transition-all"
                         title="Mark as read"
                       >
                         <Check className="h-4 w-4" />

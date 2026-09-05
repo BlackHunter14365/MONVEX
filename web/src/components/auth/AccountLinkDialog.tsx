@@ -61,12 +61,12 @@ export const AccountLinkDialog: React.FC<AccountLinkDialogProps> = ({
     >
       <div className="space-y-4 pt-1">
         <div className="p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#172033]">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#191522]">
             <ShieldCheck className="h-4 w-4 text-[#059669]" />
             <span>Existing MONVEX Account Detected</span>
           </div>
-          <p className="text-xs text-[#5F6878] leading-relaxed">
-            The email <strong className="text-[#172033]">{email}</strong> is already registered. Enter your password to securely link Google Sign-In to this account.
+          <p className="text-xs text-[#625D69] leading-relaxed">
+            The email <strong className="text-[#191522]">{email}</strong> is already registered. Enter your password to securely link Google Sign-In to this account.
           </p>
         </div>
 
@@ -79,23 +79,23 @@ export const AccountLinkDialog: React.FC<AccountLinkDialogProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">
+            <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">
               MONVEX Account Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter existing password"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-10 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-10 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#858D9A] hover:text-[#172033]"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#898390] hover:text-[#191522]"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -111,7 +111,7 @@ export const AccountLinkDialog: React.FC<AccountLinkDialogProps> = ({
               size="sm"
               type="submit"
               isLoading={isLoading}
-              className="bg-[#172033] hover:bg-[#0F172A] text-white text-xs font-bold"
+              className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold"
             >
               Verify &amp; Link Google
             </Button>

@@ -31,13 +31,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       )}
     >
       {icon && (
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F0EFEA] text-[#172033] border border-[#E4E2DC]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEAF7] text-[#3B2D54] border border-[#625477]/20">
           {icon}
         </div>
       )}
       <div className="space-y-1">
-        <h4 className="text-sm font-bold text-[#172033] tracking-tight">{title}</h4>
-        <p className="text-xs font-medium text-[#5F6878] max-w-xs mx-auto leading-relaxed">{description}</p>
+        <h4 className="text-sm font-bold text-[#191522] tracking-tight">{title}</h4>
+        <p className="text-xs font-medium text-[#625D69] max-w-xs mx-auto leading-relaxed">{description}</p>
       </div>
       {actionLabel && onAction && (
         <Button onClick={onAction} size="sm" variant="primary" leftIcon={<Plus className="h-3.5 w-3.5" />} className="mt-2">

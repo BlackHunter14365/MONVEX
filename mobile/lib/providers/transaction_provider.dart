@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../models/transaction.dart';
+import 'auth_provider.dart';
 
 class TransactionProvider extends ChangeNotifier {
   List<TransactionModel> _transactions = [];
@@ -28,6 +29,25 @@ class TransactionProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get filterType => _filterType;
   String get searchQuery => _searchQuery;
+
+  TransactionProvider() {
+    AuthProvider.registerLogoutCallback(resetState);
+  }
+
+  @override
+  void dispose() {
+    AuthProvider.unregisterLogoutCallback(resetState);
+    super.dispose();
+  }
+
+  void resetState() {
+    _transactions = [];
+    _isLoading = false;
+    _errorMessage = null;
+    _filterType = 'ALL';
+    _searchQuery = '';
+    notifyListeners();
+  }
 
   void setFilterType(String type) {
     _filterType = type;
@@ -73,6 +93,22 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
+  Future<Map<String, dynamic>?> parseNaturalLanguage(String text) async {
+    try {
+      final res = await ApiClient.post(ApiEndpoints.aiParseTransaction, {
+        'text': text.trim(),
+      });
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+      return null;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<bool> deleteTransaction(String id) async {
     try {
       await ApiClient.delete('${ApiEndpoints.transactions}$id/');
@@ -94,3 +130,4 @@ extension FilterList<E> on List<E> {
     }
   }
 }
+

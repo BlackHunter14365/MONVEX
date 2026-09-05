@@ -1,3 +1,4 @@
+export * from './MotionCard';
 export * from './AnimatedValue';
 export * from './CardReveal';
 export * from './StaggerContainer';

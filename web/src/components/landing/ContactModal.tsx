@@ -168,26 +168,26 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={subtitleId}
-        className="relative w-full max-w-lg rounded-2xl bg-white border border-[#E5E7EB] shadow-2xl overflow-hidden transition-all transform animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg rounded-2xl bg-white border border-[#E4E2DC] shadow-2xl overflow-hidden transition-all transform animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Ribbon */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#F0EFEA] bg-[#FAFAF8]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E4E2DC] bg-[#F6F5F1]">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
-              <h2 id={titleId} className="text-lg font-black text-[#172033] tracking-tight">
+              <h2 id={titleId} className="text-lg font-black text-[#191522] tracking-tight">
                 Let's Talk
               </h2>
             </div>
-            <p id={subtitleId} className="text-xs text-[#5F6878] leading-relaxed">
+            <p id={subtitleId} className="text-xs text-[#625D69] leading-relaxed">
               Have a question, project idea, collaboration opportunity, or feedback about MONVEX? Send a message.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-[#858D9A] hover:text-[#172033] hover:bg-[#E5E7EB]/50 rounded-lg transition-colors focus:outline-hidden focus:ring-2 focus:ring-[#172033]"
+            className="p-1.5 text-[#898390] hover:text-[#191522] hover:bg-[#E5E7EB]/50 rounded-lg transition-colors focus:outline-hidden focus:ring-2 focus:ring-[#4056A1]"
             aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
@@ -202,8 +202,8 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 <CheckCircle2 className="h-7 w-7" />
               </div>
               <div className="space-y-1.5">
-                <h3 className="text-base font-bold text-[#172033]">Message sent successfully.</h3>
-                <p className="text-xs text-[#5F6878] max-w-xs mx-auto leading-relaxed">
+                <h3 className="text-base font-bold text-[#191522]">Message sent successfully.</h3>
+                <p className="text-xs text-[#625D69] max-w-xs mx-auto leading-relaxed">
                   Thanks for reaching out. I’ll review your message and get back to you soon.
                 </p>
               </div>
@@ -211,7 +211,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#172033] hover:bg-[#0F172A] text-xs font-bold text-white shadow-xs transition-all active:translate-y-[1px]"
+                  className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-xs font-bold text-white shadow-xs transition-all active:translate-y-[1px]"
                 >
                   Close Window
                 </button>
@@ -228,11 +228,11 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
               {/* Name Field */}
               <div className="space-y-1.5">
-                <label htmlFor="contact-name" className="block text-xs font-bold text-[#172033]">
+                <label htmlFor="contact-name" className="block text-xs font-bold text-[#191522]">
                   Name <span className="text-[#E11D48]">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#858D9A]">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#898390]">
                     <User className="h-4 w-4" />
                   </div>
                   <input
@@ -246,10 +246,10 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                     onBlur={handleBlur}
                     placeholder="Danish Ansari"
                     disabled={isSubmitting}
-                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs bg-[#FFFFFF] text-[#172033] placeholder-[#858D9A] transition-colors focus:outline-hidden focus:ring-2 ${
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs bg-[#FFFFFF] text-[#191522] placeholder-[#858D9A] transition-colors focus:outline-hidden focus:ring-2 ${
                       errors.name && touched.name
                         ? 'border-[#E11D48] focus:ring-[#E11D48]/30 bg-[#FFF1F2]/20'
-                        : 'border-[#E5E7EB] focus:border-[#172033] focus:ring-[#172033]/15'
+                        : 'border-[#E4E2DC] focus:border-[#4056A1] focus:ring-[#4056A1]/15'
                     }`}
                   />
                 </div>
@@ -264,11 +264,11 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="contact-email" className="block text-xs font-bold text-[#172033]">
+                  <label htmlFor="contact-email" className="block text-xs font-bold text-[#191522]">
                     Email <span className="text-[#E11D48]">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#858D9A]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#898390]">
                       <Mail className="h-4 w-4" />
                     </div>
                     <input
@@ -281,10 +281,10 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                       onBlur={handleBlur}
                       placeholder="danish@example.com"
                       disabled={isSubmitting}
-                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs bg-[#FFFFFF] text-[#172033] placeholder-[#858D9A] transition-colors focus:outline-hidden focus:ring-2 ${
+                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs bg-[#FFFFFF] text-[#191522] placeholder-[#858D9A] transition-colors focus:outline-hidden focus:ring-2 ${
                         errors.email && touched.email
                           ? 'border-[#E11D48] focus:ring-[#E11D48]/30 bg-[#FFF1F2]/20'
-                          : 'border-[#E5E7EB] focus:border-[#172033] focus:ring-[#172033]/15'
+                          : 'border-[#E4E2DC] focus:border-[#4056A1] focus:ring-[#4056A1]/15'
                       }`}
                     />
                   </div>
@@ -297,11 +297,11 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
                 {/* Phone Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="contact-phone" className="block text-xs font-bold text-[#172033]">
-                    Phone Number <span className="text-[10px] font-normal text-[#858D9A]">(Optional)</span>
+                  <label htmlFor="contact-phone" className="block text-xs font-bold text-[#191522]">
+                    Phone Number <span className="text-[10px] font-normal text-[#898390]">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#858D9A]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#898390]">
                       <Phone className="h-4 w-4" />
                     </div>
                     <input
@@ -313,10 +313,10 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                       onBlur={handleBlur}
                       placeholder="+91 9876543210"
                       disabled={isSubmitting}
-                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs bg-[#FFFFFF] text-[#172033] placeholder-[#858D9A] transition-colors focus:outline-hidden focus:ring-2 ${
+                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs bg-[#FFFFFF] text-[#191522] placeholder-[#858D9A] transition-colors focus:outline-hidden focus:ring-2 ${
                         errors.phone && touched.phone
                           ? 'border-[#E11D48] focus:ring-[#E11D48]/30 bg-[#FFF1F2]/20'
-                          : 'border-[#E5E7EB] focus:border-[#172033] focus:ring-[#172033]/15'
+                          : 'border-[#E4E2DC] focus:border-[#4056A1] focus:ring-[#4056A1]/15'
                       }`}
                     />
                   </div>
@@ -330,7 +330,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
               {/* Message Field */}
               <div className="space-y-1.5">
-                <label htmlFor="contact-message" className="block text-xs font-bold text-[#172033]">
+                <label htmlFor="contact-message" className="block text-xs font-bold text-[#191522]">
                   Description / Message <span className="text-[#E11D48]">*</span>
                 </label>
                 <div className="relative">
@@ -344,10 +344,10 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                     onBlur={handleBlur}
                     placeholder="Tell me what you'd like to discuss..."
                     disabled={isSubmitting}
-                    className={`w-full p-3 rounded-xl border text-xs bg-[#FFFFFF] text-[#172033] placeholder-[#858D9A] transition-colors resize-none focus:outline-hidden focus:ring-2 ${
+                    className={`w-full p-3 rounded-xl border text-xs bg-[#FFFFFF] text-[#191522] placeholder-[#858D9A] transition-colors resize-none focus:outline-hidden focus:ring-2 ${
                       errors.message && touched.message
                         ? 'border-[#E11D48] focus:ring-[#E11D48]/30 bg-[#FFF1F2]/20'
-                        : 'border-[#E5E7EB] focus:border-[#172033] focus:ring-[#172033]/15'
+                        : 'border-[#E4E2DC] focus:border-[#4056A1] focus:ring-[#4056A1]/15'
                     }`}
                   />
                 </div>
@@ -359,19 +359,19 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               </div>
 
               {/* Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#F0EFEA]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E4E2DC]">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="px-4 py-2.5 rounded-xl border border-[#E5E7EB] hover:bg-[#F7F7F4] text-xs font-bold text-[#5F6878] hover:text-[#172033] transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-[#E4E2DC] hover:bg-[#F7F7F4] text-xs font-bold text-[#625D69] hover:text-[#191522] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#172033] hover:bg-[#0F172A] text-xs font-bold text-white shadow-xs transition-all active:translate-y-[1px] disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-xs font-bold text-white shadow-xs transition-all active:translate-y-[1px] disabled:opacity-60"
                 >
                   {isSubmitting ? (
                     <>

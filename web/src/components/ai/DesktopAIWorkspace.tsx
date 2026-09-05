@@ -151,7 +151,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
             <button
               type="button"
               onClick={handleNewChat}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-2xl bg-white hover:bg-[#F1EFEA] border border-[#E4E2DC] shadow-2xs text-xs font-bold text-[#172033] transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-2xl bg-white hover:bg-[#F1EFEA] border border-[#E4E2DC] shadow-2xs text-xs font-bold text-[#191522] transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
               <Plus className="h-4 w-4 text-[#2563EB]" />
               <span>New Conversation</span>
@@ -160,7 +160,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
             <button
               type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-2 rounded-xl text-[#858D9A] hover:text-[#172033] hover:bg-white border border-transparent hover:border-[#E4E2DC] transition-colors"
+              className="p-2 rounded-xl text-[#898390] hover:text-[#191522] hover:bg-white border border-transparent hover:border-[#E4E2DC] transition-colors"
               title="Close sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -169,13 +169,13 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
 
           {/* Search History */}
           <div className="relative">
-            <Search className="h-3.5 w-3.5 text-[#858D9A] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="h-3.5 w-3.5 text-[#898390] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchHistory}
               onChange={(e) => setSearchHistory(e.target.value)}
               placeholder="Search conversations..."
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-[#E4E2DC] text-[11.5px] font-semibold text-[#172033] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#172033]/40"
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-[#E4E2DC] text-[11.5px] font-semibold text-[#191522] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#4056A1]/50"
             />
           </div>
 
@@ -183,15 +183,15 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
             {filteredHistory.length === 0 ? (
               <div className="py-8 text-center space-y-1">
-                <BrainCircuit className="h-6 w-6 text-[#858D9A] mx-auto stroke-1" />
-                <span className="text-xs text-[#858D9A] font-medium block">No history found</span>
+                <BrainCircuit className="h-6 w-6 text-[#898390] mx-auto stroke-1" />
+                <span className="text-xs text-[#898390] font-medium block">No history found</span>
               </div>
             ) : (
               <>
                 {/* Today */}
                 {todaySessions.length > 0 && (
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2">
+                    <span className="text-[10px] font-bold text-[#898390] uppercase tracking-wider px-2">
                       Today
                     </span>
                     {todaySessions.map((session) => (
@@ -201,8 +201,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                         className={cn(
                           'group flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all',
                           currentConversationId === session.id
-                            ? 'bg-white text-[#172033] shadow-xs border border-[#E4E2DC]'
-                            : 'text-[#5F6878] hover:bg-white/60 hover:text-[#172033]'
+                            ? 'bg-white text-[#191522] shadow-xs border border-[#E4E2DC]'
+                            : 'text-[#625D69] hover:bg-white/60 hover:text-[#191522]'
                         )}
                       >
                         <span className="truncate flex-1 pr-2">{session.title}</span>
@@ -211,7 +211,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                           <button
                             type="button"
                             onClick={(e) => handleDeleteConversation(e, session.id)}
-                            className="p-1 text-[#858D9A] hover:text-[#E11D48]"
+                            className="p-1 text-[#898390] hover:text-[#E11D48]"
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -225,7 +225,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                 {/* Yesterday */}
                 {yesterdaySessions.length > 0 && (
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2">
+                    <span className="text-[10px] font-bold text-[#898390] uppercase tracking-wider px-2">
                       Yesterday
                     </span>
                     {yesterdaySessions.map((session) => (
@@ -235,8 +235,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                         className={cn(
                           'group flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all',
                           currentConversationId === session.id
-                            ? 'bg-white text-[#172033] shadow-xs border border-[#E4E2DC]'
-                            : 'text-[#5F6878] hover:bg-white/60 hover:text-[#172033]'
+                            ? 'bg-white text-[#191522] shadow-xs border border-[#E4E2DC]'
+                            : 'text-[#625D69] hover:bg-white/60 hover:text-[#191522]'
                         )}
                       >
                         <span className="truncate flex-1 pr-2">{session.title}</span>
@@ -245,7 +245,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                           <button
                             type="button"
                             onClick={(e) => handleDeleteConversation(e, session.id)}
-                            className="p-1 text-[#858D9A] hover:text-[#E11D48]"
+                            className="p-1 text-[#898390] hover:text-[#E11D48]"
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -259,7 +259,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                 {/* Previous 7 Days */}
                 {previousSessions.length > 0 && (
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-[#858D9A] uppercase tracking-wider px-2">
+                    <span className="text-[10px] font-bold text-[#898390] uppercase tracking-wider px-2">
                       Previous 7 Days
                     </span>
                     {previousSessions.map((session) => (
@@ -269,8 +269,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                         className={cn(
                           'group flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all',
                           currentConversationId === session.id
-                            ? 'bg-white text-[#172033] shadow-xs border border-[#E4E2DC]'
-                            : 'text-[#5F6878] hover:bg-white/60 hover:text-[#172033]'
+                            ? 'bg-white text-[#191522] shadow-xs border border-[#E4E2DC]'
+                            : 'text-[#625D69] hover:bg-white/60 hover:text-[#191522]'
                         )}
                       >
                         <span className="truncate flex-1 pr-2">{session.title}</span>
@@ -279,7 +279,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                           <button
                             type="button"
                             onClick={(e) => handleDeleteConversation(e, session.id)}
-                            className="p-1 text-[#858D9A] hover:text-[#E11D48]"
+                            className="p-1 text-[#898390] hover:text-[#E11D48]"
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -297,12 +297,12 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
         {/* Bottom Profile Pill */}
         <div className="pt-3 border-t border-[#E4E2DC] flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-7 w-7 rounded-xl bg-[#172033] text-white flex items-center justify-center text-[10.5px] font-black shrink-0 shadow-xs">
+            <div className="h-7 w-7 rounded-xl bg-[#2A1F3D] text-white flex items-center justify-center text-[10.5px] font-black shrink-0 shadow-xs">
               {displayName.slice(0, 1).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-bold text-[#172033] block truncate">{displayName}</span>
-              <span className="text-[10px] text-[#858D9A] block truncate font-medium">Enterprise Tier</span>
+              <span className="text-xs font-bold text-[#191522] block truncate">{displayName}</span>
+              <span className="text-[10px] text-[#898390] block truncate font-medium">Enterprise Tier</span>
             </div>
           </div>
           <div className="h-2 w-2 rounded-full bg-emerald-500" title="Online" />
@@ -320,7 +320,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 rounded-xl text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1] transition-colors"
+                className="p-2 rounded-xl text-[#898390] hover:text-[#191522] hover:bg-[#F6F5F1] transition-colors"
                 title="Open history sidebar"
               >
                 <PanelLeftOpen className="h-4 w-4" />
@@ -332,7 +332,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                 <Sparkles className="h-3.5 w-3.5 text-white" />
               </div>
               <div>
-                <span className="text-xs font-black text-[#172033] tracking-tight block leading-none">
+                <span className="text-xs font-black text-[#191522] tracking-tight block leading-none">
                   MONVEX AI
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 leading-tight">
@@ -347,7 +347,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
             <button
               type="button"
               onClick={handleNewChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E4E2DC] text-xs font-bold text-[#172033] transition-all shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E4E2DC] text-xs font-bold text-[#191522] transition-all shadow-2xs"
             >
               <SquarePen className="h-3.5 w-3.5 text-[#2563EB]" />
               <span>New Chat</span>
@@ -364,16 +364,16 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                 <div className="h-16 w-16 mx-auto rounded-3xl overflow-hidden shadow-xl p-1 bg-gradient-to-br from-blue-600 to-indigo-800">
                   <img src="/ai-logo.png" alt="MONVEX AI" className="h-full w-full object-cover rounded-2xl" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black text-[#172033] tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-[#191522] tracking-tight">
                   Next-Generation Financial Intelligence
                 </h1>
-                <p className="text-xs sm:text-sm text-[#5F6878] font-medium max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-[#625D69] font-medium max-w-md mx-auto">
                   Ask anything about your spending trends, budget caps, runway forecasts, or run deterministic what-if simulations.
                 </p>
               </div>
 
               {/* Central Floating Composer Capsule */}
-              <div className="w-full rounded-3xl border border-[#E4E2DC] bg-white shadow-xl p-4 space-y-3 transition-all hover:border-[#172033]/30">
+              <div className="w-full rounded-3xl border border-[#E4E2DC] bg-white shadow-xl p-4 space-y-3 transition-all hover:border-[#4056A1]/40">
                 <textarea
                   ref={textareaRef}
                   value={inputQuery}
@@ -390,15 +390,15 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                       : 'Ask MONVEX AI (e.g. Why did spending increase?, Forecast 30-day balance, Simulate saving ₹5,000)...'
                   }
                   rows={2}
-                  className="w-full resize-none bg-transparent text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed"
+                  className="w-full resize-none bg-transparent text-sm font-semibold text-[#191522] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed"
                 />
 
                 <div className="flex items-center justify-between pt-1 border-t border-[#F1EFEA]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#5F6878]">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#625D69]">
                     <button
                       type="button"
                       onClick={() => toast.info('Statement / CSV Ingestion: Telemetry Active.')}
-                      className="p-1.5 rounded-lg hover:bg-[#F6F5F1] text-[#858D9A] hover:text-[#172033] transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-[#F6F5F1] text-[#898390] hover:text-[#191522] transition-colors"
                       title="Attach Statement or CSV"
                     >
                       <Plus className="h-4 w-4" />
@@ -417,7 +417,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                         'p-2 rounded-full transition-all',
                         isRecording
                           ? 'bg-[#E11D48] text-white animate-pulse shadow-md'
-                          : 'text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1]'
+                          : 'text-[#898390] hover:text-[#191522] hover:bg-[#F6F5F1]'
                       )}
                       title="Voice Input"
                     >
@@ -431,8 +431,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                       className={cn(
                         'h-8 w-8 rounded-full flex items-center justify-center transition-all shadow-sm',
                         inputQuery.trim()
-                          ? 'bg-[#172033] hover:bg-black text-white'
-                          : 'bg-[#E4E2DC] text-[#858D9A] cursor-not-allowed'
+                          ? 'bg-[#2A1F3D] hover:bg-[#3B2D54] text-white'
+                          : 'bg-[#E4E2DC] text-[#898390] cursor-not-allowed'
                       )}
                     >
                       <Send className="h-3.5 w-3.5" />
@@ -447,15 +447,15 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                   <button
                     key={st.title}
                     onClick={() => handleSend(st.prompt)}
-                    className="p-3.5 rounded-2xl bg-white hover:bg-[#F6F5F1] border border-[#E4E2DC] hover:border-[#172033]/40 shadow-xs hover:shadow-md transition-all text-left space-y-1 group flex flex-col justify-between"
+                    className="p-3.5 rounded-2xl bg-white hover:bg-[#F6F5F1] border border-[#E4E2DC] hover:border-[#4056A1]/40 shadow-xs hover:shadow-md transition-all text-left space-y-1 group flex flex-col justify-between active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
                   >
                     <div className="flex items-start justify-between">
                       <span className="text-base">{st.icon}</span>
-                      <ArrowUpRight className="h-3.5 w-3.5 text-[#858D9A] group-hover:text-[#2563EB] transition-colors" />
+                      <ArrowUpRight className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#2563EB] transition-colors" />
                     </div>
                     <div>
-                      <span className="text-xs font-black text-[#172033] block">{st.title}</span>
-                      <span className="text-[10.5px] font-medium text-[#858D9A] block truncate">{st.subtitle}</span>
+                      <span className="text-xs font-black text-[#191522] block">{st.title}</span>
+                      <span className="text-[10.5px] font-medium text-[#898390] block truncate">{st.subtitle}</span>
                     </div>
                   </button>
                 ))}
@@ -481,7 +481,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                     <div
                       className={cn(
                         'flex h-8 w-8 items-center justify-center rounded-xl overflow-hidden shrink-0 shadow-xs mt-0.5',
-                        isUser ? 'bg-[#172033] text-white text-[11px] font-black' : 'ring-1 ring-blue-500/20 bg-white'
+                        isUser ? 'bg-[#2A1F3D] text-white text-[11px] font-black' : 'ring-1 ring-blue-500/20 bg-white'
                       )}
                     >
                       {isUser ? (
@@ -503,8 +503,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                         className={cn(
                           'p-4 sm:p-5 rounded-2xl text-[13.5px] leading-relaxed shadow-xs transition-all',
                           isUser
-                            ? 'bg-[#172033] text-white rounded-tr-xs'
-                            : 'bg-white border border-[#E4E2DC] text-[#0F172A] rounded-tl-xs shadow-slate-100'
+                            ? 'bg-[#2A1F3D] text-white rounded-tr-xs'
+                            : 'bg-white border border-[#E4E2DC] text-[#191522] rounded-tl-xs shadow-slate-100'
                         )}
                       >
                         {/* Tool Execution Status */}
@@ -531,7 +531,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                         )}
 
                         {/* Markdown Text Response */}
-                        <div className="prose prose-sm max-w-none text-[#0F172A] dark:text-[#0F172A]">
+                        <div className="prose prose-sm max-w-none text-[#191522] dark:text-[#191522]">
                           {renderFormattedContent(msg.content)}
                         </div>
 
@@ -560,11 +560,12 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
 
                       {/* Footer Actions (Copy, TTS, Feedback) */}
                       {!isUser && !msg.isStreaming && (
-                        <div className="flex items-center gap-2 text-[11px] text-[#858D9A] px-1">
+                        <div className="flex items-center gap-2 text-[11px] text-[#898390] px-1">
                           <button
                             type="button"
                             onClick={() => handleCopy(msg.id, msg.content)}
-                            className="flex items-center gap-1 hover:text-[#172033] transition-colors p-1 rounded-md hover:bg-[#F6F5F1]"
+                            aria-label={copiedId === msg.id ? 'Copied message' : 'Copy message to clipboard'}
+                            className="flex items-center gap-1 hover:text-[#191522] transition-colors p-1 rounded-md hover:bg-[#F6F5F1] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
                           >
                             {copiedId === msg.id ? (
                               <Check className="h-3.5 w-3.5 text-emerald-600" />
@@ -577,9 +578,10 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                           <button
                             type="button"
                             onClick={() => handleReadAloud(msg.id, msg.content)}
+                            aria-label={isSpeaking ? 'Stop speech playback' : 'Read message aloud'}
                             className={cn(
-                              'flex items-center gap-1 transition-colors p-1 rounded-md hover:bg-[#F6F5F1]',
-                              isSpeaking ? 'text-[#2563EB] font-bold' : 'hover:text-[#172033]'
+                              'flex items-center gap-1 transition-colors p-1 rounded-md hover:bg-[#F6F5F1] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none',
+                              isSpeaking ? 'text-[#2563EB] font-bold' : 'hover:text-[#191522]'
                             )}
                           >
                             {isSpeaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -590,9 +592,10 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                             <button
                               type="button"
                               onClick={() => handleFeedback(msg.id, 'like')}
+                              aria-label="Mark response as helpful"
                               className={cn(
-                                'p-1 rounded-md transition-colors',
-                                userFeedback === 'like' ? 'text-emerald-600 bg-emerald-50' : 'hover:text-[#172033]'
+                                'p-1 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none',
+                                userFeedback === 'like' ? 'text-emerald-600 bg-emerald-50' : 'hover:text-[#191522]'
                               )}
                             >
                               <ThumbsUp className="h-3.5 w-3.5" />
@@ -600,9 +603,10 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                             <button
                               type="button"
                               onClick={() => handleFeedback(msg.id, 'dislike')}
+                              aria-label="Mark response as unhelpful"
                               className={cn(
-                                'p-1 rounded-md transition-colors',
-                                userFeedback === 'dislike' ? 'text-rose-600 bg-rose-50' : 'hover:text-[#172033]'
+                                'p-1 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none',
+                                userFeedback === 'dislike' ? 'text-rose-600 bg-rose-50' : 'hover:text-[#191522]'
                               )}
                             >
                               <ThumbsDown className="h-3.5 w-3.5" />
@@ -617,7 +621,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
 
               {/* Streaming loading indicator */}
               {isLoading && (
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-white border border-[#E4E2DC] shadow-xs text-xs text-[#5F6878] animate-pulse">
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-white border border-[#E4E2DC] shadow-xs text-xs text-[#625D69] animate-pulse">
                   <Sparkles className="h-4 w-4 text-[#2563EB] animate-spin" />
                   <span className="font-semibold">Synthesizing live verified financial telemetry...</span>
                 </div>
@@ -648,19 +652,19 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                     : 'Ask MONVEX AI (e.g. Can I afford this?, Compare with last month)...'
                 }
                 rows={1}
-                className="w-full resize-none bg-transparent text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed max-h-36"
+                className="w-full resize-none bg-transparent text-sm font-semibold text-[#191522] placeholder:text-[#94A3B8] focus:outline-none leading-relaxed max-h-36"
               />
 
               <div className="flex items-center justify-between pt-1 border-t border-[#F1EFEA]">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#5F6878]">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#625D69]">
                   <button
                     type="button"
                     onClick={() => toast.info('Ledger Attachment Active.')}
-                    className="p-1.5 rounded-lg hover:bg-[#F6F5F1] text-[#858D9A] hover:text-[#172033] transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-[#F6F5F1] text-[#898390] hover:text-[#191522] transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
-                  <span className="text-[10px] text-[#858D9A] font-mono">
+                  <span className="text-[10px] text-[#898390] font-mono">
                     Enter to send • Shift+Enter for newline
                   </span>
                 </div>
@@ -673,7 +677,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                       'p-2 rounded-full transition-all',
                       isRecording
                         ? 'bg-[#E11D48] text-white animate-pulse shadow-md'
-                        : 'text-[#858D9A] hover:text-[#172033] hover:bg-[#F6F5F1]'
+                        : 'text-[#898390] hover:text-[#191522] hover:bg-[#F6F5F1]'
                     )}
                     title="Voice Input"
                   >
@@ -687,8 +691,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
                     className={cn(
                       'h-8 w-8 rounded-full flex items-center justify-center transition-all shadow-sm',
                       inputQuery.trim()
-                        ? 'bg-[#172033] hover:bg-black text-white'
-                        : 'bg-[#E4E2DC] text-[#858D9A] cursor-not-allowed'
+                        ? 'bg-[#2A1F3D] hover:bg-[#3B2D54] text-white'
+                        : 'bg-[#E4E2DC] text-[#898390] cursor-not-allowed'
                     )}
                   >
                     <Send className="h-3.5 w-3.5" />

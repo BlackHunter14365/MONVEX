@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../models/budget.dart';
+import 'auth_provider.dart';
 
 class BudgetProvider extends ChangeNotifier {
   List<BudgetModel> _budgets = [];
@@ -11,6 +12,23 @@ class BudgetProvider extends ChangeNotifier {
   List<BudgetModel> get budgets => _budgets;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  BudgetProvider() {
+    AuthProvider.registerLogoutCallback(resetState);
+  }
+
+  @override
+  void dispose() {
+    AuthProvider.unregisterLogoutCallback(resetState);
+    super.dispose();
+  }
+
+  void resetState() {
+    _budgets = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 
   Future<void> fetchBudgets() async {
     _isLoading = true;

@@ -1,6 +1,7 @@
 """
 Transactions Serializers
 """
+from decimal import Decimal
 from rest_framework import serializers
 from .models import Category, Merchant, Transaction, RecurringPayment
 
@@ -34,11 +35,12 @@ class TransactionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'confidence']
 
 class CreateTransactionInputSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('0.01'))
     type = serializers.ChoiceField(choices=['INCOME', 'EXPENSE', 'TRANSFER'], default='EXPENSE')
     date = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     description = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
     title = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
+    category = serializers.UUIDField(required=False, allow_null=True)
     category_id = serializers.UUIDField(required=False, allow_null=True)
     category_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
     merchant_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
@@ -48,6 +50,8 @@ class CreateTransactionInputSerializer(serializers.Serializer):
     def validate(self, attrs):
         if not attrs.get('description') and attrs.get('title'):
             attrs['description'] = attrs['title']
+        if not attrs.get('category_id') and attrs.get('category'):
+            attrs['category_id'] = attrs['category']
         return attrs
 
     def validate_date(self, value):
@@ -93,6 +97,8 @@ class AssetSerializer(serializers.ModelSerializer):
 
 class LiabilitySerializer(serializers.ModelSerializer):
     liability_type_label = serializers.CharField(source='get_liability_type_display', read_only=True)
+    remaining_balance = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
+    monthly_emi = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
 
     class Meta:
         from .models import Liability

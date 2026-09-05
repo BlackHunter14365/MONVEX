@@ -202,6 +202,39 @@ export class TransactionEndpoints {
     return this.client.request<any>('/transactions/report/monthly/');
   }
 
+  async uploadReceiptFile(file: File) {
+    const token = this.client.getAccessToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_BASE}/transactions/receipts/upload/`, {
+      method: 'POST',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || 'Failed to upload and parse receipt');
+    }
+    return res.json();
+  }
+
+  async downloadMonthlyReportPDF(month?: string): Promise<Blob> {
+    const token = this.client.getAccessToken();
+    const url = month
+      ? `${API_BASE}/transactions/report/pdf/?month=${encodeURIComponent(month)}`
+      : `${API_BASE}/transactions/report/pdf/`;
+    const res = await fetch(url, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+    });
+    if (!res.ok) throw new Error('Failed to generate and download PDF statement');
+    return res.blob();
+  }
+
   async downloadTransactionsCSV(): Promise<Blob> {
     const token = this.client.getAccessToken();
     const res = await fetch(`${API_BASE}/transactions/export/`, {

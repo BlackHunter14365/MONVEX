@@ -307,16 +307,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#172033] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-12">
       {/* Brand Header */}
       <div className="text-center mb-8 space-y-3">
         <Link href="/" className="inline-flex flex-col items-center gap-3 group">
           <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-xl ring-2 ring-white/80 transition-transform group-hover:scale-105">
             <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#172033]">MONVEX</span>
+          <span className="text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
         </Link>
-        <p className="text-xs text-[#5F6878] font-medium">
+        <p className="text-xs text-[#625D69] font-medium">
           {step === 'register'
             ? 'Create your personal financial intelligence workspace'
             : 'Verify your email with single-use security code'}
@@ -348,56 +348,56 @@ export default function RegisterPage() {
           /* STEP 1: Registration Form */
           <form onSubmit={handleRegisterSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Username</label>
+              <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Username</label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                 <input
                   type="text"
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="username"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none transition-all"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Email Address</label>
+              <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none transition-all"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">
-                Mobile Phone <span className="text-[#858D9A] font-normal">(Optional)</span>
+              <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">
+                Mobile Phone <span className="text-[#898390] font-normal">(Optional)</span>
               </label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                 <input
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+91 98765 43210"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:ring-2 focus:ring-[#172033]/15 focus:outline-none transition-all"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Password</label>
+                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -405,12 +405,12 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 8 chars"
-                    className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-8 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:outline-none"
+                    className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-8 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#858D9A] hover:text-[#172033]"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#898390] hover:text-[#191522]"
                   >
                     {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
@@ -418,9 +418,9 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Confirm</label>
+                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Confirm</label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#858D9A]" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -428,7 +428,7 @@ export default function RegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat password"
-                    className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#172033] placeholder:text-[#858D9A] focus:border-[#172033] focus:outline-none"
+                    className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:outline-none"
                   />
                 </div>
               </div>
@@ -436,11 +436,11 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
-                <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Primary Currency</label>
+                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Primary Currency</label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
                 >
                   <option value="INR">INR (₹)</option>
                   <option value="USD">USD ($)</option>
@@ -450,14 +450,14 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-[#5F6878] mb-1.5 block">Monthly Income</label>
+                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Monthly Income</label>
                 <input
                   type="number"
                   step="0.01"
                   required
                   value={monthlyIncome}
                   onChange={(e) => setMonthlyIncome(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#172033] focus:border-[#172033] focus:outline-none"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
                 />
               </div>
             </div>
@@ -475,7 +475,7 @@ export default function RegisterPage() {
             {/* ─── OR ─── DIVIDER */}
             <div className="relative flex items-center justify-center my-3">
               <div className="border-t border-[#E4E2DC] w-full" />
-              <span className="bg-white px-3 text-[11px] font-bold text-[#858D9A] uppercase tracking-wider relative">
+              <span className="bg-white px-3 text-[11px] font-bold text-[#898390] uppercase tracking-wider relative">
                 Or
               </span>
             </div>
@@ -498,11 +498,11 @@ export default function RegisterPage() {
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#DCFCE7] text-[#059669] mb-1">
                 <KeyRound className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-bold text-[#172033]">Verify Your Email</h3>
-              <p className="text-xs text-[#5F6878] leading-relaxed">
+              <h3 className="text-base font-bold text-[#191522]">Verify Your Email</h3>
+              <p className="text-xs text-[#625D69] leading-relaxed">
                 We sent a 6-digit verification code to
                 <br />
-                <strong className="text-[#172033] font-bold">{maskedEmail || email}</strong>
+                <strong className="text-[#191522] font-bold">{maskedEmail || email}</strong>
               </p>
             </div>
 
@@ -524,7 +524,7 @@ export default function RegisterPage() {
                     disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED'}
                     className={cn(
                       'h-12 w-11 text-center text-lg font-bold rounded-xl border bg-white focus:outline-none transition-all',
-                      digit ? 'border-[#172033] text-[#172033]' : 'border-[#E4E2DC] text-[#5F6878]',
+                      digit ? 'border-[#2A1F3D] text-[#191522]' : 'border-[#E4E2DC] text-[#625D69]',
                       uiState === 'INVALID_CODE' ? 'border-[#E11D48] text-[#E11D48]' : ''
                     )}
                   />
@@ -539,10 +539,10 @@ export default function RegisterPage() {
             </div>
 
             {/* Expiration Timer Bar */}
-            <div className="flex items-center justify-center gap-1.5 text-xs text-[#858D9A] font-mono">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-[#898390] font-mono">
               <Clock className="h-3.5 w-3.5" />
               <span>Code expires in:</span>
-              <span className="font-bold text-[#172033]">{formatExpiryTime(sessionExpiresIn)}</span>
+              <span className="font-bold text-[#191522]">{formatExpiryTime(sessionExpiresIn)}</span>
             </div>
 
             {/* Action Button */}
@@ -561,8 +561,8 @@ export default function RegisterPage() {
             {/* Resend Button */}
             <div className="pt-2 text-center">
               {resendCooldown > 0 ? (
-                <span className="text-xs text-[#858D9A]">
-                  Resend code in <strong className="text-[#172033]">{resendCooldown}s</strong>
+                <span className="text-xs text-[#898390]">
+                  Resend code in <strong className="text-[#191522]">{resendCooldown}s</strong>
                 </span>
               ) : (
                 <button
@@ -579,7 +579,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="pt-4 border-t border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+        <div className="pt-4 border-t border-[#E4E2DC] text-center text-xs text-[#625D69]">
           Already have an account?{' '}
           <Link href="/login" className="font-bold text-[#2563EB] hover:underline">
             Sign in

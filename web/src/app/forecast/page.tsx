@@ -76,18 +76,18 @@ export default function ForecastPage() {
       return (
         <div className="rounded-xl bg-white border border-[#E4E2DC] p-3.5 shadow-lg space-y-1.5 min-w-[160px]">
           <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-1">
-            <span className="text-xs font-bold text-[#858D9A]">{label}</span>
+            <span className="text-xs font-bold text-[#898390]">{label}</span>
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB]">
               Forecast Model
             </span>
           </div>
           {payload.map((entry: any, index: number) => (
             <div key={`entry-${index}`} className="flex items-center justify-between text-xs font-bold gap-3">
-              <span className="flex items-center gap-1.5 text-[#5F6878]">
+              <span className="flex items-center gap-1.5 text-[#625D69]">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                 {entry.name}:
               </span>
-              <span className="text-[#172033] tabular-nums">
+              <span className="text-[#191522] tabular-nums">
                 {formatCurrency(entry.value, user?.currency)}
               </span>
             </div>
@@ -113,8 +113,8 @@ export default function ForecastPage() {
                   className={cn(
                     'rounded-md px-3 py-1 text-xs font-bold transition-all',
                     days === d
-                      ? 'bg-white text-[#172033] shadow-sm'
-                      : 'text-[#5F6878] hover:text-[#172033]'
+                      ? 'bg-white text-[#191522] shadow-sm'
+                      : 'text-[#625D69] hover:text-[#191522]'
                   )}
                 >
                   {d} Days
@@ -135,10 +135,10 @@ export default function ForecastPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <CardReveal index={0} hoverLift={true} className="editorial-card p-6 space-y-1.5">
               <span className="swiss-eyebrow block">Current Starting Balance</span>
-              <div className="swiss-metric text-2xl sm:text-3xl text-[#172033]">
+              <div className="swiss-metric text-2xl sm:text-3xl text-[#191522]">
                 <AnimatedValue value={forecast?.starting_balance || 0} currency={user?.currency} />
               </div>
-              <span className="text-[11px] text-[#858D9A] block">Real-time baseline</span>
+              <span className="text-[11px] text-[#898390] block">Real-time baseline</span>
             </CardReveal>
 
             <CardReveal index={1} hoverLift={true} className="editorial-card p-6 space-y-1.5">
@@ -146,7 +146,7 @@ export default function ForecastPage() {
               <div className="swiss-metric text-2xl sm:text-3xl text-[#E11D48]">
                 <AnimatedValue value={forecast?.daily_burn_rate || 0} currency={user?.currency} suffix=" / day" />
               </div>
-              <span className="text-[11px] text-[#858D9A] block">30-day historical run-rate</span>
+              <span className="text-[11px] text-[#898390] block">30-day historical run-rate</span>
             </CardReveal>
 
             <CardReveal index={2} hoverLift={true} className="editorial-card p-6 space-y-1.5">
@@ -161,7 +161,7 @@ export default function ForecastPage() {
               >
                 <AnimatedValue value={simulatedEndBalance} currency={user?.currency} />
               </div>
-              <span className="text-[11px] text-[#858D9A] block">
+              <span className="text-[11px] text-[#898390] block">
                 {incomeDelta !== 0 || expenseDelta !== 0 ? (
                   <span className="text-[#2563EB] font-bold">Simulated with active adjustments</span>
                 ) : (
@@ -176,10 +176,10 @@ export default function ForecastPage() {
         <div className="editorial-card p-6 sm:p-7 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="text-sm font-bold text-[#172033]">
+              <h3 className="text-sm font-bold text-[#191522]">
                 Projected Liquidity Trajectory & Confidence Interval
               </h3>
-              <p className="text-xs text-[#5F6878]">
+              <p className="text-xs text-[#625D69]">
                 Confidence bounds expand dynamically reflecting time variance
               </p>
             </div>
@@ -264,7 +264,7 @@ export default function ForecastPage() {
         <div className="editorial-card p-6 sm:p-7 space-y-6">
           <div className="flex items-center gap-2">
             <Sliders className="h-4 w-4 text-[#2563EB]" />
-            <h3 className="text-sm font-bold text-[#172033]">
+            <h3 className="text-sm font-bold text-[#191522]">
               Scenario Levers: Simulate Behavioral Adjustments
             </h3>
           </div>
@@ -273,7 +273,7 @@ export default function ForecastPage() {
             {/* Income Adjustment Lever */}
             <div className="space-y-2 p-4 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC]">
               <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-[#5F6878]">Monthly Income Delta</span>
+                <span className="text-[#625D69]">Monthly Income Delta</span>
                 <span className={cn('tabular-nums', incomeDelta >= 0 ? 'text-[#059669]' : 'text-[#E11D48]')}>
                   {incomeDelta >= 0 ? '+' : ''}{formatCurrency(incomeDelta, user?.currency)}
                 </span>
@@ -285,15 +285,15 @@ export default function ForecastPage() {
                 step="2500"
                 value={incomeDelta}
                 onChange={(e) => setIncomeDelta(parseInt(e.target.value))}
-                className="w-full h-2 bg-[#E4E2DC] rounded-lg appearance-none cursor-pointer accent-[#172033]"
+                className="w-full h-2 bg-[#E4E2DC] rounded-lg appearance-none cursor-pointer accent-[#2A1F3D]"
               />
-              <span className="text-[10px] text-[#858D9A] block">Simulate bonuses, freelance earnings, or wage shifts.</span>
+              <span className="text-[10px] text-[#898390] block">Simulate bonuses, freelance earnings, or wage shifts.</span>
             </div>
 
             {/* Expense Reduction Lever */}
             <div className="space-y-2 p-4 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC]">
               <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-[#5F6878]">Monthly Spending Reduction</span>
+                <span className="text-[#625D69]">Monthly Spending Reduction</span>
                 <span className={cn('tabular-nums', expenseDelta >= 0 ? 'text-[#059669]' : 'text-[#E11D48]')}>
                   {expenseDelta >= 0 ? '-' : '+'}{formatCurrency(Math.abs(expenseDelta), user?.currency)}
                 </span>
@@ -305,9 +305,9 @@ export default function ForecastPage() {
                 step="1500"
                 value={expenseDelta}
                 onChange={(e) => setExpenseDelta(parseInt(e.target.value))}
-                className="w-full h-2 bg-[#E4E2DC] rounded-lg appearance-none cursor-pointer accent-[#172033]"
+                className="w-full h-2 bg-[#E4E2DC] rounded-lg appearance-none cursor-pointer accent-[#2A1F3D]"
               />
-              <span className="text-[10px] text-[#858D9A] block">Simulate trimming discretionary subscriptions or food burn.</span>
+              <span className="text-[10px] text-[#898390] block">Simulate trimming discretionary subscriptions or food burn.</span>
             </div>
           </div>
         </div>

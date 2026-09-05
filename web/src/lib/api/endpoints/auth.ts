@@ -140,10 +140,14 @@ export class AuthEndpoints {
   }
 
   async logout() {
-    const refresh = typeof window !== 'undefined' ? localStorage.getItem('monvex_refresh_token') : null;
+    const refresh = typeof window !== 'undefined'
+      ? sessionStorage.getItem('monvex_refresh_token')
+      : null;
     this.client.clearTokens();
     if (typeof window !== 'undefined') {
       sessionStorage.clear();
+      localStorage.removeItem('monvex_access_token');
+      localStorage.removeItem('monvex_refresh_token');
     }
     if (refresh) {
       try {

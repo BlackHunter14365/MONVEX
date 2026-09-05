@@ -167,7 +167,7 @@ export default function NetWorthPage() {
                 size="sm"
                 onClick={() => setIsAddAssetOpen(true)}
                 leftIcon={<Plus className="h-3.5 w-3.5" />}
-                className="bg-[#172033] hover:bg-[#0F172A] text-white text-xs font-bold shadow-md"
+                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
               >
                 Add Asset
               </Button>
@@ -179,7 +179,7 @@ export default function NetWorthPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <CardReveal index={0} hoverLift={true} className="editorial-card p-5 space-y-1 rounded-xl">
             <span className="swiss-eyebrow block">Calculated Net Worth</span>
-            <div className="text-xl sm:text-2xl font-black text-[#172033] tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
               <AnimatedValue value={netWorthData?.net_worth || 0} />
             </div>
             <span className="text-[11px] text-[#059669] font-bold block">
@@ -192,7 +192,7 @@ export default function NetWorthPage() {
             <div className="text-xl sm:text-2xl font-black text-[#059669] tracking-tight">
               <AnimatedValue value={netWorthData?.total_assets || 0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               {netWorthData?.assets_list?.length || 0} registered assets
             </span>
           </CardReveal>
@@ -202,7 +202,7 @@ export default function NetWorthPage() {
             <div className="text-xl sm:text-2xl font-black text-[#E11D48] tracking-tight">
               <AnimatedValue value={netWorthData?.total_liabilities || 0} />
             </div>
-            <span className="text-[11px] text-[#5F6878] font-medium block">
+            <span className="text-[11px] text-[#625D69] font-medium block">
               {netWorthData?.liabilities_list?.length || 0} active debts
             </span>
           </CardReveal>
@@ -225,7 +225,7 @@ export default function NetWorthPage() {
             <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
               <div className="flex items-center gap-2">
                 <Landmark className="h-4 w-4 text-[#059669]" />
-                <h3 className="text-sm font-black text-[#172033]">
+                <h3 className="text-sm font-black text-[#191522]">
                   Registered Assets ({netWorthData?.assets_list?.length || 0})
                 </h3>
               </div>
@@ -238,7 +238,7 @@ export default function NetWorthPage() {
             </div>
 
             {(netWorthData?.assets_list || []).length === 0 ? (
-              <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+              <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
                 No assets added yet. Add bank deposits, stock portfolios, or gold!
               </div>
             ) : (
@@ -250,12 +250,12 @@ export default function NetWorthPage() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-[#172033] block">{a.name}</span>
+                        <span className="text-xs font-black text-[#191522] block">{a.name}</span>
                         <span className="brutalist-tag-emerald text-[9px] py-0 px-1.5">
                           {a.asset_type}
                         </span>
                       </div>
-                      <span className="text-[11px] text-[#858D9A] font-mono">
+                      <span className="text-[11px] text-[#898390] font-mono">
                         {a.institution || 'Liquid Reserve'}
                       </span>
                     </div>
@@ -266,7 +266,7 @@ export default function NetWorthPage() {
                       </span>
                       <button
                         onClick={() => handleDeleteAsset(a.id)}
-                        className="text-[#858D9A] hover:text-[#E11D48] transition-all p-1"
+                        className="text-[#898390] hover:text-[#E11D48] transition-all p-1"
                         title="Delete asset"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -283,7 +283,7 @@ export default function NetWorthPage() {
             <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-[#E11D48]" />
-                <h3 className="text-sm font-black text-[#172033]">
+                <h3 className="text-sm font-black text-[#191522]">
                   Outstanding Liabilities ({netWorthData?.liabilities_list?.length || 0})
                 </h3>
               </div>
@@ -296,7 +296,7 @@ export default function NetWorthPage() {
             </div>
 
             {(netWorthData?.liabilities_list || []).length === 0 ? (
-              <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878]">
+              <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
                 No debt obligations recorded. Your balance sheet is clean!
               </div>
             ) : (
@@ -308,10 +308,10 @@ export default function NetWorthPage() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-[#172033] block">{l.name}</span>
+                        <span className="text-xs font-black text-[#191522] block">{l.name}</span>
                         <Badge variant="danger" size="sm">{l.liability_type}</Badge>
                       </div>
-                      <span className="text-[11px] text-[#858D9A] font-mono">
+                      <span className="text-[11px] text-[#898390] font-mono">
                         EMI: {formatCurrency(l.monthly_emi)}/mo • Rate: {l.interest_rate_pct}%
                       </span>
                     </div>
@@ -322,7 +322,7 @@ export default function NetWorthPage() {
                       </span>
                       <button
                         onClick={() => handleDeleteLiability(l.id)}
-                        className="text-[#858D9A] hover:text-[#E11D48] transition-all p-1"
+                        className="text-[#898390] hover:text-[#E11D48] transition-all p-1"
                         title="Delete liability"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -351,7 +351,7 @@ export default function NetWorthPage() {
                 value={assetName}
                 onChange={(e) => setAssetName(e.target.value)}
                 required
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
@@ -361,7 +361,7 @@ export default function NetWorthPage() {
                 <select
                   value={assetType}
                   onChange={(e) => setAssetType(e.target.value)}
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 >
                   <option value="BANK">Bank Savings & Deposits</option>
                   <option value="INVESTMENT">Stocks & Mutual Funds</option>
@@ -380,7 +380,7 @@ export default function NetWorthPage() {
                   value={assetValue}
                   onChange={(e) => setAssetValue(e.target.value)}
                   required
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
             </div>
@@ -392,7 +392,7 @@ export default function NetWorthPage() {
                 placeholder="e.g. HDFC Bank, Zerodha, Groww"
                 value={assetInstitution}
                 onChange={(e) => setAssetInstitution(e.target.value)}
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
@@ -423,7 +423,7 @@ export default function NetWorthPage() {
                 value={liabName}
                 onChange={(e) => setLiabName(e.target.value)}
                 required
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
@@ -433,7 +433,7 @@ export default function NetWorthPage() {
                 <select
                   value={liabType}
                   onChange={(e) => setLiabType(e.target.value)}
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 >
                   <option value="PERSONAL_LOAN">Personal Loan</option>
                   <option value="HOME_LOAN">Home / Mortgage Loan</option>
@@ -452,7 +452,7 @@ export default function NetWorthPage() {
                   value={liabPrincipal}
                   onChange={(e) => setLiabPrincipal(e.target.value)}
                   required
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
             </div>
@@ -467,7 +467,7 @@ export default function NetWorthPage() {
                   value={liabRate}
                   onChange={(e) => setLiabRate(e.target.value)}
                   required
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
 
@@ -479,7 +479,7 @@ export default function NetWorthPage() {
                   value={liabTenure}
                   onChange={(e) => setLiabTenure(e.target.value)}
                   required
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#172033] focus:outline-none focus:border-[#172033]"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
             </div>

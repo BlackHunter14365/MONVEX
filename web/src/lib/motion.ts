@@ -7,6 +7,7 @@ export const MOTION_DURATIONS = {
   FAST: 0.15,      // 150ms - Micro-interactions, icons, tooltips
   NORMAL: 0.22,    // 220ms - Buttons, tabs, dropdowns
   CARD: 0.28,      // 280ms - Card entrances, panel reveals
+  PAGE: 0.20,      // 200ms - Route and page transitions
   MODAL: 0.20,     // 200ms - Dialogs, confirmation popups
   DRAWER: 0.24,    // 240ms - Side drawers, mobile navigation
   COUNTER_MS: 650, // 650ms - Financial KPI count-up easing
@@ -31,7 +32,7 @@ export function checkReducedMotion(): boolean {
 export const cardEntranceVariants = {
   hidden: {
     opacity: 0,
-    y: 8,
+    y: 12,
     scale: 0.985,
   },
   visible: (customDelay: number = 0) => ({
@@ -48,6 +49,29 @@ export const cardEntranceVariants = {
     opacity: 0,
     y: 6,
     scale: 0.985,
+    transition: {
+      duration: MOTION_DURATIONS.FAST,
+      ease: MOTION_EASINGS.EXIT,
+    },
+  },
+};
+
+export const pageTransitionVariants = {
+  hidden: {
+    opacity: 0,
+    y: 6,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: MOTION_DURATIONS.PAGE,
+      ease: MOTION_EASINGS.PRIMARY,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -4,
     transition: {
       duration: MOTION_DURATIONS.FAST,
       ease: MOTION_EASINGS.EXIT,

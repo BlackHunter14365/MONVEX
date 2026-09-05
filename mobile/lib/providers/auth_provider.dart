@@ -2,25 +2,65 @@ import 'package:flutter/material.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../core/storage/secure_storage.dart';
+import '../core/storage/cache_manager.dart';
 import '../models/user_profile.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserProfile? _user;
   bool _isLoading = true;
   String? _errorMessage;
+  bool _biometricsEnabled = false;
+  bool _isAppLocked = false;
+
+  /// Global callback registered by providers to purge in-memory state on logout
+  static final List<VoidCallback> _onLogoutCallbacks = [];
+
+  static void registerLogoutCallback(VoidCallback callback) {
+    _onLogoutCallbacks.add(callback);
+  }
+
+  static void unregisterLogoutCallback(VoidCallback callback) {
+    _onLogoutCallbacks.remove(callback);
+  }
 
   UserProfile? get user => _user;
   bool get isAuthenticated => _user != null;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get biometricsEnabled => _biometricsEnabled;
+  bool get isAppLocked => _isAppLocked;
 
   AuthProvider() {
     ApiClient.onUnauthorized = () {
-      _user = null;
-      _isLoading = false;
-      notifyListeners();
+      _purgeLocalSession();
     };
     Future.microtask(() => checkAuthStatus(isInitial: true));
+  }
+
+  Future<void> _initBiometrics() async {
+    _biometricsEnabled = await SecureStorageService.isBiometricsEnabled();
+    if (_biometricsEnabled && isAuthenticated) {
+      _isAppLocked = true;
+    }
+    notifyListeners();
+  }
+
+  Future<void> toggleBiometrics(bool enabled) async {
+    _biometricsEnabled = enabled;
+    await SecureStorageService.setBiometricsEnabled(enabled);
+    notifyListeners();
+  }
+
+  void unlockApp() {
+    _isAppLocked = false;
+    notifyListeners();
+  }
+
+  void lockApp() {
+    if (_biometricsEnabled) {
+      _isAppLocked = true;
+      notifyListeners();
+    }
   }
 
   Future<void> checkAuthStatus({bool isInitial = false}) async {
@@ -42,10 +82,10 @@ class AuthProvider extends ChangeNotifier {
       final profileData = await ApiClient.get(ApiEndpoints.me);
       if (profileData is Map<String, dynamic>) {
         _user = UserProfile.fromJson(profileData);
+        await _initBiometrics();
       }
     } catch (_) {
-      await SecureStorageService.clearTokens();
-      _user = null;
+      await _purgeLocalSession();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -142,11 +182,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> logout() async {
-    final refresh = await SecureStorageService.getRefreshToken();
+  Future<void> _purgeLocalSession() async {
+    final userId = _user?.id ?? '';
+    if (userId.isNotEmpty) {
+      CacheManager.clearUserCache(userId);
+    }
+    CacheManager.clearAll();
     await SecureStorageService.clearTokens();
     _user = null;
+    _isAppLocked = false;
+
+    // Trigger all registered data providers to wipe in-memory state
+    for (final cb in _onLogoutCallbacks) {
+      try {
+        cb();
+      } catch (_) {}
+    }
+
     notifyListeners();
+  }
+
+  Future<void> logout() async {
+    final refresh = await SecureStorageService.getRefreshToken();
+    await _purgeLocalSession();
 
     if (refresh != null) {
       try {

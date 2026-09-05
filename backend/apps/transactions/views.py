@@ -25,12 +25,24 @@ class CategoryListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         cat_type = self.request.query_params.get('type')
-        qs = Category.objects.filter(Q(is_system_default=True) | Q(user=self.request.user))
+        user_cats = Category.objects.filter(user=self.request.user)
+        user_names = set(user_cats.values_list('name', flat=True))
+        sys_cats = Category.objects.filter(is_system_default=True).exclude(name__in=user_names)
+
+        combined_ids = list(user_cats.values_list('id', flat=True)) + list(sys_cats.values_list('id', flat=True))
+        qs = Category.objects.filter(id__in=combined_ids)
         if cat_type:
             qs = qs.filter(type=cat_type.upper())
         return qs.order_by('name')
 
     def perform_create(self, serializer):
+        name = serializer.validated_data.get('name', '').strip()
+        if Category.objects.filter(name__iexact=name, is_system_default=True).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"name": "A standard category with this name already exists."})
+        if Category.objects.filter(name__iexact=name, user=self.request.user).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"name": "You already have a custom category with this name."})
         serializer.save(user=self.request.user, is_system_default=False)
 
 class TransactionListCreateView(generics.ListCreateAPIView):

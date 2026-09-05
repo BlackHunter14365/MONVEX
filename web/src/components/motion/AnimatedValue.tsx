@@ -1,46 +1,31 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { formatCurrency, cn } from '@/lib/utils';
-import { MOTION_DURATIONS, checkReducedMotion } from '@/lib/motion';
+import { useReducedMotion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { MOTION_DURATIONS } from '@/lib/motion';
 
 export interface AnimatedValueProps {
-  /**
-   * The actual numeric value from API. If null/undefined, shows placeholder or doesn't animate.
-   */
+  /** The numeric value from API or state. If null/undefined, displays fallback. */
   value: number | null | undefined;
-  /**
-   * Formatting mode
-   */
+  /** Formatting mode (default: 'currency') */
   type?: 'currency' | 'percentage' | 'number' | 'compact';
-  /**
-   * Currency code (default: INR)
-   */
+  /** Currency code (default: 'INR') */
   currency?: string;
-  /**
-   * Decimal places to format (default: 2 for currency, 1 for percentage, 0 for integers)
-   */
+  /** Decimal places (default: 2 for currency, 1 for percentage, 0 for integers) */
   decimals?: number;
-  /**
-   * Prefix string (e.g. "+", "-")
-   */
+  /** Prefix string (e.g. "+", "-") */
   prefix?: string;
-  /**
-   * Suffix string (e.g. "%", " / mo", " days")
-   */
+  /** Suffix string (e.g. "%", " / mo", " days") */
   suffix?: string;
-  /**
-   * Animation duration in ms (default: 650ms)
-   */
+  /** Animation duration in ms (default: 650ms) */
   duration?: number;
-  /**
-   * Custom className
-   */
+  /** Custom className */
   className?: string;
-  /**
-   * Fallback text when value is null/undefined
-   */
+  /** Fallback text when value is null/undefined */
   fallback?: string;
+  /** Force count-up from 0 on initial mount (useful for hero/demo KPI reveals) */
+  startFromZero?: boolean;
 }
 
 export const AnimatedValue: React.FC<AnimatedValueProps> = ({
@@ -53,38 +38,56 @@ export const AnimatedValue: React.FC<AnimatedValueProps> = ({
   duration = MOTION_DURATIONS.COUNTER_MS,
   className,
   fallback = '--',
+  startFromZero = false,
 }) => {
-  const [displayValue, setDisplayValue] = useState<string>(() => {
-    if (value === null || value === undefined || isNaN(value)) return fallback;
-    return formatFormattedValue(value, type, currency, decimals, prefix, suffix);
-  });
-
+  const prefersReduced = useReducedMotion();
   const prevValueRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
+  const [displayValue, setDisplayValue] = useState<string>(() => {
+    if (value === null || value === undefined || isNaN(value)) return fallback;
+    const initialTarget = Number(value);
+    if (startFromZero) {
+      return formatFormattedValue(0, type, currency, decimals, prefix, suffix);
+    }
+    return formatFormattedValue(initialTarget, type, currency, decimals, prefix, suffix);
+  });
+
   useEffect(() => {
-    // If value is not available, don't animate fake numbers
     if (value === null || value === undefined || isNaN(value)) {
       setDisplayValue(fallback);
       prevValueRef.current = null;
       return;
     }
 
-    const isReduced = checkReducedMotion();
     const target = Number(value);
 
     // Instant display on reduced motion
-    if (isReduced) {
+    if (prefersReduced) {
       setDisplayValue(formatFormattedValue(target, type, currency, decimals, prefix, suffix));
       prevValueRef.current = target;
       return;
     }
 
-    // Determine start value: 0 on first load, previous value on subsequent live updates
-    const startValue = prevValueRef.current !== null ? prevValueRef.current : 0;
-    
-    // If no change, keep current formatted value
-    if (startValue === target && prevValueRef.current !== null) {
+    // Determine start value:
+    // If startFromZero on first run -> 0.
+    // If subsequent change -> prevValueRef.current.
+    // If not startFromZero on first run -> target (already rendered, no jump).
+    let startValue: number;
+    if (prevValueRef.current !== null) {
+      startValue = prevValueRef.current;
+    } else if (startFromZero) {
+      startValue = 0;
+    } else {
+      // First mount without startFromZero: display target directly and record ref
+      setDisplayValue(formatFormattedValue(target, type, currency, decimals, prefix, suffix));
+      prevValueRef.current = target;
+      return;
+    }
+
+    if (startValue === target) {
+      setDisplayValue(formatFormattedValue(target, type, currency, decimals, prefix, suffix));
+      prevValueRef.current = target;
       return;
     }
 
@@ -94,7 +97,7 @@ export const AnimatedValue: React.FC<AnimatedValueProps> = ({
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / Math.max(1, duration), 1);
 
-      // Fast easing (Cubic Out curve)
+      // Deceleration curve (Cubic Out)
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const current = startValue + (target - startValue) * easeOut;
 
@@ -103,7 +106,7 @@ export const AnimatedValue: React.FC<AnimatedValueProps> = ({
       if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        // Ensure exact target value is rendered at the end
+        // Guaranteed exact match with API target value on completion
         setDisplayValue(formatFormattedValue(target, type, currency, decimals, prefix, suffix));
         prevValueRef.current = target;
       }
@@ -116,17 +119,21 @@ export const AnimatedValue: React.FC<AnimatedValueProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [value, type, currency, decimals, prefix, suffix, duration, fallback]);
+  }, [value, type, currency, decimals, prefix, suffix, duration, fallback, prefersReduced, startFromZero]);
 
-  return <span className={cn('tabular-nums transition-colors duration-150', className)}>{displayValue}</span>;
+  return (
+    <span className={cn('tabular-nums font-feature-tnum transition-colors duration-150', className)}>
+      {displayValue}
+    </span>
+  );
 };
 
 export const AnimatedNumber = AnimatedValue;
 
-function formatFormattedValue(
+export function formatFormattedValue(
   num: number,
   type: 'currency' | 'percentage' | 'number' | 'compact',
-  currency: string,
+  currency: string = 'INR',
   decimals?: number,
   prefix: string = '',
   suffix: string = ''
@@ -139,21 +146,14 @@ function formatFormattedValue(
 
   if (type === 'currency') {
     const dec = decimals !== undefined ? decimals : 2;
-    if (currency === 'INR') {
-      formattedNumber = new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: dec,
-        maximumFractionDigits: dec,
-      }).format(absNum);
-    } else {
-      formattedNumber = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: dec,
-        maximumFractionDigits: dec,
-      }).format(absNum);
-    }
+    const locale = currency === 'INR' ? 'en-IN' : 'en-US';
+    formattedNumber = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: dec,
+      maximumFractionDigits: dec,
+    }).format(absNum);
+
     return `${isNeg ? '-' : prefix}${formattedNumber}${suffix}`;
   }
 

@@ -24,6 +24,7 @@ import {
 import { AppShell } from '@/components/layout/AppShell';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -40,13 +41,13 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { WalletAccountsSection } from '@/components/finance/WalletAccountsSection';
-import { AnimatedValue, CardReveal } from '@/components/motion';
+import { AnimatedValue, CardReveal, MotionCard } from '@/components/motion';
 
 export default function DashboardPage() {
   const { user } = useAuth();
 
   // Modern TanStack Query server state
-  const { data: dashboardData, isLoading, refetch } = useDashboardQuery();
+  const { data: dashboardData, isLoading, isError, refetch } = useDashboardQuery();
 
   const summary = dashboardData?.summary || null;
   const transactions = dashboardData?.transactions || [];
@@ -223,7 +224,7 @@ export default function DashboardPage() {
   const getCategoryStyles = (catName: string) => {
     const lower = (catName || '').toLowerCase();
     if (lower.includes('food') || lower.includes('dining')) {
-      return { icon: Utensils, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#5F6878]', barColor: 'bg-[#10B981]' };
+      return { icon: Utensils, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#625D69]', barColor: 'bg-[#10B981]' };
     }
     if (lower.includes('shop')) {
       return { icon: ShoppingBag, bg: 'bg-[#FEF3C7]', text: 'text-[#B45309]', badgeBg: 'bg-[#FEF3C7]', badgeText: 'text-[#B45309]', barColor: 'bg-[#F59E0B]' };
@@ -237,7 +238,7 @@ export default function DashboardPage() {
     if (lower.includes('trans') || lower.includes('travel') || lower.includes('cab')) {
       return { icon: Car, bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', badgeBg: 'bg-[#F3E8FF]', badgeText: 'text-[#7E22CE]', barColor: 'bg-[#8B5CF6]' };
     }
-    return { icon: CreditCard, bg: 'bg-[#F0EFEA]', text: 'text-[#5F6878]', badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#5F6878]', barColor: 'bg-[#172033]' };
+    return { icon: CreditCard, bg: 'bg-[#F0EFEA]', text: 'text-[#625D69]', badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#625D69]', barColor: 'bg-[#4056A1]' };
   };
 
   // Merchant Logo Resolver
@@ -252,7 +253,7 @@ export default function DashboardPage() {
     }
     if (lower.includes('amazon')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#172033] text-amber-400 text-xs font-black shadow-sm shrink-0">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2A1F3D] text-amber-400 text-xs font-black shadow-sm shrink-0">
           a
         </div>
       );
@@ -272,7 +273,7 @@ export default function DashboardPage() {
       );
     }
     return (
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F0EFEA] text-[#172033] text-xs font-bold shadow-sm shrink-0">
+      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F0EFEA] text-[#191522] text-xs font-bold shadow-sm shrink-0">
         {(merchantName || categoryName || 'T').slice(0, 1).toUpperCase()}
       </div>
     );
@@ -284,7 +285,7 @@ export default function DashboardPage() {
       return (
         <div className="rounded-xl bg-white border border-[#E4E2DC] p-3 shadow-lg space-y-1.5 min-w-[140px] animate-in fade-in zoom-in-95 duration-100">
           <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-1">
-            <span className="text-[11px] font-bold text-[#858D9A]">{label}</span>
+            <span className="text-[11px] font-bold text-[#898390]">{label}</span>
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB]">
               Telemetry
             </span>
@@ -292,11 +293,11 @@ export default function DashboardPage() {
 
           {payload.map((entry: any, index: number) => (
             <div key={`item-${index}`} className="flex items-center justify-between text-xs font-bold gap-3">
-              <span className="flex items-center gap-1.5 text-[#5F6878]">
+              <span className="flex items-center gap-1.5 text-[#625D69]">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                 {entry.name || 'Value'}:
               </span>
-              <span className="text-[#172033] tabular-nums">
+              <span className="text-[#191522] tabular-nums">
                 {formatCurrency(entry.value, user?.currency)}
               </span>
             </div>
@@ -314,11 +315,11 @@ export default function DashboardPage() {
             1. GREETING & CONTEXT HEADER
             ========================================================================= */}
         <div className="dash-reveal">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172033] tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191522] tracking-tight flex items-center gap-2">
             <span>{getGreeting()}, {displayName}</span>
             <span>👋</span>
           </h1>
-          <p className="text-sm font-medium text-[#5F6878] mt-1">
+          <p className="text-sm font-medium text-[#625D69] mt-1">
             Here&apos;s how your money moved today.
           </p>
         </div>
@@ -336,16 +337,23 @@ export default function DashboardPage() {
           }}
         />
 
-        {/* =========================================================================
-            3. MAIN DASHBOARD GRID (8 COLS LEFT, 4 COLS RIGHT)
-            ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {isError && !dashboardData ? (
+          <ErrorState
+            title="Unable to load financial dashboard"
+            description="Could not connect to the accounting service. Your ledger is safely preserved. Try refreshing."
+            onRetry={() => refetch()}
+          />
+        ) : (
+          /* =========================================================================
+              3. MAIN DASHBOARD GRID (8 COLS LEFT, 4 COLS RIGHT)
+              ========================================================================= */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* =======================================================================
               LEFT & CENTER COLUMN (8 COLS)
               ======================================================================= */}
           <div className="lg:col-span-8 space-y-6">
             {/* AVAILABLE BALANCE & SUMMARY CARD */}
-            <div className="dash-reveal editorial-card p-6 sm:p-7">
+            <MotionCard hoverLift={-2} hoverScale={1.002} className="editorial-card p-6 sm:p-7">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 {/* Available Balance Main Stat */}
                 <div className="space-y-1.5">
@@ -355,7 +363,7 @@ export default function DashboardPage() {
                   {isLoading ? (
                     <Skeleton className="h-10 w-48 mt-1" />
                   ) : (
-                    <div className="swiss-metric text-3xl sm:text-4xl text-[#172033]">
+                    <div className="swiss-metric text-3xl sm:text-4xl text-[#191522]">
                       <AnimatedValue value={totalNetBalance} currency={user?.currency} />
                     </div>
                   )}
@@ -364,7 +372,7 @@ export default function DashboardPage() {
                       <ArrowUpRight className="h-3.5 w-3.5" />
                       <span>+8.4%</span>
                     </span>
-                    <span className="text-xs font-semibold text-[#5F6878]">vs last month</span>
+                    <span className="text-xs font-semibold text-[#625D69]">vs last month</span>
                   </div>
                 </div>
 
@@ -378,7 +386,7 @@ export default function DashboardPage() {
                     {isLoading ? (
                       <Skeleton className="h-6 w-20" />
                     ) : (
-                      <div className="text-base sm:text-lg font-extrabold text-[#172033] tabular-nums">
+                      <div className="text-base sm:text-lg font-extrabold text-[#191522] tabular-nums">
                         <AnimatedValue value={totalIncome} currency={user?.currency} />
                       </div>
                     )}
@@ -395,7 +403,7 @@ export default function DashboardPage() {
                     {isLoading ? (
                       <Skeleton className="h-6 w-20" />
                     ) : (
-                      <div className="text-base sm:text-lg font-extrabold text-[#172033] tabular-nums">
+                      <div className="text-base sm:text-lg font-extrabold text-[#191522] tabular-nums">
                         <AnimatedValue value={totalExpense} currency={user?.currency} />
                       </div>
                     )}
@@ -412,7 +420,7 @@ export default function DashboardPage() {
                     {isLoading ? (
                       <Skeleton className="h-6 w-20" />
                     ) : (
-                      <div className="text-base sm:text-lg font-extrabold text-[#172033] tabular-nums">
+                      <div className="text-base sm:text-lg font-extrabold text-[#191522] tabular-nums">
                         <AnimatedValue value={netSavings} currency={user?.currency} />
                       </div>
                     )}
@@ -422,13 +430,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </MotionCard>
 
             {/* HIGH-TECH SPENDING OVERVIEW CHART CARD */}
             <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-sm font-bold text-[#172033]">
+                  <h2 className="text-sm font-bold text-[#191522]">
                     Spending overview
                   </h2>
                   {/* Metric Switcher Pills */}
@@ -437,7 +445,7 @@ export default function DashboardPage() {
                       onClick={() => setChartMetric('EXPENSE')}
                       className={cn(
                         'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all',
-                        chartMetric === 'EXPENSE' ? 'bg-white text-[#172033] shadow-sm' : 'text-[#5F6878] hover:text-[#172033]'
+                        chartMetric === 'EXPENSE' ? 'bg-white text-[#191522] shadow-sm' : 'text-[#625D69] hover:text-[#191522]'
                       )}
                     >
                       Outflow
@@ -446,7 +454,7 @@ export default function DashboardPage() {
                       onClick={() => setChartMetric('DUAL')}
                       className={cn(
                         'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all',
-                        chartMetric === 'DUAL' ? 'bg-white text-[#172033] shadow-sm' : 'text-[#5F6878] hover:text-[#172033]'
+                        chartMetric === 'DUAL' ? 'bg-white text-[#191522] shadow-sm' : 'text-[#625D69] hover:text-[#191522]'
                       )}
                     >
                       In vs Out
@@ -455,7 +463,7 @@ export default function DashboardPage() {
                       onClick={() => setChartMetric('NET')}
                       className={cn(
                         'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all',
-                        chartMetric === 'NET' ? 'bg-white text-[#172033] shadow-sm' : 'text-[#5F6878] hover:text-[#172033]'
+                        chartMetric === 'NET' ? 'bg-white text-[#191522] shadow-sm' : 'text-[#625D69] hover:text-[#191522]'
                       )}
                     >
                       Net Cash
@@ -472,8 +480,8 @@ export default function DashboardPage() {
                       className={cn(
                         'px-2.5 py-1 rounded-md text-xs font-bold transition-all',
                         chartHorizon === h
-                          ? 'bg-white text-[#172033] shadow-sm'
-                          : 'text-[#5F6878] hover:text-[#172033]'
+                          ? 'bg-white text-[#191522] shadow-sm'
+                          : 'text-[#625D69] hover:text-[#191522]'
                       )}
                     >
                       {h}
@@ -488,7 +496,7 @@ export default function DashboardPage() {
                   {isLoading ? (
                     <Skeleton className="h-8 w-32" />
                   ) : (
-                    <div className="text-2xl sm:text-3xl font-black text-[#172033] tracking-tight tabular-nums">
+                    <div className="text-2xl sm:text-3xl font-black text-[#191522] tracking-tight tabular-nums">
                       {formatCurrency(totalExpense, user?.currency)}
                     </div>
                   )}
@@ -499,8 +507,8 @@ export default function DashboardPage() {
                 </div>
 
                 {chartMetric === 'EXPENSE' && (
-                  <div className="text-right text-[11px] text-[#858D9A]">
-                    <span className="font-semibold text-[#172033] block">
+                  <div className="text-right text-[11px] text-[#898390]">
+                    <span className="font-semibold text-[#191522] block">
                       {formatCurrency(averageDailySpend, user?.currency)} / day
                     </span>
                     <span>Daily run-rate</span>
@@ -628,7 +636,7 @@ export default function DashboardPage() {
             {/* RECENT TRANSACTIONS TABLE CARD */}
             <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#172033]">
+                <h2 className="text-sm font-bold text-[#191522]">
                   Recent transactions
                 </h2>
                 <Link
@@ -671,7 +679,7 @@ export default function DashboardPage() {
 
                         return (
                           <tr key={tx.id}>
-                            <td className="text-xs font-semibold text-[#5F6878] whitespace-nowrap">
+                            <td className="text-xs font-semibold text-[#625D69] whitespace-nowrap">
                               {new Date(tx.date).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
@@ -681,7 +689,7 @@ export default function DashboardPage() {
                             <td>
                               <div className="flex items-center gap-2.5">
                                 {getMerchantLogo(tx.merchant_name, tx.category_name)}
-                                <span className="font-bold text-xs text-[#172033] truncate max-w-[200px]">
+                                <span className="font-bold text-xs text-[#191522] truncate max-w-[200px]">
                                   {tx.merchant_name || tx.description || 'Transaction'}
                                 </span>
                               </div>
@@ -724,7 +732,7 @@ export default function DashboardPage() {
             {/* 1. WHAT NEEDS YOUR ATTENTION (INSIGHT CARD) */}
             <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#172033]">
+                <h3 className="text-sm font-bold text-[#191522]">
                   What needs your attention
                 </h3>
               </div>
@@ -734,7 +742,7 @@ export default function DashboardPage() {
                   <img src="/ai-avatar.png" alt="MONVEX AI" className="h-full w-full object-cover" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-[#172033] leading-snug">
+                  <p className="text-xs font-bold text-[#191522] leading-snug">
                     {transactions.length === 0
                       ? 'Your financial intelligence workspace is ready.'
                       : topBudget && topBudgetPct > 80
@@ -743,7 +751,7 @@ export default function DashboardPage() {
                       ? `Monthly outflow is currently ${formatCurrency(totalExpense, user?.currency)}.`
                       : 'Cash flow is balanced and runway is healthy.'}
                   </p>
-                  <p className="text-[11px] text-[#858D9A]">
+                  <p className="text-[11px] text-[#898390]">
                     {transactions.length === 0
                       ? 'Record transactions to activate live cashflow insights.'
                       : topBudget && topBudgetPct > 80
@@ -772,7 +780,7 @@ export default function DashboardPage() {
             {/* 2. BUDGET PROGRESS CARD */}
             <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#172033]">
+                <h3 className="text-sm font-bold text-[#191522]">
                   Budget progress
                 </h3>
               </div>
@@ -783,7 +791,7 @@ export default function DashboardPage() {
                   <Skeleton className="h-12 w-full" />
                 </div>
               ) : budgets.length === 0 ? (
-                <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878] space-y-2">
+                <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69] space-y-2">
                   <p>No active category budgets established.</p>
                   <Link href="/budgets" className="text-[#2563EB] font-bold hover:underline inline-block">
                     + Set a budget
@@ -806,15 +814,15 @@ export default function DashboardPage() {
                               <Icon className="h-4 w-4" />
                             </div>
                             <div>
-                              <span className="text-xs font-bold text-[#172033] block leading-tight">
+                              <span className="text-xs font-bold text-[#191522] block leading-tight">
                                 {b.category_name || b.name}
                               </span>
-                              <span className="text-[11px] font-medium text-[#5F6878]">
+                              <span className="text-[11px] font-medium text-[#625D69]">
                                 {formatCurrency(spent, user?.currency)} / {formatCurrency(limit, user?.currency)}
                               </span>
                             </div>
                           </div>
-                          <span className="text-xs font-bold text-[#5F6878]">
+                          <span className="text-xs font-bold text-[#625D69]">
                             {pct}%
                           </span>
                         </div>
@@ -846,7 +854,7 @@ export default function DashboardPage() {
             {/* 3. GOAL PROGRESS CARD */}
             <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#172033]">
+                <h3 className="text-sm font-bold text-[#191522]">
                   Goal progress
                 </h3>
                 <Link
@@ -860,7 +868,7 @@ export default function DashboardPage() {
               {isLoading ? (
                 <Skeleton className="h-28 w-full" />
               ) : !primaryGoal ? (
-                <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#5F6878] space-y-2">
+                <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69] space-y-2">
                   <p>No active savings goals configured.</p>
                   <Link href="/goals" className="text-[#2563EB] font-bold hover:underline inline-block">
                     + Create savings goal
@@ -874,10 +882,10 @@ export default function DashboardPage() {
                         <Plane className="h-4 w-4" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-[#172033] block leading-tight">
+                        <span className="text-xs font-bold text-[#191522] block leading-tight">
                           {primaryGoal.title || primaryGoal.name || 'Travel Fund'}
                         </span>
-                        <span className="text-[11px] font-medium text-[#5F6878]">
+                        <span className="text-[11px] font-medium text-[#625D69]">
                           {formatCurrency(goalCurrent, user?.currency)} / {formatCurrency(goalTarget, user?.currency)}
                         </span>
                       </div>
@@ -898,8 +906,8 @@ export default function DashboardPage() {
                   {/* Target Date & Required Monthly */}
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#E4E2DC] text-xs">
                     <div>
-                      <span className="text-[11px] text-[#858D9A] block">Target date</span>
-                      <span className="font-bold text-[#172033]">
+                      <span className="text-[11px] text-[#898390] block">Target date</span>
+                      <span className="font-bold text-[#191522]">
                         {goalDeadline
                           ? new Date(goalDeadline).toLocaleDateString('en-US', {
                               month: 'short',
@@ -909,8 +917,8 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-[11px] text-[#858D9A] block">Required monthly</span>
-                      <span className="font-bold text-[#172033]">
+                      <span className="text-[11px] text-[#898390] block">Required monthly</span>
+                      <span className="font-bold text-[#191522]">
                         {goalRequiredMonthly
                           ? formatCurrency(goalRequiredMonthly, user?.currency)
                           : '₹6,167'}
@@ -922,6 +930,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </AppShell>
   );

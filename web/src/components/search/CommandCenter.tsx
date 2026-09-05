@@ -236,7 +236,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   const getItemIcon = (type: string, badge?: string) => {
     switch (type) {
       case 'action':
-        return <Plus className="h-4 w-4 text-[#172033]" />;
+        return <Plus className="h-4 w-4 text-[#191522]" />;
       case 'navigation':
         return <Compass className="h-4 w-4 text-[#2563EB]" />;
       case 'transaction':
@@ -250,7 +250,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       case 'conversation':
         return <Sparkles className="h-4 w-4 text-[#2563EB]" />;
       default:
-        return <ArrowRight className="h-4 w-4 text-[#858D9A]" />;
+        return <ArrowRight className="h-4 w-4 text-[#898390]" />;
     }
   };
 
@@ -258,7 +258,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 p-4 bg-[#172033]/40 backdrop-blur-sm animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-20 p-4 bg-[#191522]/40 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -271,27 +271,27 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       >
         {/* Search Header Bar */}
         <div className="flex items-center px-4 py-3.5 border-b border-[#E4E2DC] bg-[#FAF9F6] gap-3">
-          <Search className="h-5 w-5 text-[#858D9A] shrink-0" />
+          <Search className="h-5 w-5 text-[#898390] shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search transactions, accounts, budgets, goals, AI chats, commands..."
-            className="w-full bg-transparent text-sm sm:text-base font-semibold text-[#172033] placeholder-[#858D9A] focus:outline-hidden"
+            className="w-full bg-transparent text-sm sm:text-base font-semibold text-[#191522] placeholder-[#858D9A] focus:outline-hidden"
           />
           {isLoading && <Loader2 className="h-4 w-4 text-[#2563EB] animate-spin shrink-0" />}
           {query && !isLoading && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 rounded-md text-[#858D9A] hover:text-[#172033] hover:bg-[#E4E2DC]/50 transition-colors"
+              className="p-1 rounded-md text-[#898390] hover:text-[#191522] hover:bg-[#E4E2DC]/50 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
           )}
           <button
             onClick={onClose}
-            className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-[#F0EFEA] border border-[#E4E2DC] text-[11px] font-mono font-bold text-[#5F6878]"
+            className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-[#F0EFEA] border border-[#E4E2DC] text-[11px] font-mono font-bold text-[#625D69]"
           >
             ESC
           </button>
@@ -308,7 +308,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               <p className="text-xs font-bold text-[#E11D48]">{error}</p>
               <button
                 onClick={() => performSearch(query)}
-                className="mt-2 text-[11px] font-bold text-[#172033] underline"
+                className="mt-2 text-[11px] font-bold text-[#191522] underline"
               >
                 Retry Search
               </button>
@@ -318,7 +318,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 1. Quick Actions (Shown when query is empty) */}
           {!query.trim() && (
             <div className="space-y-1">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 pt-1 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 pt-1 block">
                 Quick Actions
               </span>
               {quickActions.map((act) => {
@@ -332,8 +332,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all text-xs group',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -342,7 +342,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                           'flex h-7 w-7 items-center justify-center rounded-lg border shrink-0',
                           isSelected
                             ? 'bg-white/10 border-white/20 text-white'
-                            : 'bg-[#F6F5F1] border-[#E4E2DC] text-[#172033]'
+                            : 'bg-[#F6F5F1] border-[#E4E2DC] text-[#191522]'
                         )}
                       >
                         {getItemIcon(act.type)}
@@ -352,7 +352,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {act.subtitle}
@@ -371,7 +371,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 2. Navigation Results */}
           {results.navigation.length > 0 && (
             <div className="space-y-1 pt-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 block">
                 Navigation & Views
               </span>
               {results.navigation.map((nav) => {
@@ -385,8 +385,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all text-xs',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -405,7 +405,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {nav.subtitle}
@@ -422,7 +422,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 3. Transactions Results */}
           {results.transactions.length > 0 && (
             <div className="space-y-1 pt-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 block">
                 Transactions Ledger
               </span>
               {results.transactions.map((tx) => {
@@ -436,8 +436,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all text-xs',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -456,7 +456,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {tx.subtitle}
@@ -471,7 +471,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                             ? 'text-white'
                             : tx.badge === 'INCOME'
                             ? 'text-[#059669]'
-                            : 'text-[#172033]'
+                            : 'text-[#191522]'
                         )}
                       >
                         {tx.badge === 'INCOME' ? '+' : '-'}₹{tx.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -486,7 +486,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 4. Accounts & Assets Results */}
           {results.accounts.length > 0 && (
             <div className="space-y-1 pt-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 block">
                 Accounts & Assets
               </span>
               {results.accounts.map((acc) => {
@@ -500,8 +500,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all text-xs',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -520,7 +520,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {acc.subtitle}
@@ -528,7 +528,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                       </div>
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <div className={cn('font-mono font-bold tabular-nums', isSelected ? 'text-white' : 'text-[#172033]')}>
+                      <div className={cn('font-mono font-bold tabular-nums', isSelected ? 'text-white' : 'text-[#191522]')}>
                         ₹{acc.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
@@ -541,7 +541,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 5. Budgets Results */}
           {results.budgets.length > 0 && (
             <div className="space-y-1 pt-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 block">
                 Budgets
               </span>
               {results.budgets.map((bg) => {
@@ -555,8 +555,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all text-xs',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -575,7 +575,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {bg.subtitle}
@@ -592,7 +592,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 6. Savings Goals Results */}
           {results.goals.length > 0 && (
             <div className="space-y-1 pt-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 block">
                 Savings Goals
               </span>
               {results.goals.map((g) => {
@@ -606,8 +606,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all text-xs',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -626,7 +626,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {g.subtitle}
@@ -643,7 +643,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {/* 7. AI Conversation Sessions */}
           {results.conversations.length > 0 && (
             <div className="space-y-1 pt-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#858D9A] px-3 block">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] px-3 block">
                 AI Intelligence Sessions
               </span>
               {results.conversations.map((c) => {
@@ -657,8 +657,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     className={cn(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all text-xs',
                       isSelected
-                        ? 'bg-[#172033] text-white shadow-xs'
-                        : 'hover:bg-[#FAF9F6] text-[#172033]'
+                        ? 'bg-[#4056A1] text-white shadow-xs'
+                        : 'hover:bg-[#FAF9F6] text-[#191522]'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -677,7 +677,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         <div
                           className={cn(
                             'text-[11px] truncate',
-                            isSelected ? 'text-white/70' : 'text-[#5F6878]'
+                            isSelected ? 'text-white/70' : 'text-[#625D69]'
                           )}
                         >
                           {c.subtitle}
@@ -697,11 +697,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             flattenedItems.length === 0 &&
             !error && (
               <div className="py-12 px-4 text-center">
-                <Search className="h-8 w-8 text-[#858D9A] mx-auto mb-2 opacity-50" />
-                <p className="text-sm font-bold text-[#172033]">
+                <Search className="h-8 w-8 text-[#898390] mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-bold text-[#191522]">
                   No matching results for &ldquo;{query}&rdquo;
                 </p>
-                <p className="text-xs text-[#5F6878] mt-1">
+                <p className="text-xs text-[#625D69] mt-1">
                   Try searching for merchant names, categories, banks, budgets, or navigation terms.
                 </p>
               </div>
@@ -709,29 +709,29 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         </div>
 
         {/* Command Center Keyboard Footer */}
-        <div className="px-4 py-2.5 border-t border-[#E4E2DC] bg-[#FAF9F6] flex items-center justify-between text-[11px] text-[#5F6878] font-medium">
+        <div className="px-4 py-2.5 border-t border-[#E4E2DC] bg-[#FAF9F6] flex items-center justify-between text-[11px] text-[#625D69] font-medium">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
-              <kbd className="px-1.5 py-0.5 rounded-sm bg-[#FFFFFF] border border-[#E4E2DC] font-mono text-[10px] font-bold text-[#172033]">
+              <kbd className="px-1.5 py-0.5 rounded-sm bg-[#FFFFFF] border border-[#E4E2DC] font-mono text-[10px] font-bold text-[#191522]">
                 ↑↓
               </kbd>
               <span>Navigate</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <kbd className="px-1.5 py-0.5 rounded-sm bg-[#FFFFFF] border border-[#E4E2DC] font-mono text-[10px] font-bold text-[#172033]">
+              <kbd className="px-1.5 py-0.5 rounded-sm bg-[#FFFFFF] border border-[#E4E2DC] font-mono text-[10px] font-bold text-[#191522]">
                 ↵
               </kbd>
               <span>Select</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <kbd className="px-1.5 py-0.5 rounded-sm bg-[#FFFFFF] border border-[#E4E2DC] font-mono text-[10px] font-bold text-[#172033]">
+              <kbd className="px-1.5 py-0.5 rounded-sm bg-[#FFFFFF] border border-[#E4E2DC] font-mono text-[10px] font-bold text-[#191522]">
                 ESC
               </kbd>
               <span>Close</span>
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-[#858D9A]">
+          <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-[#898390]">
             <Command className="h-3 w-3" />
             <span>MONVEX COMMAND CENTER</span>
           </div>

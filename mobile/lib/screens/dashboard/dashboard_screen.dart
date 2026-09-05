@@ -128,25 +128,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${_getGreeting()}, ${user?.displayName ?? "there"}',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_getGreeting()}, ${user?.displayName ?? "there"}',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Real-time financial intelligence telemetry',
-                              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Real-time financial intelligence telemetry',
+                                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -176,13 +183,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'NET FINANCIAL POSITION',
-                                style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.0,
+                              const Expanded(
+                                child: Text(
+                                  'NET FINANCIAL POSITION',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.0,
+                                  ),
                                 ),
                               ),
                               IconButton(
@@ -214,11 +225,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const Divider(color: AppColors.borderSubtle, height: 1),
                           const SizedBox(height: 14),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildMetricColumn('Monthly Income', dashboard.monthlyIncome, AppColors.income),
-                              _buildMetricColumn('Monthly Spent', dashboard.monthlyExpense, AppColors.expense),
-                              _buildMetricColumn('Cash Flow', dashboard.cashFlow, dashboard.cashFlow >= 0 ? AppColors.income : AppColors.expense),
+                              Expanded(child: _buildMetricColumn('Monthly Income', dashboard.monthlyIncome, AppColors.income)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildMetricColumn('Monthly Spent', dashboard.monthlyExpense, AppColors.expense)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildMetricColumn('Cash Flow', dashboard.cashFlow, dashboard.cashFlow >= 0 ? AppColors.income : AppColors.expense)),
                             ],
                           ),
                         ],
@@ -247,12 +259,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'Financial Health',
-                                        style: TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w800,
+                                      const Expanded(
+                                        child: Text(
+                                          'Financial Health',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 6),
@@ -290,12 +306,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Recent Transactions',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                        Expanded(
+                          child: Text(
+                            'Recent Transactions',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ],
@@ -324,10 +344,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+        ),
         const SizedBox(height: 2),
         Text(
           Formatters.compactCurrency(amount),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: color,
             fontSize: 13,
@@ -347,20 +374,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.bolt, color: AppColors.warning, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Instant Affordability Check',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.bolt, color: AppColors.warning, size: 20),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Instant Affordability Check',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -383,7 +417,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             children: [
               Expanded(
-                flex: 3,
                 child: TextField(
                   controller: _impulseAmtCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -396,9 +429,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                flex: 4,
                 child: DropdownButtonFormField<String>(
                   value: _impulseCategory,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
@@ -413,43 +446,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onChanged: (v) => setState(() => _impulseCategory = v ?? 'Shopping'),
                 ),
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-                onPressed: _isEvaluatingImpulse
-                    ? null
-                    : () async {
-                        final amt = double.tryParse(_impulseAmtCtrl.text);
-                        if (amt == null || amt <= 0) return;
-
-                        setState(() => _isEvaluatingImpulse = true);
-                        AppHaptics.medium();
-
-                        final res = await context.read<DashboardProvider>().checkImpulseBuy(
-                              amount: amt,
-                              category: _impulseCategory,
-                            );
-
-                        if (mounted) {
-                          setState(() {
-                            _impulseResult = res;
-                            _isEvaluatingImpulse = false;
-                          });
-                          AppHaptics.success();
-                        }
-                      },
-                child: _isEvaluatingImpulse
-                    ? const SizedBox(
-                        height: 14,
-                        width: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.check, size: 18),
-              ),
             ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+              onPressed: _isEvaluatingImpulse
+                  ? null
+                  : () async {
+                      final amt = double.tryParse(_impulseAmtCtrl.text);
+                      if (amt == null || amt <= 0) return;
+
+                      setState(() => _isEvaluatingImpulse = true);
+                      AppHaptics.medium();
+
+                      final res = await context.read<DashboardProvider>().checkImpulseBuy(
+                            amount: amt,
+                            category: _impulseCategory,
+                          );
+
+                      if (mounted) {
+                        setState(() {
+                          _impulseResult = res;
+                          _isEvaluatingImpulse = false;
+                        });
+                        AppHaptics.success();
+                      }
+                    },
+              child: _isEvaluatingImpulse
+                  ? const SizedBox(
+                      height: 14,
+                      width: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.auto_awesome, size: 16),
+                        SizedBox(width: 6),
+                        Text('Evaluate Impact', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+            ),
           ),
           if (_impulseResult != null) ...[
             const SizedBox(height: 12),

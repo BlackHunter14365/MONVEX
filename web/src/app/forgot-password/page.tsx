@@ -42,14 +42,14 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-10">
+    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* Brand Header */}
-      <div className="text-center mb-8 space-y-3">
-        <Link href="/" className="inline-flex flex-col items-center gap-2.5 group">
-          <div className="h-14 w-14 rounded-2xl overflow-hidden shadow-lg p-0.5 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105">
+      <div className="text-center mb-6 sm:mb-8 space-y-2.5">
+        <Link href="/" className="inline-flex flex-col items-center gap-2 group">
+          <div className="h-12 sm:h-14 w-12 sm:w-14 rounded-2xl overflow-hidden shadow-lg p-0.5 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105">
             <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover rounded-xl" />
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
         </Link>
         <p className="text-xs text-[#625D69] font-medium">
           Deterministic Security & Account Recovery
@@ -57,8 +57,8 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Outer Double-Bezel Frame */}
-      <div className="w-full max-w-md p-1.5 sm:p-2 rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
-        <div className="p-6 sm:p-8 rounded-[24px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-6">
+      <div className="w-full max-w-md p-1 sm:p-2 rounded-2xl sm:rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
+        <div className="p-5 sm:p-8 rounded-xl sm:rounded-[24px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-5 sm:space-y-6">
           <div className="space-y-1 text-center">
             <div className="h-10 w-10 mx-auto rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#2563EB] mb-2">
               <KeyRound className="h-5 w-5" />
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
               </div>
               <Link
                 href="/login"
-                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-[#2A1F3D] px-6 py-3 text-xs font-bold text-white hover:bg-[#3B2D54] transition-all w-full shadow-xs"
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-[#2A1F3D] px-6 py-3.5 text-xs font-bold text-white hover:bg-[#3B2D54] transition-all w-full shadow-xs min-h-[48px]"
               >
                 Return to Sign In
               </Link>
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-4 py-3 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-4 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                   />
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function ForgotPasswordPage() {
                 isLoading={isLoading}
                 variant="primary"
                 size="lg"
-                className="w-full font-bold min-h-[44px]"
+                className="w-full font-bold min-h-[48px] text-sm shadow-sm"
               >
                 Send Recovery Instructions
               </Button>
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
               <div className="pt-2 text-center">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#625D69] hover:text-[#191522] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#625D69] hover:text-[#191522] transition-colors p-2 min-h-[44px]"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   <span>Return to Sign In</span>

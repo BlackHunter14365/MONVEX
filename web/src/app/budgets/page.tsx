@@ -355,7 +355,7 @@ export default function BudgetsPage() {
                 <select
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
                 >
                   {categories.map((c: any) => (
                     <option key={c.id} value={c.name}>
@@ -375,7 +375,7 @@ export default function BudgetsPage() {
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
                 placeholder="e.g. 15000"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
               />
             </div>
 
@@ -384,7 +384,7 @@ export default function BudgetsPage() {
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
               >
                 <option value="MONTHLY">Monthly</option>
                 <option value="WEEKLY">Weekly</option>

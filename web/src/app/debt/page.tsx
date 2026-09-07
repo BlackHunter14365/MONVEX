@@ -350,14 +350,14 @@ export default function DebtPage() {
 
                   {/* Manual Parameters if Custom is Selected */}
                   {selectedLoanId === 'custom' && (
-                    <div className="grid grid-cols-3 gap-3 p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC]">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC]">
                       <div>
                         <span className="text-[10px] font-mono text-[#898390] block">Principal</span>
                         <input
                           type="number"
                           value={selectedPrincipal}
                           onChange={(e) => setSelectedPrincipal(Number(e.target.value))}
-                          className="w-full bg-white rounded-lg border border-[#E4E2DC] px-2.5 py-1.5 text-xs font-mono font-bold text-[#191522]"
+                          className="w-full bg-white rounded-lg border border-[#E4E2DC] px-2.5 py-1.5 min-h-[44px] text-base sm:text-xs font-mono font-bold text-[#191522]"
                         />
                       </div>
                       <div>
@@ -367,7 +367,7 @@ export default function DebtPage() {
                           step="0.1"
                           value={selectedRate}
                           onChange={(e) => setSelectedRate(Number(e.target.value))}
-                          className="w-full bg-white rounded-lg border border-[#E4E2DC] px-2.5 py-1.5 text-xs font-mono font-bold text-[#191522]"
+                          className="w-full bg-white rounded-lg border border-[#E4E2DC] px-2.5 py-1.5 min-h-[44px] text-base sm:text-xs font-mono font-bold text-[#191522]"
                         />
                       </div>
                       <div>
@@ -376,7 +376,7 @@ export default function DebtPage() {
                           type="number"
                           value={selectedEmi}
                           onChange={(e) => setSelectedEmi(Number(e.target.value))}
-                          className="w-full bg-white rounded-lg border border-[#E4E2DC] px-2.5 py-1.5 text-xs font-mono font-bold text-[#191522]"
+                          className="w-full bg-white rounded-lg border border-[#E4E2DC] px-2.5 py-1.5 min-h-[44px] text-base sm:text-xs font-mono font-bold text-[#191522]"
                         />
                       </div>
                     </div>
@@ -668,11 +668,11 @@ export default function DebtPage() {
                 value={loanName}
                 onChange={(e) => setLoanName(e.target.value)}
                 placeholder="e.g. SBI Home Loan, Axis Auto Loan, Education Loan"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold text-[#625D69] mb-1 block">Creditor / Lending Bank</label>
                 <input
@@ -680,7 +680,7 @@ export default function DebtPage() {
                   value={loanLender}
                   onChange={(e) => setLoanLender(e.target.value)}
                   placeholder="e.g. HDFC Bank, ICICI, SBI"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
 
@@ -689,7 +689,7 @@ export default function DebtPage() {
                 <select
                   value={loanType}
                   onChange={(e) => setLoanType(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 >
                   <option value="MORTGAGE">Home Loan / Mortgage</option>
                   <option value="AUTO_LOAN">Auto Loan</option>
@@ -701,7 +701,7 @@ export default function DebtPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs font-semibold text-[#625D69] mb-1 block">Principal Amount</label>
                 <input
@@ -711,7 +711,7 @@ export default function DebtPage() {
                   value={loanPrincipal}
                   onChange={(e) => setLoanPrincipal(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
 
@@ -723,7 +723,7 @@ export default function DebtPage() {
                   value={loanRate}
                   onChange={(e) => setLoanRate(e.target.value)}
                   placeholder="10.5"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
 
@@ -734,7 +734,7 @@ export default function DebtPage() {
                   value={loanTenure}
                   onChange={(e) => setLoanTenure(e.target.value)}
                   placeholder="24"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
             </div>

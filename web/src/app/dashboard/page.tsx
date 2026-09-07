@@ -378,12 +378,12 @@ export default function DashboardPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs font-semibold text-[#625D69]">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-[#625D69]">
                       <div>
                         <span className="text-[10px] text-[#898390] block uppercase tracking-wider">Savings Rate</span>
                         <span className="font-mono font-bold text-[#059669]">{savingsRate}%</span>
                       </div>
-                      <div className="h-8 w-px bg-[#E4E2DC]" />
+                      <div className="hidden sm:block h-8 w-px bg-[#E4E2DC]" />
                       <div>
                         <span className="text-[10px] text-[#898390] block uppercase tracking-wider">Net Retained</span>
                         <span className="font-mono font-bold text-[#191522]">
@@ -634,7 +634,42 @@ export default function DashboardPage() {
                     />
                   ) : (
                     <div className="overflow-x-auto -mx-6 px-6">
-                      <table className="ref-table">
+                      {/* Mobile Card List */}
+                      <div className="sm:hidden divide-y divide-[#F0EFEA]">
+                        {transactions.slice(0, 5).map((tx: any) => {
+                          const isExp = tx.type === 'EXPENSE';
+                          const catStyles = getCategoryStyles(tx.category_name);
+                          return (
+                            <div key={`mob-${tx.id}`} className="py-3 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg shrink-0 text-xs font-black', catStyles.bg, catStyles.text)}>
+                                  {(tx.merchant_name || tx.category_name || 'T').slice(0,1).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-xs text-[#191522] block truncate">
+                                    {tx.merchant_name || tx.description || 'Transaction'}
+                                  </span>
+                                  <span className="text-[11px] text-[#898390] block">
+                                    {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    {' · '}
+                                    <span className={cn('font-bold', catStyles.badgeText)}>{tx.category_name || 'General'}</span>
+                                  </span>
+                                </div>
+                              </div>
+                              <FinancialAmount
+                                amount={tx.amount}
+                                currency={user?.currency}
+                                type={isExp ? 'expense' : 'income'}
+                                showSign={true}
+                                size="sm"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Desktop Table */}
+                      <table className="ref-table hidden sm:table">
                         <thead>
                           <tr>
                             <th className="w-[20%]">Date</th>

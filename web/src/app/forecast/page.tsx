@@ -120,7 +120,7 @@ export default function ForecastPage() {
                   key={d}
                   onClick={() => setDays(d)}
                   className={cn(
-                    'rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all min-h-[36px]',
+                    'rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all min-h-[44px]',
                     days === d
                       ? 'bg-[#2A1F3D] text-white shadow-xs'
                       : 'text-[#625D69] hover:text-[#191522]'

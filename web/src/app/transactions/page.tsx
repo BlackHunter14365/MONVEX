@@ -273,7 +273,7 @@ export default function TransactionsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search merchant, notes, or category..."
-                className="w-full pl-10 pr-3.5 py-2 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-xs font-semibold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
+                className="w-full pl-10 pr-3.5 py-2 min-h-[48px] rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-base sm:text-xs font-semibold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
               />
             </div>
 
@@ -299,7 +299,7 @@ export default function TransactionsPage() {
               <select
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
-                className="rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[44px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
               >
                 <option value="date_desc">Newest First</option>
                 <option value="amount_desc">Highest Amount</option>
@@ -551,7 +551,7 @@ export default function TransactionsPage() {
                 </div>
                 <button
                   onClick={() => setSelectedTx(null)}
-                  className="p-1.5 rounded-xl hover:bg-[#F6F5F1] text-[#898390] hover:text-[#191522] transition-colors"
+                  className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-[#F6F5F1] text-[#898390] hover:text-[#191522] transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>

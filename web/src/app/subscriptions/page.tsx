@@ -494,11 +494,11 @@ export default function SubscriptionsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-[#625D69] mb-1 block">Billing Amount</label>
                 <input
@@ -508,7 +508,7 @@ export default function SubscriptionsPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   required
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 />
               </div>
 
@@ -517,7 +517,7 @@ export default function SubscriptionsPage() {
                 <select
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
                 >
                   <option value="MONTHLY">Monthly</option>
                   <option value="YEARLY">Yearly / Annual</option>
@@ -534,7 +534,7 @@ export default function SubscriptionsPage() {
                 value={nextDueDate}
                 onChange={(e) => setNextDueDate(e.target.value)}
                 required
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 

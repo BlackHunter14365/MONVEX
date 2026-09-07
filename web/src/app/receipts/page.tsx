@@ -507,7 +507,7 @@ export default function ReceiptsPage() {
                         type="text"
                         value={editMerchant}
                         onChange={(e) => setEditMerchant(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1] touch-target"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                       />
                     </div>
 
@@ -518,7 +518,7 @@ export default function ReceiptsPage() {
                         step="0.01"
                         value={editAmount}
                         onChange={(e) => setEditAmount(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-bold text-[#191522] focus:outline-none focus:border-[#4056A1] touch-target"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-mono font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                       />
                     </div>
 
@@ -527,7 +527,7 @@ export default function ReceiptsPage() {
                       <select
                         value={editCategory}
                         onChange={(e) => setEditCategory(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1] touch-target"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
                       >
                         <option value="Groceries">Groceries</option>
                         <option value="Food & Dining">Food & Dining</option>

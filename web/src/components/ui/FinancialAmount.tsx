@@ -85,14 +85,13 @@ export const FinancialAmount: React.FC<FinancialAmountProps> = ({
   return (
     <span
       className={cn(
-        'font-mono tabular-nums tracking-tight inline-flex items-baseline',
+        'font-mono tabular-nums tracking-tight inline-flex items-baseline whitespace-nowrap shrink-0',
         sizeStyles[size],
         typeStyles[resolvedType],
         className
       )}
     >
-      {signPrefix}
-      {formatted}
+      <span className="whitespace-nowrap shrink-0">{signPrefix}{formatted}</span>
     </span>
   );
 };

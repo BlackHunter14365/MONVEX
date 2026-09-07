@@ -533,49 +533,49 @@ export default function LandingPage() {
               {/* Terminal Workspace Content */}
               <div className="p-5 space-y-5 bg-[#FFFFFF]">
                 {/* 4 Core Financial Metrics */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3.5 rounded-xl bg-[#E9EDFA] border border-[#7184C4]/30 space-y-1">
-                    <span className="font-mono text-[10px] font-bold text-[#4056A1] uppercase tracking-wider block">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="p-3 sm:p-3.5 rounded-xl bg-[#E9EDFA] border border-[#7184C4]/30 space-y-1">
+                    <span className="font-mono text-[9.5px] sm:text-[10px] font-bold text-[#4056A1] uppercase tracking-wider block truncate">
                       Available Capital
                     </span>
-                    <div className="flex items-baseline justify-between">
-                      <span className="font-mono text-xl font-extrabold text-[#26335F]">
+                    <div className="flex flex-wrap sm:flex-nowrap items-baseline justify-between gap-1">
+                      <span className="font-mono text-base sm:text-xl font-extrabold text-[#26335F] whitespace-nowrap">
                         <AnimatedValue value={72910} currency="INR" startFromZero={true} duration={800} />
                       </span>
-                      <span className="text-[10px] font-bold text-[#4056A1] bg-white px-1.5 py-0.5 rounded shadow-2xs">
+                      <span className="text-[9.5px] sm:text-[10px] font-bold text-[#4056A1] bg-white px-1.5 py-0.5 rounded shadow-2xs shrink-0 whitespace-nowrap">
                         +8.4%
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#E8F7F1] border border-[#A7F3D0] space-y-1">
-                    <span className="font-mono text-[10px] font-bold text-[#059669] uppercase tracking-wider block">
+                  <div className="p-3 sm:p-3.5 rounded-xl bg-[#E8F7F1] border border-[#A7F3D0] space-y-1">
+                    <span className="font-mono text-[9.5px] sm:text-[10px] font-bold text-[#059669] uppercase tracking-wider block truncate">
                       Retained Savings
                     </span>
-                    <div className="flex items-baseline justify-between">
-                      <span className="font-mono text-xl font-extrabold text-[#059669]">
+                    <div className="flex flex-wrap sm:flex-nowrap items-baseline justify-between gap-1">
+                      <span className="font-mono text-base sm:text-xl font-extrabold text-[#059669] whitespace-nowrap">
                         <AnimatedValue value={54100} currency="INR" startFromZero={true} duration={800} />
                       </span>
-                      <span className="text-[10px] font-mono font-bold text-[#059669] bg-white px-1.5 py-0.5 rounded shadow-2xs">
+                      <span className="text-[9.5px] sm:text-[10px] font-mono font-bold text-[#059669] bg-white px-1.5 py-0.5 rounded shadow-2xs shrink-0 whitespace-nowrap">
                         72.1% rate
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#DDF7FA] border border-[#06B6D4]/30 space-y-0.5">
-                    <span className="font-mono text-[10px] font-bold text-[#0891B2] uppercase block">
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-[#DDF7FA] border border-[#06B6D4]/30 space-y-0.5">
+                    <span className="font-mono text-[9.5px] sm:text-[10px] font-bold text-[#0891B2] uppercase block truncate">
                       Monthly Inflow
                     </span>
-                    <span className="font-mono text-sm font-bold text-[#0E7490]">
+                    <span className="font-mono text-xs sm:text-sm font-bold text-[#0E7490] whitespace-nowrap">
                       <AnimatedValue value={75000} currency="INR" startFromZero={true} duration={700} />
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#FDECEF] border border-[#FECDD3] space-y-0.5">
-                    <span className="font-mono text-[10px] font-bold text-[#E11D48] uppercase block">
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-[#FDECEF] border border-[#FECDD3] space-y-0.5">
+                    <span className="font-mono text-[9.5px] sm:text-[10px] font-bold text-[#E11D48] uppercase block truncate">
                       Expenses / Burn
                     </span>
-                    <span className="font-mono text-sm font-bold text-[#E11D48]">
+                    <span className="font-mono text-xs sm:text-sm font-bold text-[#E11D48] whitespace-nowrap">
                       <AnimatedValue value={20900} currency="INR" startFromZero={true} duration={700} />
                     </span>
                   </div>
@@ -620,30 +620,30 @@ export default function LandingPage() {
                     <span>Status</span>
                   </div>
                   <div className="space-y-1.5">
-                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E4E2DC] flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-6 w-6 rounded-md bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-[10px]">
+                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E4E2DC] flex items-center justify-between gap-2.5 text-xs">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                        <div className="h-6 w-6 rounded-md bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold text-[10px] shrink-0">
                           FD
                         </div>
-                        <div>
-                          <span className="font-bold text-[#191522] block">Swiggy Gourmet</span>
-                          <span className="text-[10px] text-[#625D69]">Food & Dining • Today</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-[#191522] block truncate">Swiggy Gourmet</span>
+                          <span className="text-[10px] text-[#625D69] block truncate">Food & Dining • Today</span>
                         </div>
                       </div>
-                      <span className="font-mono font-bold text-[#E11D48]">-₹840.00</span>
+                      <span className="font-mono font-bold text-[#E11D48] shrink-0 whitespace-nowrap">-₹840.00</span>
                     </div>
 
-                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E4E2DC] flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-6 w-6 rounded-md bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center font-bold text-[10px]">
+                    <div className="p-2.5 rounded-lg bg-[#FFFFFF] border border-[#E4E2DC] flex items-center justify-between gap-2.5 text-xs">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                        <div className="h-6 w-6 rounded-md bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center font-bold text-[10px] shrink-0">
                           IN
                         </div>
-                        <div>
-                          <span className="font-bold text-[#191522] block">Monthly Salary Inflow</span>
-                          <span className="text-[10px] text-[#625D69]">Primary Income • Aug 01</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-[#191522] block truncate">Monthly Salary Inflow</span>
+                          <span className="text-[10px] text-[#625D69] block truncate">Primary Income • Aug 01</span>
                         </div>
                       </div>
-                      <span className="font-mono font-bold text-[#059669]">+₹75,000.00</span>
+                      <span className="font-mono font-bold text-[#059669] shrink-0 whitespace-nowrap">+₹75,000.00</span>
                     </div>
                   </div>
                 </div>
@@ -1028,7 +1028,7 @@ export default function LandingPage() {
                 </p>
                 <div className="pt-1 flex items-center justify-between text-xs font-mono font-bold text-[#059669]">
                   <span>Projected Annual Buffer:</span>
-                  <span className="text-sm">+₹30,000.00 / yr</span>
+                  <span className="text-sm shrink-0 whitespace-nowrap">+₹30,000.00 / yr</span>
                 </div>
               </div>
             </MotionCard>
@@ -1115,28 +1115,28 @@ export default function LandingPage() {
               </div>
 
               <div className="space-y-2 font-mono text-xs">
-                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-[#191522] block">Apple Cloud Storage</span>
-                    <span className="text-[10px] text-[#625D69]">Subscription • ICICI Credit Card</span>
+                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-[#191522] block truncate">Apple Cloud Storage</span>
+                    <span className="text-[10px] text-[#625D69] block truncate">Subscription • ICICI Credit Card</span>
                   </div>
-                  <span className="font-bold text-[#E11D48]">-₹219.00</span>
+                  <span className="font-bold text-[#E11D48] shrink-0 whitespace-nowrap text-right">-₹219.00</span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-[#191522]">Consulting Dividend</span>
-                    <span className="text-[10px] text-[#625D69]">Secondary Income • HDFC Salary</span>
+                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-[#191522] block truncate">Consulting Dividend</span>
+                    <span className="text-[10px] text-[#625D69] block truncate">Secondary Income • HDFC Salary</span>
                   </div>
-                  <span className="font-bold text-[#059669]">+₹18,500.00</span>
+                  <span className="font-bold text-[#059669] shrink-0 whitespace-nowrap text-right">+₹18,500.00</span>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-[#191522]">HPCL Fuel Station</span>
-                    <span className="text-[10px] text-[#625D69]">Transport • UPI Cash Wallet</span>
+                <div className="p-3 rounded-lg bg-[#F7F7F4] border border-[#E4E2DC] flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-[#191522] block truncate">HPCL Fuel Station</span>
+                    <span className="text-[10px] text-[#625D69] block truncate">Transport • UPI Cash Wallet</span>
                   </div>
-                  <span className="font-bold text-[#E11D48]">-₹2,100.00</span>
+                  <span className="font-bold text-[#E11D48] shrink-0 whitespace-nowrap text-right">-₹2,100.00</span>
                 </div>
               </div>
             </MotionCard>

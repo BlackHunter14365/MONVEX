@@ -74,7 +74,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <Sidebar onOpenAddTransaction={() => setIsAddTxOpen(true)} />
 
       {/* Main Content Body */}
-      <div className="flex-1 flex flex-col min-w-0 pb-16 lg:pb-0">
+      <div className="flex-1 flex flex-col min-w-0 pb-20 sm:pb-24 lg:pb-0">
         <Topbar
           onOpenAddTransaction={() => setIsAddTxOpen(true)}
           onOpenMobileDrawer={() => setIsMobileDrawerOpen(true)}

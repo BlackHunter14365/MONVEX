@@ -304,13 +304,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-10">
+    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
       {/* Outer Double-Bezel Frame */}
-      <div className="w-full max-w-4xl p-1.5 sm:p-2 rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
-        <div className="rounded-[26px] border border-[#ECE9E0] bg-[#FBFBFA] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+      <div className="w-full max-w-4xl p-1 sm:p-2 rounded-2xl sm:rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
+        <div className="rounded-xl sm:rounded-[26px] border border-[#ECE9E0] bg-[#FBFBFA] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0 lg:min-h-[580px]">
           
-          {/* LEFT COLUMN: INSTITUTIONAL BRANDING & TRUST ENGINE (5 COLS) */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-[#2A1F3D] to-[#1D152B] p-7 sm:p-9 text-white flex flex-col justify-between relative overflow-hidden">
+          {/* LEFT COLUMN: INSTITUTIONAL BRANDING & TRUST ENGINE (DESKTOP ONLY 5 COLS) */}
+          <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-[#2A1F3D] to-[#1D152B] p-7 sm:p-9 text-white flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -385,11 +385,28 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: REGISTRATION / OTP FORM (7 COLS) */}
-          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between bg-white overflow-y-auto">
+          {/* RIGHT COLUMN: REGISTRATION / OTP FORM (FULL-WIDTH ON MOBILE, 7 COLS ON DESKTOP) */}
+          <div className="col-span-1 lg:col-span-7 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-white overflow-y-auto">
             <div className="space-y-5 max-w-md mx-auto w-full">
-              {/* Header */}
-              <div className="space-y-1">
+              {/* Mobile-Only Dedicated App Header */}
+              <div className="lg:hidden text-center space-y-2.5 pb-1">
+                <Link href="/" className="inline-flex flex-col items-center gap-2 group">
+                  <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-md p-0.5 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105">
+                    <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover rounded-xl" />
+                  </div>
+                  <div>
+                    <span className="text-xl font-black tracking-tight text-[#191522] block leading-tight">
+                      MONVEX
+                    </span>
+                    <span className="text-[10px] font-mono tracking-wider text-[#898390] uppercase block">
+                      Financial Intelligence
+                    </span>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Form Title Header */}
+              <div className="space-y-1 text-center lg:text-left">
                 <h2 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
                   {step === 'register' ? 'Create Your Account' : 'Verify Email Address'}
                 </h2>
@@ -433,7 +450,7 @@ export default function RegisterPage() {
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
                           placeholder="alex"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                         />
                       </div>
                     </div>
@@ -448,7 +465,7 @@ export default function RegisterPage() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="alex@example.com"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                         />
                       </div>
                     </div>
@@ -465,7 +482,7 @@ export default function RegisterPage() {
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+91 98765 43210"
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                       />
                     </div>
                   </div>
@@ -474,7 +491,7 @@ export default function RegisterPage() {
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-[#191522] block">Password</label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
@@ -482,14 +499,15 @@ export default function RegisterPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Min 8 chars"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-9 pr-8 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-12 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#898390] hover:text-[#191522]"
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-[#898390] hover:text-[#191522] rounded-lg transition-colors focus-visible:outline-none"
                         >
-                          {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
                     </div>
@@ -497,7 +515,7 @@ export default function RegisterPage() {
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-[#191522] block">Confirm Password</label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
@@ -505,8 +523,16 @@ export default function RegisterPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Repeat password"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-9 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-12 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-[#898390] hover:text-[#191522] rounded-lg transition-colors focus-visible:outline-none"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -517,7 +543,7 @@ export default function RegisterPage() {
                       <select
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-3 text-base sm:text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                       >
                         <option value="INR">INR (₹)</option>
                         <option value="USD">USD ($)</option>
@@ -534,7 +560,7 @@ export default function RegisterPage() {
                         required
                         value={monthlyIncome}
                         onChange={(e) => setMonthlyIncome(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-3 text-base sm:text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
                       />
                     </div>
                   </div>
@@ -544,7 +570,7 @@ export default function RegisterPage() {
                     variant="primary"
                     size="lg"
                     isLoading={uiState === 'SENDING'}
-                    className="w-full mt-3 font-bold min-h-[44px]"
+                    className="w-full mt-3 font-bold min-h-[48px] text-sm shadow-sm"
                   >
                     Create Account & Continue
                   </Button>
@@ -553,7 +579,7 @@ export default function RegisterPage() {
                   <div className="relative flex items-center justify-center my-2">
                     <div className="border-t border-[#E4E2DC] w-full" />
                     <span className="bg-white px-3 text-[11px] font-bold text-[#898390] uppercase tracking-wider relative">
-                      Or
+                      Or Connect With
                     </span>
                   </div>
 
@@ -585,7 +611,7 @@ export default function RegisterPage() {
 
                   {/* 6 Digit Numeric Inputs */}
                   <div className="space-y-2">
-                    <div className="flex justify-center gap-2 py-1">
+                    <div className="flex justify-center gap-1.5 xs:gap-2 py-1">
                       {otpDigits.map((digit, idx) => (
                         <input
                           key={idx}
@@ -600,7 +626,7 @@ export default function RegisterPage() {
                           onKeyDown={(e) => handleKeyDown(idx, e)}
                           disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED'}
                           className={cn(
-                            'h-13 w-11 text-center text-xl font-mono font-black rounded-2xl border bg-white focus:outline-none transition-all',
+                            'h-12 xs:h-13 sm:h-14 w-9 xs:w-11 sm:w-12 text-center text-lg sm:text-xl font-mono font-black rounded-xl sm:rounded-2xl border bg-white focus:outline-none transition-all',
                             digit ? 'border-[#2A1F3D] text-[#191522] shadow-xs' : 'border-[#E4E2DC] text-[#625D69]',
                             uiState === 'INVALID_CODE' ? 'border-[#E11D48] text-[#E11D48] bg-rose-50/50' : ''
                           )}
@@ -630,7 +656,7 @@ export default function RegisterPage() {
                     isLoading={uiState === 'VERIFYING'}
                     variant="primary"
                     size="lg"
-                    className="w-full font-bold min-h-[44px]"
+                    className="w-full font-bold min-h-[48px] text-sm shadow-sm"
                   >
                     Verify Code & Access Dashboard
                   </Button>
@@ -646,7 +672,7 @@ export default function RegisterPage() {
                         type="button"
                         onClick={handleResend}
                         disabled={isResending}
-                        className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1.5"
+                        className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1.5 min-h-[44px] px-3"
                       >
                         <RefreshCw className={cn('h-3.5 w-3.5', isResending && 'animate-spin')} />
                         <span>Resend verification code</span>
@@ -660,7 +686,7 @@ export default function RegisterPage() {
             {/* Bottom Login Prompt */}
             <div className="pt-6 border-t border-[#E4E2DC] text-center text-xs text-[#625D69] max-w-md mx-auto w-full">
               Already have an account?{' '}
-              <Link href="/login" className="font-bold text-[#2563EB] hover:underline">
+              <Link href="/login" className="font-bold text-[#2563EB] hover:underline p-1">
                 Sign in
               </Link>
             </div>

@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* NARRATIVE SUMMARY CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669] block">
               Net Inflows
@@ -223,14 +223,14 @@ export default function AnalyticsPage() {
                     {/* Category List */}
                     <div className="space-y-2 pt-2 border-t border-[#E4E2DC]">
                       {formattedCategoryData.map((cat, idx) => (
-                        <div key={cat.name} className="flex items-center justify-between text-xs font-semibold">
-                          <div className="flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                            <span className="text-[#191522]">{cat.name}</span>
+                        <div key={cat.name} className="flex items-center justify-between gap-2 text-xs font-semibold">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                            <span className="text-[#191522] truncate">{cat.name}</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-[#898390] text-[11px]">{cat.percentage}%</span>
-                            <span className="font-mono text-[#191522] font-bold">
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-mono text-[#898390] text-[11px] whitespace-nowrap">{cat.percentage}%</span>
+                            <span className="font-mono text-[#191522] font-bold whitespace-nowrap">
                               {formatCurrency(cat.value, user?.currency)}
                             </span>
                           </div>

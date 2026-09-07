@@ -342,11 +342,11 @@ export default function GoalsPage() {
                 value={goalName}
                 onChange={(e) => setGoalName(e.target.value)}
                 placeholder="e.g. Emergency Reserve, Down Payment"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-[#191522] block">Target Amount ({user?.currency || 'INR'})</label>
                 <input
@@ -356,7 +356,7 @@ export default function GoalsPage() {
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="e.g. 500000"
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
                 />
               </div>
 
@@ -368,7 +368,7 @@ export default function GoalsPage() {
                   value={currentAmount}
                   onChange={(e) => setCurrentAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
                 />
               </div>
             </div>
@@ -379,7 +379,7 @@ export default function GoalsPage() {
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
               />
             </div>
 
@@ -428,7 +428,7 @@ export default function GoalsPage() {
                 value={contributeAmount}
                 onChange={(e) => setContributeAmount(e.target.value)}
                 placeholder="e.g. 5000"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
               />
             </div>
 

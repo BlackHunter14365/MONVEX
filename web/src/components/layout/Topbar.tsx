@@ -155,7 +155,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               window.dispatchEvent(new Event('monvex:open-mobile-drawer'));
             }
           }}
-          className="lg:hidden p-2 rounded-xl text-[#191522] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+          className="lg:hidden h-11 w-11 flex items-center justify-center rounded-xl text-[#191522] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
           aria-label="Open navigation menu"
         >
           <Menu className="h-4 w-4" />
@@ -205,7 +205,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             }}
             aria-expanded={isNotificationsOpen}
             aria-haspopup="true"
-            className="relative p-2 rounded-lg text-[#625D69] hover:text-[#191522] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+            className="relative h-11 w-11 flex items-center justify-center rounded-lg text-[#625D69] hover:text-[#191522] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
@@ -272,7 +272,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
               aria-label="User profile menu"
-              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 min-h-[40px] hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 min-h-[44px] hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden bg-[#2A1F3D] text-white text-xs font-bold uppercase shadow-xs">
                 {avatarImage ? (

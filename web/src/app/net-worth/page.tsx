@@ -228,22 +228,26 @@ export default function NetWorthPage() {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-baseline gap-4 sm:gap-6">
-                  <div>
+                <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+                  <div className="min-w-[110px]">
                     <span className="text-[10px] font-mono text-[#898390] block uppercase">Total Assets</span>
                     <FinancialAmount amount={totalAssets} currency={user?.currency} size="xl" showSign={false} />
                   </div>
 
-                  <span className="text-2xl font-black text-[#898390] self-center">−</span>
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#F6F5F1] border border-[#E4E2DC] flex items-center justify-center text-sm sm:text-base font-black text-[#898390] shrink-0">
+                    −
+                  </div>
 
-                  <div>
+                  <div className="min-w-[110px]">
                     <span className="text-[10px] font-mono text-[#898390] block uppercase">Total Liabilities</span>
                     <FinancialAmount amount={-totalLiabilities} currency={user?.currency} size="xl" showSign={false} />
                   </div>
 
-                  <span className="text-2xl font-black text-[#898390] self-center">=</span>
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#F6F5F1] border border-[#E4E2DC] flex items-center justify-center text-sm sm:text-base font-black text-[#898390] shrink-0">
+                    =
+                  </div>
 
-                  <div>
+                  <div className="min-w-[110px]">
                     <span className="text-[10px] font-mono text-[#4056A1] block uppercase font-bold">Net Standing</span>
                     <FinancialAmount amount={netWorth} currency={user?.currency} size="2xl" showSign={true} />
                   </div>

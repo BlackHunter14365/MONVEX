@@ -510,7 +510,7 @@ export default function SettingsPage() {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="Enter first name"
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                     />
                   </div>
                   <div>
@@ -520,7 +520,7 @@ export default function SettingsPage() {
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Enter last name"
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                     />
                   </div>
                   <div>
@@ -530,7 +530,7 @@ export default function SettingsPage() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                     />
                   </div>
                   <div>
@@ -556,7 +556,7 @@ export default function SettingsPage() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="e.g. Financial Freedom Builder • Portfolio Target ₹1 Cr"
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                 />
               </div>
 
@@ -600,7 +600,7 @@ export default function SettingsPage() {
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="INR">INR (₹) - Indian Rupee</option>
                     <option value="USD">USD ($) - US Dollar</option>
@@ -618,7 +618,7 @@ export default function SettingsPage() {
                       type="number"
                       value={monthlyIncome}
                       onChange={(e) => setMonthlyIncome(e.target.value)}
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-8 pr-3.5 py-2.5 text-xs font-mono font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-8 pr-3.5 py-2.5 min-h-[48px] text-base sm:text-xs font-mono font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                     />
                     <span className="absolute left-3 top-3 text-xs font-bold text-[#898390]">
                       {currency === 'INR' ? '₹' : '$'}
@@ -661,7 +661,7 @@ export default function SettingsPage() {
                   <select
                     value={fiscalStartDay}
                     onChange={(e) => setFiscalStartDay(e.target.value)}
-                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                   >
                     <option value="1">1st of Month (Standard Calendar)</option>
                     <option value="5">5th of Month</option>

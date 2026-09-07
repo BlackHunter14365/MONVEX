@@ -21,7 +21,7 @@ import 'screens/money/money_hub_screen.dart';
 import 'screens/budgets_goals/budgets_goals_screen.dart';
 import 'screens/receipts/receipts_screen.dart';
 import 'screens/copilot/copilot_screen.dart';
-import 'screens/transactions/quick_entry_sheet.dart';
+import 'screens/navigation/quick_add_sheet.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -174,14 +174,14 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     const CopilotScreen(),
   ];
 
-  void _openQuickEntrySheet() {
+  void _openQuickAddSheet() {
     AppHaptics.medium();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => QuickEntrySheet(
-        onSwitchToReceiptScanner: () {
+      builder: (_) => QuickAddBottomSheet(
+        onScanReceipt: () {
           setState(() => _currentIndex = 3);
         },
       ),
@@ -205,7 +205,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
         floatingActionButton: _currentIndex != 3
             ? FloatingActionButton(
                 backgroundColor: AppColors.primary,
-                onPressed: _openQuickEntrySheet,
+                onPressed: _openQuickAddSheet,
                 child: const Icon(Icons.add, color: Colors.white),
               )
             : null,

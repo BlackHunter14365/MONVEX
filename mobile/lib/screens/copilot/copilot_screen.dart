@@ -4,6 +4,7 @@ import '../../core/constants/colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../models/ai_message.dart';
 import '../../providers/copilot_provider.dart';
+import '../transactions/quick_entry_sheet.dart';
 
 class CopilotScreen extends StatefulWidget {
   const CopilotScreen({super.key});
@@ -152,7 +153,20 @@ class _CopilotScreenState extends State<CopilotScreen> {
                     onSubmitted: (val) => _handleSend(),
                   ),
                 ),
-                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    AppHaptics.medium();
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const QuickEntrySheet(),
+                    );
+                  },
+                  icon: const Icon(Icons.mic_none_outlined, size: 22, color: AppColors.primaryLight),
+                  tooltip: 'Voice / Natural Language Entry',
+                ),
+                const SizedBox(width: 4),
                 IconButton(
                   onPressed: copilot.isLoading ? null : () => _handleSend(),
                   style: IconButton.styleFrom(

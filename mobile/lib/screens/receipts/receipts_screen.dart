@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../core/utils/formatters.dart';
@@ -7,6 +7,7 @@ import '../../core/utils/haptics.dart';
 import '../../models/receipt.dart';
 import '../../providers/receipt_provider.dart';
 import '../../providers/money_hub_provider.dart';
+import '../../providers/dashboard_provider.dart';
 import '../../shared/widgets/monvex_card.dart';
 import '../../shared/widgets/empty_state_view.dart';
 
@@ -27,31 +28,47 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
     });
   }
 
-  void _simulateCameraOrGalleryCapture(bool isCamera) async {
+  Future<void> _captureReceipt(ImageSource source) async {
     AppHaptics.light();
-    
-    // In automated testing / headless devices without physical camera,
-    // we provide a realistic receipt payload upload option or raw image bytes simulation
-    final sampleReceiptBytes = utf8.encode('MONVEX_RECEIPT_SCAN_SAMPLE_${DateTime.now().millisecondsSinceEpoch}');
-    final filename = isCamera ? 'camera_capture_${DateTime.now().millisecondsSinceEpoch}.jpg' : 'gallery_upload.jpg';
-
-    final receiptProvider = context.read<ReceiptProvider>();
-    final receipt = await receiptProvider.uploadReceiptBytes(
-      bytes: sampleReceiptBytes,
-      filename: filename,
-    );
-
-    if (receipt != null && mounted) {
-      AppHaptics.success();
-      _openReviewSheet(receipt);
-    } else if (mounted && receiptProvider.errorMessage != null) {
-      AppHaptics.warning();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(receiptProvider.errorMessage!),
-          backgroundColor: AppColors.expense,
-        ),
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
       );
+      if (picked == null) return;
+
+      final bytes = await picked.readAsBytes();
+      final receiptProvider = context.read<ReceiptProvider>();
+      final receipt = await receiptProvider.uploadReceiptBytes(
+        bytes: bytes,
+        filename: picked.name.isNotEmpty ? picked.name : 'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+
+      if (receipt != null && mounted) {
+        AppHaptics.success();
+        _openReviewSheet(receipt);
+      } else if (mounted && receiptProvider.errorMessage != null) {
+        AppHaptics.warning();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(receiptProvider.errorMessage!),
+            backgroundColor: AppColors.expense,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppHaptics.warning();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to access camera/gallery: $e'),
+            backgroundColor: AppColors.expense,
+          ),
+        );
+      }
     }
   }
 
@@ -155,7 +172,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                                 backgroundColor: AppColors.primary,
                                 padding: const EdgeInsets.symmetric(vertical: 13),
                               ),
-                              onPressed: () => _simulateCameraOrGalleryCapture(true),
+                              onPressed: () => _captureReceipt(ImageSource.camera),
                               icon: const Icon(Icons.camera_alt_outlined, size: 18),
                               label: const Text('Camera Snap'),
                             ),
@@ -170,7 +187,7 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              onPressed: () => _simulateCameraOrGalleryCapture(false),
+                              onPressed: () => _captureReceipt(ImageSource.gallery),
                               icon: const Icon(Icons.photo_library_outlined, size: 18, color: AppColors.textPrimary),
                               label: const Text('Upload File', style: TextStyle(color: AppColors.textPrimary)),
                             ),
@@ -308,9 +325,13 @@ class _ReceiptsScreenState extends State<ReceiptsScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              r.isConfirmed ? 'CONFIRMED' : 'PENDING',
+              r.status,
               style: TextStyle(
-                color: r.isConfirmed ? AppColors.income : AppColors.warning,
+                color: r.status == 'CONFIRMED'
+                    ? AppColors.income
+                    : r.status == 'REJECTED'
+                        ? AppColors.expense
+                        : AppColors.warning,
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
               ),
@@ -397,12 +418,30 @@ class _ReceiptReviewSheetState extends State<_ReceiptReviewSheet> {
     );
 
     if (success && mounted) {
+      context.read<DashboardProvider>().fetchDashboard();
+      context.read<MoneyHubProvider>().fetchAll();
       AppHaptics.success();
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Receipt successfully confirmed into financial ledger.'),
           backgroundColor: AppColors.income,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleReject() async {
+    AppHaptics.medium();
+    final provider = context.read<ReceiptProvider>();
+    final success = await provider.rejectReceipt(widget.receipt.id);
+    if (success && mounted) {
+      AppHaptics.light();
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Receipt rejected and dismissed.'),
+          backgroundColor: AppColors.textMuted,
         ),
       );
     }
@@ -597,6 +636,27 @@ class _ReceiptReviewSheetState extends State<_ReceiptReviewSheet> {
                         'Confirm & Write to Ledger',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                       ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Reject / Dismiss Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.expense),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: isConfirming ? null : _handleReject,
+                icon: const Icon(Icons.close, color: AppColors.expense, size: 18),
+                label: const Text(
+                  'Reject / Dismiss Receipt',
+                  style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.w700, fontSize: 13),
+                ),
               ),
             ),
           ],

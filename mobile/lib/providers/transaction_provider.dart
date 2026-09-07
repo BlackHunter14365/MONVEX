@@ -109,6 +109,26 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateTransaction(String id, Map<String, dynamic> payload) async {
+    try {
+      final res = await ApiClient.patch('${ApiEndpoints.transactions}$id/', payload);
+      if (res is Map<String, dynamic>) {
+        final updatedTx = TransactionModel.fromJson(res);
+        final index = _transactions.indexWhere((tx) => tx.id == id);
+        if (index != -1) {
+          _transactions[index] = updatedTx;
+        }
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> deleteTransaction(String id) async {
     try {
       await ApiClient.delete('${ApiEndpoints.transactions}$id/');

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:local_auth/local_auth.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../core/storage/secure_storage.dart';
@@ -11,6 +13,9 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _biometricsEnabled = false;
   bool _isAppLocked = false;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  final LocalAuthentication _localAuth = LocalAuthentication();
 
   /// Global callback registered by providers to purge in-memory state on logout
   static final List<VoidCallback> _onLogoutCallbacks = [];
@@ -63,6 +68,34 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> authenticateWithBiometrics() async {
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isDeviceSupported = await _localAuth.isDeviceSupported();
+      if (!canCheck && !isDeviceSupported) {
+        unlockApp();
+        return true;
+      }
+
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Authenticate to access your MONVEX Financial Vault',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+        ),
+      );
+
+      if (authenticated) {
+        unlockApp();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('[AuthProvider] Biometric error: $e');
+      return false;
+    }
+  }
+
   Future<void> checkAuthStatus({bool isInitial = false}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -112,6 +145,70 @@ class AuthProvider extends ChangeNotifier {
         return true;
       }
       throw ApiException('Invalid credentials returned from server.');
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // User cancelled dialog
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken ?? googleAuth.accessToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        throw ApiException('Failed to retrieve authentication token from Google.');
+      }
+
+      final res = await ApiClient.post(ApiEndpoints.googleAuth, {
+        'credential': idToken,
+      });
+
+      if (res is Map<String, dynamic> && res['access'] != null && res['refresh'] != null) {
+        await SecureStorageService.saveTokens(
+          accessToken: res['access'],
+          refreshToken: res['refresh'],
+        );
+        await checkAuthStatus();
+        return true;
+      }
+      throw ApiException(res['message'] ?? 'Google authentication failed.');
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile(Map<String, dynamic> fields) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final res = await ApiClient.patch(ApiEndpoints.me, fields);
+      if (res is Map<String, dynamic>) {
+        _user = UserProfile.fromJson(res);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      throw ApiException('Could not update profile information.');
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;

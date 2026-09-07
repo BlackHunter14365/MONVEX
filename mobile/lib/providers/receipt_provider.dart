@@ -98,9 +98,12 @@ class ReceiptProvider extends ChangeNotifier {
       final payload = <String, dynamic>{
         'receipt_id': receiptId,
         'merchant': merchant.trim(),
+        'merchant_name': merchant.trim(),
         'total_amount': totalAmount,
+        'amount': totalAmount,
         'date': date,
         'category': category,
+        'category_name': category,
       };
       if (accountId != null && accountId.isNotEmpty) {
         payload['account_id'] = accountId;
@@ -120,6 +123,22 @@ class ReceiptProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isConfirming = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> rejectReceipt(String receiptId) async {
+    try {
+      await ApiClient.post(ApiEndpoints.receiptReject(receiptId), {});
+      if (_currentReceipt?.id == receiptId) {
+        _currentReceipt = null;
+      }
+      notifyListeners();
+      fetchReceipts();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
       notifyListeners();
       return false;
     }

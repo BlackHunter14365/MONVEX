@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../core/config/env_config.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/constants/colors.dart';
 import '../../core/networking/api_client.dart';
 import '../../core/networking/api_endpoints.dart';
@@ -12,6 +13,7 @@ import '../../providers/auth_provider.dart';
 import '../../shared/widgets/monvex_card.dart';
 import '../analytics/analytics_screen.dart';
 import '../budgets_goals/budgets_goals_screen.dart';
+import 'edit_profile_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,10 +24,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isDownloadingPdf = false;
+  String? _lastDownloadedPdfPath;
   final String _selectedMonth = DateTime.now().toIso8601String().substring(0, 7);
 
   Future<void> _downloadPdfStatement() async {
-    setState(() => _isDownloadingPdf = true);
+    setState(() {
+      _isDownloadingPdf = true;
+      _lastDownloadedPdfPath = null;
+    });
     AppHaptics.medium();
 
     try {
@@ -37,28 +43,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final file = File(filePath);
       await file.writeAsBytes(pdfBytes);
 
+      _lastDownloadedPdfPath = filePath;
       AppHaptics.success();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Statement downloaded: ${file.path.split("/").last} (${(pdfBytes.length / 1024).toStringAsFixed(1)} KB)'),
+            content: Text('Statement generated successfully (${(pdfBytes.length / 1024).toStringAsFixed(1)} KB)'),
             backgroundColor: AppColors.income,
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () {
+                OpenFilex.open(filePath);
+              },
+            ),
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       AppHaptics.warning();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to download PDF: ${e.toString().replaceAll("Exception: ", "")}'),
+            content: const Text("Couldn't generate your statement."),
             backgroundColor: AppColors.expense,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _downloadPdfStatement,
+            ),
           ),
         );
       }
     } finally {
       if (mounted) setState(() => _isDownloadingPdf = false);
     }
+  }
+
+  void _openEditProfileSheet() {
+    AppHaptics.selection();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const EditProfileSheet(),
+    );
   }
 
   @override
@@ -69,57 +98,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Settings & Security'),
+        title: const Text('Settings & Profile'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User Profile Card
+            // User Profile Card with Edit Button
             MonvexCard(
               padding: const EdgeInsets.all(18),
-              child: Row(
+              child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.primary,
-                    child: Text(
-                      user?.displayName.substring(0, 1).toUpperCase() ?? 'M',
-                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
-                    ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppColors.primary,
+                        child: Text(
+                          user?.displayName.substring(0, 1).toUpperCase() ?? 'M',
+                          style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user?.displayName ?? 'MONVEX User',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              user?.email ?? '',
+                              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.incomeBg,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                user?.monthlyIncome != null && user!.monthlyIncome > 0
+                                    ? 'Monthly Base: ${Formatters.currency(user.monthlyIncome)}'
+                                    : 'Monthly Base: Not configured',
+                                style: const TextStyle(color: AppColors.income, fontSize: 10.5, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.displayName ?? 'MONVEX User',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                  const SizedBox(height: 14),
+                  const Divider(color: AppColors.borderSubtle, height: 1),
+                  const SizedBox(height: 10),
+                  InkWell(
+                    onTap: _openEditProfileSheet,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.edit_outlined, size: 16, color: AppColors.accent),
+                          SizedBox(width: 6),
+                          Text(
+                            'Edit Profile & Financial Parameters',
+                            style: TextStyle(color: AppColors.accent, fontSize: 13, fontWeight: FontWeight.w600),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          user?.email ?? '',
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.incomeBg,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Monthly Base: ${Formatters.currency(user?.monthlyIncome ?? 0)}',
-                            style: const TextStyle(color: AppColors.income, fontSize: 10, fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -151,7 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 20),
 
-            // ReportLab PDF Statement Download Card
+            // PDF Statement Download Card
             const Text(
               'Official Financial Statements',
               style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
@@ -171,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: AppColors.primary.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.picture_as_pdf, color: AppColors.primaryLight, size: 22),
+                        child: const Icon(Icons.picture_as_pdf, color: AppColors.accent, size: 22),
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
@@ -179,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Server-Side ReportLab PDF',
+                              'Monthly PDF Statement',
                               style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700),
                             ),
                             Text(
@@ -196,7 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(10),
@@ -205,7 +261,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Statement Month:', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                              const Text('Month:', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                               Text(_selectedMonth, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 12)),
                             ],
                           ),
@@ -221,10 +277,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: _isDownloadingPdf
                             ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.download, size: 16),
-                        label: Text(_isDownloadingPdf ? 'Generating...' : 'Export PDF'),
+                        label: Text(_isDownloadingPdf ? 'Generating...' : 'Generate PDF'),
                       ),
                     ],
                   ),
+                  if (_lastDownloadedPdfPath != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.accent),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            icon: const Icon(Icons.visibility_outlined, size: 16, color: AppColors.accent),
+                            label: const Text('Open Statement', style: TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                            onPressed: () {
+                              OpenFilex.open(_lastDownloadedPdfPath!);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.border),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            icon: const Icon(Icons.share_outlined, size: 16, color: AppColors.textSecondary),
+                            label: const Text('Share PDF', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+                            onPressed: () {
+                              Share.shareXFiles([XFile(_lastDownloadedPdfPath!)], text: 'MONVEX Statement for $_selectedMonth');
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -265,9 +355,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Switch(
                         value: auth.biometricsEnabled,
                         activeColor: AppColors.income,
-                        onChanged: (val) {
+                        onChanged: (val) async {
                           AppHaptics.selection();
-                          auth.toggleBiometrics(val);
+                          if (val) {
+                            final ok = await auth.authenticateWithBiometrics();
+                            if (ok) {
+                              await auth.toggleBiometrics(true);
+                            }
+                          } else {
+                            await auth.toggleBiometrics(false);
+                          }
                         },
                       ),
                     ],
@@ -279,12 +376,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Active Backend Host',
+                        'Cloud Connection',
                         style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       ),
-                      Text(
-                        EnvConfig.baseUrl,
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontFamily: 'monospace'),
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.income,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'MONVEX Cloud • Connected',
+                            style: TextStyle(color: AppColors.income, fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ],
                   ),

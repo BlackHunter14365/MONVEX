@@ -16,7 +16,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _incomeController = TextEditingController(text: '75000');
+  final _incomeController = TextEditingController();
   final String _currency = 'INR';
 
   // Step 2 OTP State
@@ -191,10 +191,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
           decoration: const InputDecoration(
             labelText: 'Monthly Income (₹)',
+            hintText: 'e.g. 60000 (Optional)',
             prefixIcon: Icon(Icons.currency_rupee, size: 20, color: AppColors.textMuted),
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 24),
 
         ElevatedButton(
           onPressed: auth.isLoading ? null : _handleRegister,
@@ -205,6 +206,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
               : const Text('Continue to Verification'),
+        ),
+        const SizedBox(height: 16),
+
+        Row(
+          children: const [
+            Expanded(child: Divider(color: AppColors.borderSubtle)),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14.0),
+              child: Text('OR', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
+            ),
+            Expanded(child: Divider(color: AppColors.borderSubtle)),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        OutlinedButton.icon(
+          onPressed: auth.isLoading
+              ? null
+              : () async {
+                  final success = await auth.loginWithGoogle();
+                  if (success && mounted) {
+                    Navigator.pop(context);
+                  } else if (!success && mounted && auth.errorMessage != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(auth.errorMessage!), backgroundColor: AppColors.expense),
+                    );
+                  }
+                },
+          icon: const Icon(Icons.g_mobiledata, size: 28, color: Colors.white),
+          label: const Text(
+            'Sign Up with Google',
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.border),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: AppColors.surfaceElevated,
+          ),
         ),
       ],
     );

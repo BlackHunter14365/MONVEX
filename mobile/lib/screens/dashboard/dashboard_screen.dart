@@ -11,7 +11,6 @@ import '../../shared/widgets/transaction_tile.dart';
 import '../../shared/widgets/empty_state_view.dart';
 import '../search/search_sheet.dart';
 import '../settings/settings_screen.dart';
-import '../transactions/quick_entry_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -99,19 +98,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () {
-          AppHaptics.medium();
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => const QuickEntrySheet(),
-          );
-        },
       ),
       body: dashboard.isLoading && dashboard.rawMetrics == null
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))

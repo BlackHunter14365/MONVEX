@@ -200,6 +200,20 @@ class _BudgetsGoalsScreenState extends State<BudgetsGoalsScreen> with SingleTick
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Budgets & Financial Goals'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, color: AppColors.primaryLight),
+            tooltip: 'Add item',
+            onPressed: () {
+              AppHaptics.light();
+              if (_tabController.index == 0) {
+                _showAddBudgetDialog();
+              } else {
+                _showAddGoalDialog();
+              }
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primary,
@@ -211,15 +225,6 @@ class _BudgetsGoalsScreenState extends State<BudgetsGoalsScreen> with SingleTick
             Tab(text: 'Monthly Pacing & Budgets'),
             Tab(text: 'Milestones & Targets'),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        onPressed: _tabController.index == 0 ? _showAddBudgetDialog : _showAddGoalDialog,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          _tabController.index == 0 ? 'Add Budget Cap' : 'New Goal',
-          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: TabBarView(
@@ -274,20 +279,36 @@ class _BudgetsGoalsScreenState extends State<BudgetsGoalsScreen> with SingleTick
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isOver ? AppColors.expenseBg : AppColors.incomeBg,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          budget.paceInsight,
-                          style: TextStyle(
-                            color: isOver ? AppColors.expense : AppColors.income,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: isOver ? AppColors.expenseBg : AppColors.incomeBg,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              budget.paceInsight,
+                              style: TextStyle(
+                                color: isOver ? AppColors.expense : AppColors.income,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.textMuted),
+                            tooltip: 'Delete Budget',
+                            onPressed: () async {
+                              AppHaptics.warning();
+                              await provider.deleteBudget(budget.id);
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -411,19 +432,35 @@ class _BudgetsGoalsScreenState extends State<BudgetsGoalsScreen> with SingleTick
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.surfaceElevated,
-                          foregroundColor: AppColors.primaryLight,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: const BorderSide(color: AppColors.border),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.surfaceElevated,
+                              foregroundColor: AppColors.primaryLight,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: const BorderSide(color: AppColors.border),
+                              ),
+                            ),
+                            onPressed: () => _showContributeDialog(goal),
+                            icon: const Icon(Icons.add_circle_outline, size: 14),
+                            label: const Text('Contribute', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                           ),
-                        ),
-                        onPressed: () => _showContributeDialog(goal),
-                        icon: const Icon(Icons.add_circle_outline, size: 14),
-                        label: const Text('Contribute', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.textMuted),
+                            tooltip: 'Delete Goal',
+                            onPressed: () async {
+                              AppHaptics.warning();
+                              await provider.deleteGoal(goal.id);
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),

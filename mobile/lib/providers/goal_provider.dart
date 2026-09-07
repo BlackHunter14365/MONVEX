@@ -87,4 +87,17 @@ class GoalProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> deleteGoal(String goalId) async {
+    try {
+      await ApiClient.delete('${ApiEndpoints.goals}$goalId/');
+      _goals.removeWhere((g) => g.id == goalId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

@@ -7,6 +7,7 @@ from django.db.models import Q
 from .models import Profile, VerificationSession
 
 class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', required=False)
     first_name = serializers.CharField(source='user.first_name', required=False, allow_blank=True)
     last_name = serializers.CharField(source='user.last_name', required=False, allow_blank=True)
     has_google_auth = serializers.SerializerMethodField()
@@ -15,7 +16,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'id', 'first_name', 'last_name', 'phone_number', 'status', 'email_verified', 'is_verified',
+            'id', 'username', 'first_name', 'last_name', 'phone_number', 'status', 'email_verified', 'is_verified',
             'currency', 'monthly_income', 'savings_target_percentage', 'theme',
             'has_google_auth', 'has_password_auth'
         ]
@@ -34,6 +35,12 @@ class ProfileSerializer(serializers.ModelSerializer):
                 user.first_name = user_data['first_name']
             if 'last_name' in user_data:
                 user.last_name = user_data['last_name']
+            if 'username' in user_data and user_data['username']:
+                new_u = user_data['username'].strip()
+                if new_u != user.username:
+                    if User.objects.filter(username__iexact=new_u).exclude(pk=user.pk).exists():
+                        raise serializers.ValidationError({"username": "A user with that username already exists."})
+                    user.username = new_u
             user.save()
         return super().update(instance, validated_data)
 
@@ -42,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
     currency = serializers.CharField(source='profile.currency', required=False)
     monthly_income = serializers.DecimalField(source='profile.monthly_income', max_digits=12, decimal_places=2, required=False)
     phone_number = serializers.CharField(source='profile.phone_number', required=False, allow_blank=True)
+    savings_target_percentage = serializers.DecimalField(source='profile.savings_target_percentage', max_digits=5, decimal_places=2, required=False)
     is_verified = serializers.BooleanField(source='profile.email_verified', read_only=True)
     status = serializers.CharField(source='profile.status', read_only=True)
     has_google_auth = serializers.SerializerMethodField()
@@ -51,10 +59,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 'phone_number',
-            'currency', 'monthly_income', 'is_verified', 'status',
+            'currency', 'monthly_income', 'savings_target_percentage', 'is_verified', 'status',
             'has_google_auth', 'has_password_auth', 'profile'
         ]
-        read_only_fields = ['id', 'username', 'email', 'is_verified', 'status', 'has_google_auth', 'has_password_auth']
+        read_only_fields = ['id', 'email', 'is_verified', 'status', 'has_google_auth', 'has_password_auth']
 
     def get_has_google_auth(self, obj):
         return obj.google_identities.exists()
@@ -64,6 +72,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
+        if 'username' in validated_data and validated_data['username']:
+            new_u = validated_data['username'].strip()
+            if new_u != instance.username:
+                if User.objects.filter(username__iexact=new_u).exclude(pk=instance.pk).exists():
+                    raise serializers.ValidationError({"username": "A user with that username already exists."})
+                instance.username = new_u
         if 'first_name' in validated_data:
             instance.first_name = validated_data['first_name']
         if 'last_name' in validated_data:
@@ -78,6 +92,8 @@ class UserSerializer(serializers.ModelSerializer):
                 profile.monthly_income = profile_data['monthly_income']
             if 'phone_number' in profile_data:
                 profile.phone_number = profile_data['phone_number']
+            if 'savings_target_percentage' in profile_data:
+                profile.savings_target_percentage = profile_data['savings_target_percentage']
             profile.save()
         return instance
 

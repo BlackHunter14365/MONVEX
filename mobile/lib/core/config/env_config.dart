@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Environment Configuration for MONVEX Android Mobile
 class EnvConfig {
   /// Default base URL for Android Emulator (10.0.2.2 points to host localhost)
@@ -15,7 +13,7 @@ class EnvConfig {
   );
 
   /// Active environment mode: 'emulator' | 'lan' | 'production'
-  static String activeMode = kReleaseMode ? 'production' : 'emulator';
+  static String activeMode = 'production';
 
   /// Dynamic custom URL override (if user configures in settings)
   static String? customBaseUrl;
@@ -25,13 +23,13 @@ class EnvConfig {
       return customBaseUrl!;
     }
     switch (activeMode) {
-      case 'production':
-        return _prodUrl;
       case 'lan':
         return _lanUrl;
       case 'emulator':
+        return _emulatorUrl;
+      case 'production':
       default:
-        return kReleaseMode ? _prodUrl : _emulatorUrl;
+        return _prodUrl;
     }
   }
 }

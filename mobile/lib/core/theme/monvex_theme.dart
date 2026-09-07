@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants/colors.dart';
 
 class MonvexTheme {
   static ThemeData get darkTheme {
+    final baseTextTheme = ThemeData.dark().textTheme;
+    final interTextTheme = GoogleFonts.interTextTheme(baseTextTheme).copyWith(
+      displayLarge: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w800, letterSpacing: -1.0),
+      displayMedium: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w700, letterSpacing: -0.8),
+      titleLarge: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 19, letterSpacing: -0.4),
+      titleMedium: GoogleFonts.inter(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
+      titleSmall: GoogleFonts.inter(color: AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 14),
+      bodyLarge: GoogleFonts.inter(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w400),
+      bodyMedium: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13.5, fontWeight: FontWeight.w400),
+      bodySmall: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w400),
+      labelLarge: GoogleFonts.inter(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+      labelMedium: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w500),
+      labelSmall: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -13,18 +29,21 @@ class MonvexTheme {
         secondary: AppColors.accent,
         surface: AppColors.surface,
         error: AppColors.expense,
+        onPrimary: Colors.white,
+        onSurface: AppColors.textPrimary,
       ),
-      fontFamily: 'Inter',
-      appBarTheme: const AppBarTheme(
+      textTheme: interTextTheme,
+      fontFamily: GoogleFonts.inter().fontFamily,
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.inter(
           color: AppColors.textPrimary,
           fontSize: 18,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
         ),
       ),
       cardTheme: CardTheme(
@@ -32,7 +51,7 @@ class MonvexTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -44,9 +63,9 @@ class MonvexTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.inter(
             fontSize: 14,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -70,19 +89,19 @@ class MonvexTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.expense),
         ),
-        hintStyle: const TextStyle(
+        hintStyle: GoogleFonts.inter(
           color: AppColors.textMuted,
           fontSize: 13,
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textMuted,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-        unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+        selectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500),
       ),
     );
   }

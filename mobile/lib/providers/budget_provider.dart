@@ -63,4 +63,17 @@ class BudgetProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> deleteBudget(String id) async {
+    try {
+      await ApiClient.delete('${ApiEndpoints.budgets}$id/');
+      _budgets.removeWhere((b) => b.id == id);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

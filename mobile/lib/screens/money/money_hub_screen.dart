@@ -305,6 +305,13 @@ class _MoneyHubScreenState extends State<MoneyHubScreen> with SingleTickerProvid
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Money Hub & Balance Sheet'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, color: AppColors.primaryLight),
+            tooltip: 'Add Entry',
+            onPressed: _showAddDialog,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -321,23 +328,6 @@ class _MoneyHubScreenState extends State<MoneyHubScreen> with SingleTickerProvid
             Tab(text: 'Liabilities'),
             Tab(text: 'Subscriptions'),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        onPressed: _showAddDialog,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          _tabController.index == 0
-              ? 'Add Transaction'
-              : _tabController.index == 1
-                  ? 'Add Account'
-                  : _tabController.index == 2
-                      ? 'Add Asset'
-                      : _tabController.index == 3
-                          ? 'Add Liability'
-                          : 'Add Subscription',
-          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: TabBarView(
@@ -490,20 +480,43 @@ class _MoneyHubScreenState extends State<MoneyHubScreen> with SingleTickerProvid
               ],
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.expense),
-                  padding: const EdgeInsets.symmetric(vertical: 13),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primaryLight),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AddTransactionSheet(transactionToEdit: tx),
+                      );
+                    },
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.primaryLight, size: 18),
+                    label: const Text('Edit', style: TextStyle(color: AppColors.primaryLight, fontWeight: FontWeight.w700)),
+                  ),
                 ),
-                onPressed: () async {
-                  await context.read<TransactionProvider>().deleteTransaction(tx.id);
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
-                icon: const Icon(Icons.delete_outline, color: AppColors.expense, size: 18),
-                label: const Text('Delete Transaction', style: TextStyle(color: AppColors.expense)),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.expense),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                    ),
+                    onPressed: () async {
+                      await context.read<TransactionProvider>().deleteTransaction(tx.id);
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                    icon: const Icon(Icons.delete_outline, color: AppColors.expense, size: 18),
+                    label: const Text('Delete', style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

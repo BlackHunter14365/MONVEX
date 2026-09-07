@@ -180,6 +180,51 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       : const Text('Sign In'),
                 ),
+                const SizedBox(height: 18),
+
+                // Social Login Divider
+                Row(
+                  children: const [
+                    Expanded(child: Divider(color: AppColors.borderSubtle)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.0),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: AppColors.borderSubtle)),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
+                // Google Sign-In Button
+                OutlinedButton.icon(
+                  onPressed: auth.isLoading
+                      ? null
+                      : () async {
+                          final success = await auth.loginWithGoogle();
+                          if (!success && mounted && auth.errorMessage != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(auth.errorMessage!),
+                                backgroundColor: AppColors.expense,
+                              ),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.g_mobiledata, size: 28, color: Colors.white),
+                  label: const Text(
+                    'Continue with Google',
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: AppColors.surfaceElevated,
+                  ),
+                ),
                 const SizedBox(height: 24),
 
                 // Register Navigation Link
@@ -200,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text(
                         'Create Account',
                         style: TextStyle(
-                          color: AppColors.primaryLight,
+                          color: AppColors.accent,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),

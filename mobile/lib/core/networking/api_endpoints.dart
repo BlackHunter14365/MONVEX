@@ -24,6 +24,7 @@ class ApiEndpoints {
   static const String receipts = '/transactions/receipts/';
   static const String receiptUpload = '/transactions/receipts/upload/';
   static String receiptConfirm(String id) => '/transactions/receipts/$id/confirm/';
+  static String receiptReject(String id) => '/transactions/receipts/$id/reject/';
   static String receiptImage(String id) => '/transactions/receipts/$id/image/';
 
   // Financial Reports & PDF Export

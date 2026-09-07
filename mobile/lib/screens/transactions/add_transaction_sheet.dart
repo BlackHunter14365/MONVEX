@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
+import '../../models/transaction.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../providers/money_hub_provider.dart';
 
 class AddTransactionSheet extends StatefulWidget {
-  const AddTransactionSheet({super.key});
+  final String initialType;
+  final TransactionModel? transactionToEdit;
+
+  const AddTransactionSheet({
+    super.key,
+    this.initialType = 'EXPENSE',
+    this.transactionToEdit,
+  });
 
   @override
   State<AddTransactionSheet> createState() => _AddTransactionSheetState();
 }
 
 class _AddTransactionSheetState extends State<AddTransactionSheet> {
-  final _amountController = TextEditingController();
-  final _merchantController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String _type = 'EXPENSE';
-  String _category = 'Food & Dining';
-  final DateTime _date = DateTime.now();
+  late final TextEditingController _amountController;
+  late final TextEditingController _merchantController;
+  late final TextEditingController _descriptionController;
+  late String _type;
+  late String _category;
+  late DateTime _date;
   bool _isSubmitting = false;
 
   final List<String> _categories = [
@@ -29,8 +38,35 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     'Entertainment',
     'Salary & Income',
     'Health & Medical',
+    'Investments',
+    'Transfer',
     'General',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final tx = widget.transactionToEdit;
+    if (tx != null) {
+      _amountController = TextEditingController(text: tx.amount > 0 ? tx.amount.toStringAsFixed(2) : '');
+      _merchantController = TextEditingController(text: tx.merchantName ?? '');
+      _descriptionController = TextEditingController(text: tx.description ?? '');
+      _type = tx.type;
+      _category = _categories.contains(tx.categoryName) ? tx.categoryName : 'General';
+      _date = DateTime.tryParse(tx.date) ?? DateTime.now();
+    } else {
+      _amountController = TextEditingController();
+      _merchantController = TextEditingController();
+      _descriptionController = TextEditingController();
+      _type = widget.initialType;
+      _category = widget.initialType == 'INCOME'
+          ? 'Salary & Income'
+          : widget.initialType == 'TRANSFER'
+              ? 'Transfer'
+              : 'Food & Dining';
+      _date = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -61,14 +97,23 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     };
 
     final txProvider = context.read<TransactionProvider>();
-    final success = await txProvider.addTransaction(payload);
+    bool success;
+
+    if (widget.transactionToEdit != null) {
+      success = await txProvider.updateTransaction(widget.transactionToEdit!.id, payload);
+    } else {
+      success = await txProvider.addTransaction(payload);
+    }
 
     if (success && mounted) {
       context.read<DashboardProvider>().fetchDashboard();
-      Navigator.pop(context);
+      context.read<MoneyHubProvider>().fetchAll();
+      Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Transaction recorded successfully.'),
+        SnackBar(
+          content: Text(widget.transactionToEdit != null
+              ? 'Transaction updated successfully.'
+              : 'Transaction recorded successfully.'),
           backgroundColor: AppColors.income,
         ),
       );
@@ -76,7 +121,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(txProvider.errorMessage ?? 'Failed to add transaction.'),
+          content: Text(txProvider.errorMessage ?? 'Failed to save transaction.'),
           backgroundColor: AppColors.expense,
         ),
       );
@@ -85,6 +130,8 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.transactionToEdit != null;
+
     return Container(
       padding: EdgeInsets.only(
         left: 20,
@@ -102,7 +149,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Handle indicator
             Center(
               child: Container(
                 height: 4,
@@ -115,9 +161,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ),
             const SizedBox(height: 16),
 
-            const Text(
-              'Add Transaction',
-              style: TextStyle(
+            Text(
+              isEditing ? 'Edit Transaction' : 'Add Transaction',
+              style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -125,7 +171,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Type Segment
+            // 3-Way Type Segment: Expense / Income / Transfer
             Row(
               children: [
                 Expanded(
@@ -146,13 +192,14 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           style: TextStyle(
                             color: _type == 'EXPENSE' ? AppColors.expense : AppColors.textMuted,
                             fontWeight: FontWeight.w700,
+                            fontSize: 13,
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => _type = 'INCOME'),
@@ -171,6 +218,33 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                           style: TextStyle(
                             color: _type == 'INCOME' ? AppColors.income : AppColors.textMuted,
                             fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _type = 'TRANSFER'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _type == 'TRANSFER' ? AppColors.infoBg : AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _type == 'TRANSFER' ? AppColors.info : AppColors.border,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Transfer',
+                          style: TextStyle(
+                            color: _type == 'TRANSFER' ? AppColors.info : AppColors.textMuted,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
                           ),
                         ),
                       ),
@@ -185,7 +259,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             TextField(
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              autofocus: true,
+              autofocus: !isEditing,
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 22,
@@ -247,7 +321,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Save Transaction'),
+                  : Text(isEditing ? 'Save Changes' : 'Save Transaction'),
             ),
           ],
         ),

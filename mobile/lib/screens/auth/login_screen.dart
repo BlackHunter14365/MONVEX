@@ -208,7 +208,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(auth.errorMessage!),
-                                backgroundColor: AppColors.expense,
+                                backgroundColor: AppColors.surfaceElevated,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                action: SnackBarAction(
+                                  label: 'Try Again',
+                                  textColor: AppColors.accent,
+                                  onPressed: () => auth.loginWithGoogle(),
+                                ),
                               ),
                             );
                           }

@@ -12,6 +12,12 @@ class EnvConfig {
     defaultValue: 'https://monvex-backend.onrender.com/api/v1',
   );
 
+  /// Google OAuth 2.0 Web Client ID used for server audience verification
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '1068232450695-drbp5fk2066qtl9j83s69kkgk1gbc984.apps.googleusercontent.com',
+  );
+
   /// Active environment mode: 'emulator' | 'lan' | 'production'
   static String activeMode = 'production';
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
+import '../core/config/env_config.dart';
 import '../core/networking/api_client.dart';
 import '../core/networking/api_endpoints.dart';
 import '../core/storage/secure_storage.dart';
@@ -14,7 +15,10 @@ class AuthProvider extends ChangeNotifier {
   bool _biometricsEnabled = false;
   bool _isAppLocked = false;
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: EnvConfig.googleWebClientId,
+    scopes: ['email', 'profile'],
+  );
   final LocalAuthentication _localAuth = LocalAuthentication();
 
   /// Global callback registered by providers to purge in-memory state on logout
@@ -168,10 +172,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken ?? googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
 
       if (idToken == null || idToken.isEmpty) {
-        throw ApiException('Failed to retrieve authentication token from Google.');
+        throw ApiException('Google ID token was not returned by Google Play Services.');
       }
 
       final res = await ApiClient.post(ApiEndpoints.googleAuth, {
@@ -187,8 +191,16 @@ class AuthProvider extends ChangeNotifier {
         return true;
       }
       throw ApiException(res['message'] ?? 'Google authentication failed.');
-    } catch (e) {
-      _errorMessage = e.toString();
+    } catch (e, stack) {
+      debugPrint('[AuthProvider] Google Sign-In technical error: $e\n$stack');
+      final errStr = e.toString();
+      if (errStr.contains('sign_in_canceled') || errStr.contains('12501')) {
+        // User intentionally cancelled account picker
+        _errorMessage = null;
+      } else {
+        // Strict production mandate: never expose raw PlatformException or ApiException: 10
+        _errorMessage = "Google Sign-In couldn't be completed.";
+      }
       _isLoading = false;
       notifyListeners();
       return false;
@@ -286,6 +298,11 @@ class AuthProvider extends ChangeNotifier {
     }
     CacheManager.clearAll();
     await SecureStorageService.clearTokens();
+    try {
+      if (await _googleSignIn.isSignedIn()) {
+        await _googleSignIn.signOut();
+      }
+    } catch (_) {}
     _user = null;
     _isAppLocked = false;
 

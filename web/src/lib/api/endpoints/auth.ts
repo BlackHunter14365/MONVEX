@@ -139,15 +139,21 @@ export class AuthEndpoints {
     });
   }
 
+  async refreshToken(refresh?: string) {
+    if (refresh) {
+      return this.client.request<{ access: string }>('/auth/token/refresh/', {
+        method: 'POST',
+        body: JSON.stringify({ refresh }),
+      });
+    }
+    return this.client.refreshAccessToken();
+  }
+
   async logout() {
-    const refresh = typeof window !== 'undefined'
-      ? sessionStorage.getItem('monvex_refresh_token')
-      : null;
+    const refresh = this.client.getRefreshToken();
     this.client.clearTokens();
     if (typeof window !== 'undefined') {
       sessionStorage.clear();
-      localStorage.removeItem('monvex_access_token');
-      localStorage.removeItem('monvex_refresh_token');
     }
     if (refresh) {
       try {

@@ -5,34 +5,95 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://monvex-backend.onrender.com/api/v1';
 
 export class HttpClient {
+  private refreshPromise: Promise<string | null> | null = null;
+
   public getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem('monvex_access_token');
+    return localStorage.getItem('monvex_access_token') || sessionStorage.getItem('monvex_access_token');
+  }
+
+  public getRefreshToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('monvex_refresh_token') || sessionStorage.getItem('monvex_refresh_token');
   }
 
   public setAccessToken(token: string) {
     if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('monvex_access_token', token);
+      } catch {}
       sessionStorage.setItem('monvex_access_token', token);
     }
   }
 
   public setTokens(access: string, refresh: string) {
     if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('monvex_access_token', access);
+        localStorage.setItem('monvex_refresh_token', refresh);
+      } catch {}
       sessionStorage.setItem('monvex_access_token', access);
       sessionStorage.setItem('monvex_refresh_token', refresh);
-      // Clean up any legacy persistent tokens
-      localStorage.removeItem('monvex_access_token');
-      localStorage.removeItem('monvex_refresh_token');
     }
   }
 
   public clearTokens() {
     if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('monvex_access_token');
+        localStorage.removeItem('monvex_refresh_token');
+      } catch {}
       sessionStorage.removeItem('monvex_access_token');
       sessionStorage.removeItem('monvex_refresh_token');
-      localStorage.removeItem('monvex_access_token');
-      localStorage.removeItem('monvex_refresh_token');
     }
+  }
+
+  public async refreshAccessToken(): Promise<string | null> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.clearTokens();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('monvex:auth-logout'));
+      }
+      return null;
+    }
+
+    this.refreshPromise = (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-Platform': 'web',
+          },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Refresh token invalid or expired');
+        }
+
+        const data = await res.json();
+        const newAccess = data.access;
+        const newRefresh = data.refresh || refreshToken;
+        this.setTokens(newAccess, newRefresh);
+        return newAccess;
+      } catch {
+        this.clearTokens();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('monvex:auth-logout'));
+        }
+        return null;
+      } finally {
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
   }
 
   public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -49,6 +110,7 @@ export class HttpClient {
       endpoint.startsWith('/auth/login') ||
       endpoint.startsWith('/auth/register') ||
       endpoint.startsWith('/auth/google') ||
+      endpoint.startsWith('/auth/token/refresh') ||
       endpoint.startsWith('/auth/verification') ||
       endpoint.startsWith('/auth/verify-otp') ||
       endpoint.startsWith('/auth/resend-otp') ||
@@ -65,15 +127,36 @@ export class HttpClient {
     });
 
     if (!res.ok) {
+      // Automatic Token Refresh on 401 for authenticated endpoints
+      if (res.status === 401 && !isPublicAuthEndpoint) {
+        const newAccessToken = await this.refreshAccessToken();
+        if (newAccessToken) {
+          // Retry the request with the refreshed token
+          const retryHeaders = {
+            ...headers,
+            'Authorization': `Bearer ${newAccessToken}`,
+          };
+          const retryRes = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
+            headers: retryHeaders,
+          });
+
+          if (retryRes.ok) {
+            if (retryRes.status === 204) {
+              return {} as T;
+            }
+            return retryRes.json();
+          }
+        }
+      }
+
       const err = await res.json().catch(() => ({ detail: res.statusText }));
       let msg = 'An unexpected error occurred';
 
-      if (res.status === 401) {
-        if (err.code === 'token_not_valid' || (typeof err.detail === 'string' && err.detail.includes('token'))) {
-          this.clearTokens();
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('monvex:auth-logout'));
-          }
+      if (res.status === 401 && !isPublicAuthEndpoint) {
+        this.clearTokens();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('monvex:auth-logout'));
         }
       }
 

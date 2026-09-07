@@ -29,8 +29,10 @@ export class UnifiedApiClient {
 
   // Token management proxies
   getAccessToken = () => this.client.getAccessToken();
+  getRefreshToken = () => this.client.getRefreshToken();
   setTokens = (access: string, refresh: string) => this.client.setTokens(access, refresh);
   clearTokens = () => this.client.clearTokens();
+  refreshToken = (r?: string) => this.auth.refreshToken(r);
 
   // Auth proxies
   login = (c: any) => this.auth.login(c);

@@ -135,16 +135,17 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
   const previousSessions = filteredHistory.filter((c) => c.dateGroup === 'Previous 7 Days');
 
   return (
-    <div className="hidden lg:flex h-[calc(100vh-6.5rem)] rounded-3xl overflow-hidden border border-[#E4E2DC] shadow-xl bg-[#FBFBFA]">
-      {/* =========================================================================
-          1. LEFT SIDEBAR (History, Search, Model Selector, Profile)
-          ========================================================================= */}
-      <aside
-        className={cn(
-          'flex flex-col justify-between shrink-0 bg-[#F7F6F3] border-r border-[#E4E2DC] transition-all duration-300 select-none z-20',
-          isSidebarOpen ? 'w-72 p-3.5' : 'w-0 p-0 overflow-hidden border-r-0'
-        )}
-      >
+    <div className="hidden lg:block p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E2DFD7] shadow-sm">
+      <div className="flex h-[calc(100vh-8.5rem)] rounded-[22px] overflow-hidden border border-[#ECE9E0] shadow-inner bg-[#FBFBFA]">
+        {/* =========================================================================
+            1. LEFT SIDEBAR (History, Search, Model Selector, Profile)
+            ========================================================================= */}
+        <aside
+          className={cn(
+            'flex flex-col justify-between shrink-0 bg-[#F7F6F3] border-r border-[#E4E2DC] transition-all duration-300 select-none z-20',
+            isSidebarOpen ? 'w-72 p-3.5' : 'w-0 p-0 overflow-hidden border-r-0'
+          )}
+        >
         <div className="space-y-3.5 overflow-hidden flex flex-col flex-1">
           {/* Top Actions: Toggle Sidebar & New Chat Button */}
           <div className="flex items-center justify-between gap-2">
@@ -327,19 +328,75 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
               </button>
             )}
 
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-xs p-1">
-                <Sparkles className="h-3.5 w-3.5 text-white" />
-              </div>
-              <div>
-                <span className="text-xs font-black text-[#191522] tracking-tight block leading-none">
-                  MONVEX AI
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 leading-tight">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Gemini 2.0 Flash • Online
-                </span>
-              </div>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-[#F1EFEA] border border-transparent hover:border-[#E4E2DC] transition-all text-left"
+              >
+                <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-xs p-1">
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black text-[#191522] tracking-tight block leading-none">
+                      {activeModel}
+                    </span>
+                    <ChevronDown className="h-3 w-3 text-[#898390]" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 leading-tight">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Autonomous Telemetry Active
+                  </span>
+                </div>
+              </button>
+
+              {isModelDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-80 rounded-2xl bg-white border border-[#E4E2DC] shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-2 py-1 text-[10px] font-bold text-[#898390] uppercase tracking-wider">
+                    Execution Engine
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveModel('Autonomous Reasoner v2.4');
+                      setIsModelDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full text-left p-2.5 rounded-xl text-xs transition-all space-y-1',
+                      activeModel === 'Autonomous Reasoner v2.4'
+                        ? 'bg-blue-50/70 border border-blue-200/60'
+                        : 'hover:bg-[#F6F5F1]'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#191522]">Deterministic Reasoner v2.4</span>
+                      <span className="text-[9.5px] font-mono font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md">Verified Zero-Slop</span>
+                    </div>
+                    <p className="text-[11px] text-[#625D69]">Direct Django database telemetry, anomaly Z-scores, and deterministic calculation math.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveModel('Gemini 2.0 Flash');
+                      setIsModelDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full text-left p-2.5 rounded-xl text-xs transition-all space-y-1 mt-1',
+                      activeModel === 'Gemini 2.0 Flash'
+                        ? 'bg-blue-50/70 border border-blue-200/60'
+                        : 'hover:bg-[#F6F5F1]'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#191522]">Gemini 2.0 Flash</span>
+                      <span className="text-[9.5px] font-mono font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-md">Cloud Hybrid</span>
+                    </div>
+                    <p className="text-[11px] text-[#625D69]">Natural language synthesis with multimodal receipt OCR & context parsing.</p>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -704,5 +761,6 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
         )}
       </main>
     </div>
+  </div>
   );
 };

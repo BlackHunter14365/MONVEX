@@ -253,7 +253,8 @@ export const Topbar: React.FC<TopbarProps> = ({
         {onOpenAddTransaction && (
           <button
             onClick={onOpenAddTransaction}
-            className="hidden sm:flex items-center gap-1.5 rounded-lg bg-[#2A1F3D] hover:bg-[#3B2D54] active:bg-[#21182F] py-2 px-3.5 text-xs font-bold text-white transition-all shadow-subtle active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+            aria-label="Add transaction"
+            className="hidden sm:flex items-center gap-1.5 rounded-lg bg-[#2A1F3D] hover:bg-[#3B2D54] active:bg-[#21182F] py-2 px-3.5 min-h-[40px] text-xs font-bold text-white transition-all shadow-subtle active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add transaction</span>
@@ -270,7 +271,8 @@ export const Topbar: React.FC<TopbarProps> = ({
               }}
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
-              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+              aria-label="User profile menu"
+              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 min-h-[40px] hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden bg-[#2A1F3D] text-white text-xs font-bold uppercase shadow-xs">
                 {avatarImage ? (

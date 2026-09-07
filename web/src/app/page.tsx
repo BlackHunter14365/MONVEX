@@ -61,8 +61,8 @@ export default function LandingPage() {
 
   // Platform & Native Desktop Detection (SSR safe)
   const [isNativeDesktop, setIsNativeDesktop] = useState(false);
-  const [detectedPlatform, setDetectedPlatform] = useState<'windows' | 'android' | 'other'>('windows');
-  const [selectedPlatformTab, setSelectedPlatformTab] = useState<'windows' | 'android'>('windows');
+  const [detectedPlatform, setDetectedPlatform] = useState<'windows' | 'mobile' | 'other'>('windows');
+  const [selectedPlatformTab, setSelectedPlatformTab] = useState<'windows' | 'mobile-web'>('windows');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -71,9 +71,9 @@ export default function LandingPage() {
 
       if (navigator) {
         const ua = navigator.userAgent || navigator.vendor || '';
-        if (/android/i.test(ua)) {
-          setDetectedPlatform('android');
-          setSelectedPlatformTab('android');
+        if (/android|iphone|ipad|ipod/i.test(ua)) {
+          setDetectedPlatform('mobile');
+          setSelectedPlatformTab('mobile-web');
         } else if (/windows/i.test(ua)) {
           setDetectedPlatform('windows');
           setSelectedPlatformTab('windows');
@@ -243,7 +243,7 @@ export default function LandingPage() {
               Intelligence System
             </a>
             <a href="#desktop" className="hover:text-[#191522] transition-colors whitespace-nowrap">
-              {detectedPlatform === 'android' ? 'Android App' : isNativeDesktop ? 'Desktop Specs' : 'Windows App'}
+              {detectedPlatform === 'mobile' ? 'Mobile Workspace' : isNativeDesktop ? 'Desktop Specs' : 'Windows App'}
             </a>
             <a href="#about" className="hover:text-[#191522] transition-colors whitespace-nowrap">
               About
@@ -329,7 +329,7 @@ export default function LandingPage() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-xs font-bold text-[#191522] py-1.5"
               >
-                {detectedPlatform === 'android' ? 'Android App' : 'Windows Desktop App'}
+                {detectedPlatform === 'mobile' ? 'Mobile & Tablet App' : 'Windows Desktop App'}
               </a>
               <a
                 href="#about"
@@ -443,14 +443,20 @@ export default function LandingPage() {
                     <span>Open Workspace</span>
                   </Link>
                 </motion.div>
-              ) : detectedPlatform === 'android' ? (
-                <div
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F3F4F6] border border-[#E4E2DC] px-5 py-3.5 text-xs font-bold text-[#6B7280] shadow-2xs select-none cursor-default"
-                  title="Android application is in closed preview — Public APK release coming soon"
+              ) : detectedPlatform === 'mobile' ? (
+                <motion.div
+                  whileHover={{ scale: 1.015, y: -1 }}
+                  whileTap={{ scale: 0.985 }}
+                  transition={{ duration: 0.15 }}
                 >
-                  <Smartphone className="h-4 w-4 text-[#A855F7]" />
-                  <span>Android App — Coming Soon</span>
-                </div>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E4E2DC] px-6 py-3.5 text-xs font-bold text-[#191522] shadow-2xs transition-colors w-full sm:w-auto"
+                  >
+                    <Smartphone className="h-4 w-4 text-[#2563EB]" />
+                    <span>Launch Mobile Web</span>
+                  </Link>
+                </motion.div>
               ) : (
                 <motion.div
                   whileHover={{ scale: 1.015, y: -1 }}
@@ -471,7 +477,7 @@ export default function LandingPage() {
                 href="#desktop"
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-3.5 text-xs font-bold text-[#625D69] hover:text-[#191522] transition-colors"
               >
-                <span>{detectedPlatform === 'android' ? 'Platform Details' : 'Desktop Specs'}</span>
+                <span>{detectedPlatform === 'mobile' ? 'Platform Details' : 'Desktop Specs'}</span>
                 <ChevronRight className="h-3.5 w-3.5 text-[#898390]" />
               </a>
             </motion.div>
@@ -1246,7 +1252,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── PLATFORM APPS SECTION (WINDOWS LIVE / ANDROID FROZEN) ─────────── */}
+      {/* ─── PLATFORM APPS SECTION (WINDOWS LIVE / MOBILE WEB LIVE) ─────────── */}
       <section id="desktop" className="py-16 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto w-full scroll-mt-20">
         <div id="apps" className="space-y-4">
           {/* Platform Toggle Tabs */}
@@ -1264,22 +1270,22 @@ export default function LandingPage() {
               )}
             >
               <Cpu className="h-3.5 w-3.5 text-[#38BDF8]" />
-              <span>Windows (v2.0.0 Live)</span>
+              <span>Windows Desktop (v2.0.0 Live)</span>
             </motion.button>
             <motion.button
               type="button"
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setSelectedPlatformTab('android')}
+              onClick={() => setSelectedPlatformTab('mobile-web')}
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
-                selectedPlatformTab === 'android'
+                selectedPlatformTab === 'mobile-web'
                   ? 'bg-[#2A1F3D] text-white shadow-xs'
                   : 'bg-white text-[#625D69] border border-[#E4E2DC] hover:text-[#191522]'
               )}
             >
-              <Smartphone className="h-3.5 w-3.5 text-[#A855F7]" />
-              <span>Android (Coming Soon)</span>
+              <Smartphone className="h-3.5 w-3.5 text-[#38BDF8]" />
+              <span>Mobile Web Workspace (Live)</span>
             </motion.button>
           </div>
 
@@ -1359,34 +1365,34 @@ export default function LandingPage() {
               </motion.div>
             ) : (
               <motion.div
-                key="android"
+                key="mobile-web"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.22, ease: MOTION_EASINGS.PRIMARY }}
-                className="rounded-3xl border border-[#E4E2DC] bg-gradient-to-br from-white via-white to-[#FAF5FF] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8"
+                className="rounded-3xl border border-[#E4E2DC] bg-gradient-to-br from-white via-white to-[#F0F9FF] p-6 sm:p-12 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8"
               >
                 <div className="space-y-4 max-w-2xl text-left">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#A855F7]/10 border border-[#A855F7]/20 text-[#7E22CE]">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20 text-[#2563EB]">
                     <Smartphone className="h-3.5 w-3.5" />
                     <span className="font-mono text-[11px] font-extrabold uppercase tracking-wider">
-                      Mobile Platform — Closed Preview
+                      Responsive Web Platform — Active &amp; Live
                     </span>
                   </div>
                   <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[#191522]">
-                    MONVEX for Android
+                    MONVEX for Mobile &amp; Tablet
                   </h2>
                   <p className="text-xs sm:text-sm text-[#475467] font-medium leading-relaxed">
-                    Your financial intelligence on the go. High-speed transaction logging, voice dictation, camera receipt capture, and biometric security — tailored for Android phones.
+                    Full-featured financial intelligence engineered for your smartphone or tablet browser. Experience high-speed transaction entry, responsive drawer navigation, camera receipt scanning, voice dictation, and the grounded AI Copilot with zero installation required.
                   </p>
                   <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-xs font-semibold text-[#625D69] pt-1">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
-                      Android 8.0+ (ARM64)
+                      iOS Safari &amp; Android Chrome
                     </span>
-                    <span className="flex items-center gap-1.5 text-[#D97706]">
-                      <AlertTriangle className="h-3.5 w-3.5 text-[#D97706]" />
-                      Release Frozen / In Closed Preview
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
+                      Camera &amp; Neural OCR Enabled
                     </span>
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-[#059669]" />
@@ -1395,14 +1401,21 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center sm:items-end gap-2.5 w-full lg:w-auto shrink-0">
-                  <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#33264A] border border-[#4A3A68] text-[#D8D2E2] px-8 py-4 text-xs sm:text-sm font-bold shadow-sm select-none cursor-default">
-                    <Smartphone className="h-4 w-4 text-[#A855F7]" />
-                    <span>Android App — Coming Soon</span>
-                  </div>
-                  <span className="text-[11px] font-medium text-[#64748B] text-center sm:text-right">
-                    Public APK release is currently frozen and not available for download.
-                  </span>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+                  <motion.div
+                    whileHover={{ scale: 1.015, y: -1 }}
+                    whileTap={{ scale: 0.985 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-full sm:w-auto"
+                  >
+                    <Link
+                      href="/login"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <Smartphone className="h-4 w-4 text-[#38BDF8]" />
+                      <span>Open Mobile Workspace</span>
+                    </Link>
+                  </motion.div>
                 </div>
               </motion.div>
             )}

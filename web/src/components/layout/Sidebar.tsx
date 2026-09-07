@@ -79,42 +79,98 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
     return () => window.removeEventListener('monvex:profile-updated', handleProfileUpdated);
   }, [user]);
 
-  const overviewNav = [
+  interface NavItem {
+    name: string;
+    href: string;
+    icon: React.ComponentType<any>;
+    badge?: string;
+  }
+
+  const overviewNav: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
+  ];
+
+  const moneyNav: NavItem[] = [
     { name: 'Transactions', href: '/transactions', icon: Receipt },
+    { name: 'Net Worth', href: '/net-worth', icon: Landmark },
+    { name: 'Debt & EMI', href: '/debt', icon: CreditCard },
+    { name: 'Subscriptions', href: '/subscriptions', icon: Repeat },
+  ];
+
+  const planningNav: NavItem[] = [
     { name: 'Budgets', href: '/budgets', icon: PieChart },
     { name: 'Savings Goals', href: '/goals', icon: Target },
-    { name: 'Analytics', href: '/analytics', icon: BarChart2 },
-  ];
-
-  const intelligenceNav = [
-    { name: 'AI Copilot Intelligence', href: '/ai', icon: Sparkles, badge: 'AI' },
     { name: 'What-If Simulator', href: '/simulator', icon: Sliders, badge: 'Sim' },
+  ];
+
+  const intelligenceNav: NavItem[] = [
+    { name: 'Analytics', href: '/analytics', icon: BarChart2 },
     { name: 'Cashflow Forecast', href: '/forecast', icon: TrendingUp },
-    { name: 'Receipt Vision Scanner', href: '/receipts', icon: Receipt, badge: 'OCR' },
+    { name: 'AI Copilot', href: '/ai', icon: Sparkles, badge: 'AI' },
   ];
 
-  const wealthNav = [
-    { name: 'Net Worth & Balance Sheet', href: '/net-worth', icon: Landmark },
-    { name: 'Debt & EMI Planner', href: '/debt', icon: CreditCard },
-    { name: 'Subscriptions & Bills', href: '/subscriptions', icon: Repeat },
-    { name: 'Monthly Statements', href: '/reports', icon: FileText },
+  const documentsNav: NavItem[] = [
+    { name: 'Receipt Vision', href: '/receipts', icon: Receipt, badge: 'OCR' },
+    { name: 'Reports & Statements', href: '/reports', icon: FileText },
   ];
 
-  const systemNav = [
-    { name: 'Smart Alerts & Telemetry', href: '/notifications', icon: Bell },
-    { name: 'Cyber Defense & Security', href: '/security', icon: ShieldCheck, badge: 'ZeroTrust' },
-    { name: 'Preferences & Settings', href: '/settings', icon: Settings },
+  const systemNav: NavItem[] = [
+    { name: 'Smart Alerts', href: '/notifications', icon: Bell },
+    { name: 'Security Shield', href: '/security', icon: ShieldCheck, badge: 'ZeroTrust' },
+    { name: 'Settings & Profile', href: '/settings', icon: Settings },
   ];
 
   const fullName = cachedName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User Profile';
+
+  const renderNavGroup = (title: string, items: NavItem[]) => (
+    <div className="space-y-1">
+      <div className="px-3 pb-1 swiss-eyebrow text-[10px] font-bold text-[#898390] uppercase tracking-wider">
+        {title}
+      </div>
+      {items.map((item) => {
+        const isActive = pathname === item.href;
+        const Icon = item.icon;
+
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
+              isActive
+                ? 'bg-[#EEEAF7] text-[#191522] shadow-2xs border border-[#625477]/20 scale-[1.01]'
+                : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <Icon
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-colors',
+                  isActive ? 'text-[#2A1F3D]' : 'text-[#898390]'
+                )}
+              />
+              <span>{item.name}</span>
+            </div>
+            {item.badge && (
+              <span className="brutalist-tag-indigo text-[9px] py-0 px-1.5">
+                {item.badge}
+              </span>
+            )}
+            {isActive && !item.badge && (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2A1F3D]" />
+            )}
+          </Link>
+        );
+      })}
+    </div>
+  );
 
   return (
     <>
       <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 liquid-glass-sidebar select-none z-30 justify-between">
         {/* Top Header & Navigation */}
         <div className="flex flex-col min-h-0 flex-1">
-          {/* USER PROFILE HEADER CAPSULE (Replaces default logo header) */}
+          {/* USER PROFILE HEADER CAPSULE */}
           <div className="p-3 border-b border-[#E4E2DC]/80 bg-white/40">
             <button
               onClick={() => setIsProfileModalOpen(true)}
@@ -153,7 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
           </div>
 
           {/* Navigation Groups */}
-          <div className="flex-1 px-3.5 py-4 space-y-5 overflow-y-auto">
+          <div className="flex-1 px-3.5 py-4 space-y-4 overflow-y-auto">
             {/* Quick Command Center Trigger */}
             <button
               onClick={() => {
@@ -172,154 +228,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
               </kbd>
             </button>
 
-            {/* Overview Group */}
-            <div className="space-y-1">
-              <div className="px-3 pb-1 swiss-eyebrow">
-                Overview
-              </div>
-              {overviewNav.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
-                      isActive
-                        ? 'bg-[#EEEAF7] text-[#191522] shadow-2xs border border-[#625477]/20 scale-[1.01]'
-                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#2A1F3D]' : 'text-[#898390]'
-                        )}
-                      />
-                      <span>{item.name}</span>
-                    </div>
-                    {isActive && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#2A1F3D]" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Intelligence Group */}
-            <div className="space-y-1">
-              <div className="px-3 pb-1 swiss-eyebrow">
-                Intelligence
-              </div>
-              {intelligenceNav.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
-                      isActive
-                        ? 'bg-[#E9EDFA] text-[#191522] shadow-2xs border border-[#7184C4]/25 scale-[1.01]'
-                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#4056A1]' : 'text-[#898390]'
-                        )}
-                      />
-                      <span>{item.name}</span>
-                    </div>
-                    {item.badge && (
-                      <span className="brutalist-tag-indigo text-[9px] py-0 px-1.5">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Wealth & Planning Group */}
-            <div className="space-y-1">
-              <div className="px-3 pb-1 swiss-eyebrow">
-                Wealth & Planning
-              </div>
-              {wealthNav.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
-                      isActive
-                        ? 'bg-[#F6F3FA] text-[#191522] shadow-2xs border border-[#625477]/20 scale-[1.01]'
-                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#3B2D54]' : 'text-[#898390]'
-                        )}
-                      />
-                      <span>{item.name}</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* System & Security Group */}
-            <div className="space-y-1">
-              <div className="px-3 pb-1 swiss-eyebrow">
-                System & Security
-              </div>
-              {systemNav.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
-                      isActive
-                        ? 'bg-[#F1F0EC] text-[#191522] shadow-2xs border border-[#E4E2DC] scale-[1.01]'
-                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-[#191522]' : 'text-[#898390]'
-                        )}
-                      />
-                      <span>{item.name}</span>
-                    </div>
-                    {item.badge && (
-                      <span className="brutalist-tag-emerald text-[9px] py-0 px-1.5">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+            {renderNavGroup('Overview', overviewNav)}
+            {renderNavGroup('Money Movement', moneyNav)}
+            {renderNavGroup('Planning & Projections', planningNav)}
+            {renderNavGroup('Financial Intelligence', intelligenceNav)}
+            {renderNavGroup('Documents & Reports', documentsNav)}
+            {renderNavGroup('System & Security', systemNav)}
           </div>
         </div>
 

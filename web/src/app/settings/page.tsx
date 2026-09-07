@@ -23,6 +23,9 @@ import {
   Camera,
   Upload,
   Check,
+  Database,
+  Laptop,
+  CheckCheck,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
@@ -89,6 +92,7 @@ export default function SettingsPage() {
     if (!user) return;
     setCurrency(user.currency || 'INR');
     setMonthlyIncome(String(user.monthly_income || 75000));
+    setSavingsTarget(String(user.savings_target_percentage || 20));
     setFirstName(user.first_name || '');
     setLastName(user.last_name || '');
     setPhoneNumber(user.phone_number || '');
@@ -119,7 +123,6 @@ export default function SettingsPage() {
       const savedPrefs = localStorage.getItem('monvex_app_preferences');
       if (savedPrefs) {
         const p = JSON.parse(savedPrefs);
-        if (p.savingsTarget) setSavingsTarget(p.savingsTarget);
         if (p.fiscalStartDay) setFiscalStartDay(p.fiscalStartDay);
         if (p.notifAnomaly !== undefined) setNotifAnomaly(p.notifAnomaly);
         if (p.notifBudget80 !== undefined) setNotifBudget80(p.notifBudget80);
@@ -196,7 +199,7 @@ export default function SettingsPage() {
     setStatusMsg('');
 
     try {
-      // 1. Update Backend Profile
+      // 1. Update Backend Profile (Server Synced)
       await api.updateProfile({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -206,7 +209,7 @@ export default function SettingsPage() {
         savings_target_percentage: parseFloat(savingsTarget) || 20,
       });
 
-      // 2. Persist Client User Profile & Avatar
+      // 2. Persist Client User Profile & Avatar (Device Stored)
       if (user) {
         if (avatarImage) {
           localStorage.setItem(`monvex_avatar_${user.username}`, avatarImage);
@@ -228,7 +231,7 @@ export default function SettingsPage() {
         localStorage.setItem(`monvex_bio_${user.username}`, bio.trim());
       }
 
-      // 3. Persist Client Preferences
+      // 3. Persist Client Preferences (Device Stored)
       const clientPrefs = {
         savingsTarget,
         fiscalStartDay,
@@ -249,7 +252,7 @@ export default function SettingsPage() {
         window.dispatchEvent(new Event('monvex:profile-updated'));
       }
 
-      toast.success('✓ All profile details & system settings saved permanently!');
+      toast.success('✓ Profile details & system preferences successfully saved.');
       setStatusMsg('Preferences saved & verified.');
       setTimeout(() => setStatusMsg(''), 3000);
     } catch (err: any) {
@@ -308,7 +311,7 @@ export default function SettingsPage() {
 
   const navTabs = [
     { id: 'general' as TabId, label: 'Profile', icon: User },
-    { id: 'financial' as TabId, label: 'Financial Parameters', icon: Sliders },
+    { id: 'financial' as TabId, label: 'Financial Baseline', icon: Sliders },
     { id: 'notifications' as TabId, label: 'Telemetry & Alerts', icon: Bell },
     { id: 'ai' as TabId, label: 'AI Intelligence', icon: Sparkles },
     { id: 'security' as TabId, label: 'Security & Auth', icon: ShieldCheck },
@@ -319,7 +322,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 max-w-5xl mx-auto pb-12">
         <PageHeader
           title="System Settings"
           description="Configure your financial intelligence parameters, profile photo, AI reasoner behavior, and security policies."
@@ -330,7 +333,7 @@ export default function SettingsPage() {
               size="sm"
               isLoading={isSaving}
               leftIcon={<Save className="h-3.5 w-3.5" />}
-              className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-md font-bold"
+              className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-sm font-bold touch-target"
             >
               Save changes
             </Button>
@@ -338,7 +341,7 @@ export default function SettingsPage() {
         />
 
         {/* Navigation Tabs Pill Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#E4E2DC]">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#E4E2DC] scrollbar-none">
           {navTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -348,10 +351,10 @@ export default function SettingsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
+                  'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all touch-target shrink-0',
                   isActive
-                    ? 'bg-[#E9EDFA] text-[#26335F] border border-[#7184C4]/35 font-bold shadow-xs'
-                    : 'text-[#625D69] hover:text-[#191522] hover:bg-white/60'
+                    ? 'bg-[#2A1F3D] text-white shadow-sm'
+                    : 'bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] hover:bg-[#EAE8E1]'
                 )}
               >
                 <Icon className={cn('h-3.5 w-3.5', isActive ? 'text-white' : 'text-[#898390]')} />
@@ -361,16 +364,18 @@ export default function SettingsPage() {
           })}
         </div>
 
-        {/* Tab 1: Profile & Identity */}
+        {/* =========================================================================
+            TAB 1: PROFILE & IDENTITY
+            ========================================================================= */}
         {activeTab === 'general' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Main Profile Showcase Card */}
-            <div className="editorial-card p-6 sm:p-7 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E2DC]/80 pb-5">
+          <div className="double-bezel">
+            <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+              {/* Profile Header Card */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E2DC] pb-5">
                 <div className="flex items-center gap-4">
                   {/* Active Profile Photo Surface */}
                   <div className="relative group shrink-0">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden bg-[#2A1F3D] text-white text-xl font-black shadow-lg border-2 border-white ring-2 ring-slate-900/10">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden bg-[#2A1F3D] text-white text-xl font-black shadow-md border-2 border-white ring-2 ring-slate-900/10">
                       {avatarImage ? (
                         <img src={avatarImage} alt={fullName} className="h-full w-full object-cover" />
                       ) : selectedPreset ? (
@@ -390,7 +395,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-[#2A1F3D] text-white shadow-md hover:bg-[#2563EB] transition-all hover:scale-110"
+                      className="absolute -bottom-1 -right-1 p-1.5 rounded-xl bg-[#2A1F3D] text-white shadow-md hover:bg-[#2563EB] transition-all touch-target flex items-center justify-center"
                       title="Upload Photo"
                     >
                       <Camera className="h-3 w-3" />
@@ -423,7 +428,7 @@ export default function SettingsPage() {
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
                     leftIcon={<Upload className="h-3.5 w-3.5" />}
-                    className="text-xs"
+                    className="text-xs touch-target"
                   >
                     Upload Photo
                   </Button>
@@ -431,22 +436,29 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={handleRemovePhoto}
-                      className="p-2 text-xs font-semibold text-[#E11D48] hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1"
+                      className="p-2 text-xs font-semibold text-[#E11D48] hover:bg-rose-50 rounded-lg transition-colors flex items-center gap-1 touch-target"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Reset</span>
                     </button>
                   )}
-                  <span className="brutalist-tag-emerald text-xs">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    <span>Verified Identity</span>
-                  </span>
+                  <Badge variant="success" size="sm">
+                    Verified Identity
+                  </Badge>
                 </div>
               </div>
 
               {/* 3D Preset Selector Gallery */}
               <div className="space-y-2">
-                <span className="swiss-eyebrow block">Or Choose a 3D Preset Style:</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
+                    Choose Preset Avatar Style
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                    Stored on this device
+                  </span>
+                </div>
+
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                   {PRESET_AVATARS.map((p) => {
                     const isSel = selectedPreset === p.id && !avatarImage;
@@ -456,15 +468,15 @@ export default function SettingsPage() {
                         type="button"
                         onClick={() => handleSelectPreset(p)}
                         className={cn(
-                          'p-2.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1',
+                          'p-2.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1 touch-target',
                           isSel
-                            ? 'border-[#4056A1] bg-[#E9EDFA] ring-2 ring-[#4056A1]/25 shadow-sm'
-                            : 'border-[#E4E2DC] bg-white hover:border-[#858D9A]'
+                            ? 'border-[#2563EB] bg-[#EFF6FF] ring-2 ring-[#2563EB]/20 shadow-sm'
+                            : 'border-[#E4E2DC] bg-white hover:border-[#CBD5E1]'
                         )}
                       >
                         <div
                           className={cn(
-                            'h-8 w-8 rounded-lg flex items-center justify-center text-base bg-gradient-to-br shadow-xs',
+                            'h-8 w-8 rounded-lg flex items-center justify-center text-base bg-gradient-to-br shadow-sm',
                             p.bg
                           )}
                         >
@@ -479,55 +491,72 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Profile Form Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="swiss-eyebrow mb-1.5 block">First Name</label>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Enter first name"
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-                  />
+              {/* Synced Profile Form Fields */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
+                    Account Profile Details
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] font-bold">
+                    ✓ Synced to your MONVEX account
+                  </span>
                 </div>
-                <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Last Name</label>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Enter last name"
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Primary Phone Number</label>
-                  <input
-                    type="text"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Account Level & Tier</label>
-                  <div className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] flex items-center justify-between">
-                    <span>MONVEX Enterprise / Individual</span>
-                    <Badge variant="neutral" size="sm">Tier 1</Badge>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">First Name</label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Enter first name"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Last Name</label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Enter last name"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Primary Phone Number</label>
+                    <input
+                      type="text"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Account Level & Tier</label>
+                    <div className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] flex items-center justify-between touch-target">
+                      <span>MONVEX Institutional / Individual</span>
+                      <Badge variant="neutral" size="sm">Tier 1 Sovereign</Badge>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="swiss-eyebrow mb-1.5 block">Personal Tagline / Status Bio</label>
+              {/* Device Stored Bio */}
+              <div className="space-y-1.5 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-[#625D69] block">Personal Status Tagline</label>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                    Stored on this device
+                  </span>
+                </div>
                 <input
                   type="text"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="e.g. Financial Freedom Builder • Portfolio Target ₹1 Cr"
-                  className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
                 />
               </div>
 
@@ -538,7 +567,7 @@ export default function SettingsPage() {
                   size="sm"
                   isLoading={isSaving}
                   leftIcon={<Save className="h-3.5 w-3.5" />}
-                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-md font-bold px-6"
+                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-sm font-bold px-6 touch-target"
                 >
                   Save Profile Changes
                 </Button>
@@ -547,24 +576,31 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Tab 2: Financial Parameters */}
+        {/* =========================================================================
+            TAB 2: FINANCIAL BASELINE
+            ========================================================================= */}
         {activeTab === 'financial' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="editorial-card p-6 sm:p-7 space-y-6">
-              <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#191522]">Core Monetary Framework</h3>
-                <p className="text-xs text-[#625D69] mt-0.5">
-                  Set baseline monthly inflow, reporting denomination, and fiscal month boundaries.
-                </p>
+          <div className="double-bezel">
+            <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-[#191522]">Core Monetary Framework</h3>
+                  <p className="text-xs text-[#625D69] mt-0.5">
+                    Set baseline monthly inflow, reporting denomination, and fiscal month boundaries.
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] font-bold">
+                  ✓ Synced to your MONVEX account
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Reporting Currency</label>
+                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Reporting Currency</label>
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
                   >
                     <option value="INR">INR (₹) - Indian Rupee</option>
                     <option value="USD">USD ($) - US Dollar</option>
@@ -576,24 +612,29 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Monthly Inflow Baseline</label>
+                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Monthly Inflow Baseline</label>
                   <div className="relative">
                     <input
                       type="number"
                       value={monthlyIncome}
                       onChange={(e) => setMonthlyIncome(e.target.value)}
-                      className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] pl-8 pr-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-8 pr-3.5 py-2.5 text-xs font-mono font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
                     />
-                    <span className="absolute left-3 top-2.5 text-xs font-bold text-[#898390]">
+                    <span className="absolute left-3 top-3 text-xs font-bold text-[#898390]">
                       {currency === 'INR' ? '₹' : '$'}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="swiss-eyebrow mb-1.5 block">
-                    Target Monthly Savings Rate: {savingsTarget}%
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-semibold text-[#625D69]">
+                      Target Monthly Savings Rate: {savingsTarget}%
+                    </label>
+                    <span className="text-[10px] font-mono text-[#059669] font-bold">
+                      {formatCurrency((parseFloat(monthlyIncome) || 0) * (parseFloat(savingsTarget) / 100 || 0), currency)}/mo
+                    </span>
+                  </div>
                   <input
                     type="range"
                     min="5"
@@ -601,9 +642,9 @@ export default function SettingsPage() {
                     step="1"
                     value={savingsTarget}
                     onChange={(e) => setSavingsTarget(e.target.value)}
-                    className="w-full accent-[#4056A1] cursor-pointer"
+                    className="w-full accent-[#059669] cursor-pointer h-2 bg-[#E4E2DC] rounded-lg"
                   />
-                  <div className="flex justify-between text-[10px] text-[#898390] font-semibold mt-1">
+                  <div className="flex justify-between text-[10px] font-mono text-[#898390] mt-1">
                     <span>5% (Lean)</span>
                     <span>25% (Recommended)</span>
                     <span>60% (Aggressive FIRE)</span>
@@ -611,11 +652,16 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Fiscal Cycle Start Day</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-[#625D69]">Fiscal Cycle Start Day</label>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                      Device local
+                    </span>
+                  </div>
                   <select
                     value={fiscalStartDay}
                     onChange={(e) => setFiscalStartDay(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
                   >
                     <option value="1">1st of Month (Standard Calendar)</option>
                     <option value="5">5th of Month</option>
@@ -624,25 +670,45 @@ export default function SettingsPage() {
                   </select>
                 </div>
               </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  onClick={() => handleSaveAllPreferences()}
+                  variant="primary"
+                  size="sm"
+                  isLoading={isSaving}
+                  leftIcon={<Save className="h-3.5 w-3.5" />}
+                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-sm font-bold px-6 touch-target"
+                >
+                  Save Baseline Parameters
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Tab 3: Notifications & Telemetry Alerts */}
+        {/* =========================================================================
+            TAB 3: TELEMETRY & ALERTS
+            ========================================================================= */}
         {activeTab === 'notifications' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="editorial-card p-6 sm:p-7 space-y-6">
-              <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#191522]">Real-Time Telemetry Triggers</h3>
-                <p className="text-xs text-[#625D69] mt-0.5">
-                  Control which mathematical deviations and threshold warnings trigger UI alerts.
-                </p>
+          <div className="double-bezel">
+            <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-[#191522]">Real-Time Telemetry Triggers</h3>
+                  <p className="text-xs text-[#625D69] mt-0.5">
+                    Control which mathematical deviations and threshold warnings trigger in-app alerts.
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                  Stored on this device
+                </span>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#191522] block">Statistical Outlier Anomaly Detection</span>
+                    <span className="text-xs font-bold text-[#191522] block">Statistical Outlier Anomaly Detection</span>
                     <span className="text-[11px] text-[#625D69]">
                       Alert when a single expense exceeds 2.5 standard deviations from the 90-day category mean.
                     </span>
@@ -651,13 +717,13 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifAnomaly}
                     onChange={(e) => setNotifAnomaly(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#191522] block">80% Budget Velocity Warning</span>
+                    <span className="text-xs font-bold text-[#191522] block">80% Budget Velocity Warning</span>
                     <span className="text-[11px] text-[#625D69]">
                       Send alert when category spending reaches 80% with more than 10 days remaining in the billing cycle.
                     </span>
@@ -666,13 +732,13 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifBudget80}
                     onChange={(e) => setNotifBudget80(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#191522] block">Savings Goal Milestone Celebrations</span>
+                    <span className="text-xs font-bold text-[#191522] block">Savings Goal Milestone Celebrations</span>
                     <span className="text-[11px] text-[#625D69]">
                       Display milestone confirmations at 25%, 50%, 75%, and 100% savings goal completion.
                     </span>
@@ -681,47 +747,67 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notifGoalMilestone}
                     onChange={(e) => setNotifGoalMilestone(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
                   <div>
-                    <span className="text-xs font-extrabold text-[#191522] block">Weekly Digest Email</span>
+                    <span className="text-xs font-bold text-[#191522] block">Weekly Digest Notification</span>
                     <span className="text-[11px] text-[#625D69]">
-                      Receive an encrypted Sunday morning summary of weekly cash velocity and top expenses.
+                      Provide Sunday morning summary of weekly cash velocity and major expenses.
                     </span>
                   </div>
                   <input
                     type="checkbox"
                     checked={notifWeeklyDigest}
                     onChange={(e) => setNotifWeeklyDigest(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
                   />
                 </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  onClick={() => handleSaveAllPreferences()}
+                  variant="primary"
+                  size="sm"
+                  isLoading={isSaving}
+                  leftIcon={<Save className="h-3.5 w-3.5" />}
+                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-sm font-bold px-6 touch-target"
+                >
+                  Save Alert Settings
+                </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab 4: AI Copilot Intelligence */}
+        {/* =========================================================================
+            TAB 4: AI INTELLIGENCE
+            ========================================================================= */}
         {activeTab === 'ai' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="editorial-card p-6 sm:p-7 space-y-6">
-              <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#191522]">Autonomous Reasoner Model Parameters</h3>
-                <p className="text-xs text-[#625D69] mt-0.5">
-                  Tune the risk tolerance, speech dialect, and auto-tagging algorithms for the AI assistant.
-                </p>
+          <div className="double-bezel">
+            <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-[#191522]">Autonomous Reasoner Model Parameters</h3>
+                  <p className="text-xs text-[#625D69] mt-0.5">
+                    Configure safety buffers, speech dialect, and auto-categorization preferences.
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                  Stored on this device
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Affordability Emergency Buffer</label>
+                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Affordability Emergency Buffer</label>
                   <select
                     value={aiEmergencyBuffer}
                     onChange={(e) => setAiEmergencyBuffer(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
                   >
                     <option value="2.0">2.0x Monthly Expenses (Lean)</option>
                     <option value="2.5">2.5x Monthly Expenses (Standard)</option>
@@ -731,11 +817,11 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Voice Dictation Dialect</label>
+                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Voice Dictation Dialect</label>
                   <select
                     value={voiceLang}
                     onChange={(e) => setVoiceLang(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
                   >
                     <option value="en-IN">English (India - en-IN)</option>
                     <option value="en-US">English (United States - en-US)</option>
@@ -744,9 +830,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
                 <div>
-                  <span className="text-xs font-extrabold text-[#191522] block">Automatic Category Normalization</span>
+                  <span className="text-xs font-bold text-[#191522] block">Automatic Category Normalization</span>
                   <span className="text-[11px] text-[#625D69]">
                     Allow the AI parser to automatically map unknown merchant names (e.g. Swiggy, Uber) to standard categories.
                   </span>
@@ -755,18 +841,33 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={aiAutoCategorize}
                   onChange={(e) => setAiAutoCategorize(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
+                  className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
                 />
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  onClick={() => handleSaveAllPreferences()}
+                  variant="primary"
+                  size="sm"
+                  isLoading={isSaving}
+                  leftIcon={<Save className="h-3.5 w-3.5" />}
+                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white shadow-sm font-bold px-6 touch-target"
+                >
+                  Save AI Preferences
+                </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab 5: Security & Session Isolation */}
+        {/* =========================================================================
+            TAB 5: SECURITY & SESSION ISOLATION
+            ========================================================================= */}
         {activeTab === 'security' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="space-y-5">
             {/* Cyber Defense Center Gateway Card */}
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-[#2A1F3D] to-[#21182F] text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-5 rounded-2xl bg-[#2A1F3D] text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center font-bold shrink-0">
                   <ShieldCheck className="h-5 w-5" />
@@ -776,130 +877,135 @@ export default function SettingsPage() {
                     <h4 className="text-xs font-black tracking-tight text-white uppercase">
                       MONVEX Cyber Defense Center
                     </h4>
-                    <span className="brutalist-tag-emerald text-[9px] py-0 px-1.5">Zero-Trust Active</span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                      Zero-Trust Active
+                    </span>
                   </div>
                   <p className="text-xs text-slate-300 font-medium mt-0.5">
-                    Live WAF intrusion prevention, tamper-evident audit stream & automated vulnerability self-audits.
+                    Live WAF intrusion prevention, tamper-evident audit stream & automated security diagnostics.
                   </p>
                 </div>
               </div>
 
               <a
                 href="/security"
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white text-[#191522] hover:bg-[#F6F5F1] text-xs font-bold shadow-md transition-all shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white text-[#191522] hover:bg-[#F6F5F1] text-xs font-bold shadow-sm transition-all shrink-0 touch-target"
               >
                 <span>Open Defense Center</span>
                 <span className="text-xs">➔</span>
               </a>
             </div>
 
-            <div className="editorial-card p-6 sm:p-7 space-y-6">
-              <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#191522]">Enterprise Access & Session Controls</h3>
-                <p className="text-xs text-[#625D69] mt-0.5">
-                  Manage active browser sessions, inactivity timeouts, and two-factor challenge enforcement.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="swiss-eyebrow mb-1.5 block">Inactivity Auto-Lock Timeout</label>
-                  <select
-                    value={sessionTimeout}
-                    onChange={(e) => setSessionTimeout(e.target.value)}
-                    className="w-full rounded-xl bg-white/80 border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-                  >
-                    <option value="15">15 Minutes (Strict)</option>
-                    <option value="60">60 Minutes (Standard)</option>
-                    <option value="720">12 Hours</option>
-                    <option value="10080">7 Days (Trusted Workstation)</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/80 border border-[#E4E2DC]">
+            <div className="double-bezel">
+              <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+                <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
                   <div>
-                    <span className="text-xs font-extrabold text-[#191522] block">6-Digit OTP Security Challenge</span>
-                    <span className="text-[11px] text-[#625D69]">Require email OTP on new device sign-ins.</span>
+                    <h3 className="text-sm font-bold text-[#191522]">Enterprise Access & Session Controls</h3>
+                    <p className="text-xs text-[#625D69] mt-0.5">
+                      Manage active browser sessions, inactivity timeouts, and two-factor challenge enforcement.
+                    </p>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={requireOtpLogin}
-                    onChange={(e) => setRequireOtpLogin(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#4056A1]"
-                  />
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                    Stored on this device
+                  </span>
                 </div>
-              </div>
 
-              {/* Authentication Methods */}
-              <div className="space-y-3 pt-3 border-t border-[#E4E2DC]/80">
-                <span className="swiss-eyebrow block">Connected Authentication Methods</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-white/80 border border-[#E4E2DC] flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-[#F6F5F1] text-[#191522] flex items-center justify-center font-bold">
-                        <Lock className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-[#191522] block">Password Authentication</span>
-                        <span className="text-[11px] text-[#625D69]">Standard email/username + password</span>
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Inactivity Auto-Lock Timeout</label>
+                    <select
+                      value={sessionTimeout}
+                      onChange={(e) => setSessionTimeout(e.target.value)}
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    >
+                      <option value="15">15 Minutes (Strict)</option>
+                      <option value="60">60 Minutes (Standard)</option>
+                      <option value="720">12 Hours</option>
+                      <option value="10080">7 Days (Trusted Workstation)</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
+                    <div>
+                      <span className="text-xs font-bold text-[#191522] block">6-Digit OTP Security Challenge</span>
+                      <span className="text-[11px] text-[#625D69]">Require email OTP on new device sign-ins.</span>
                     </div>
-                    {user?.has_password_auth !== false ? (
+                    <input
+                      type="checkbox"
+                      checked={requireOtpLogin}
+                      onChange={(e) => setRequireOtpLogin(e.target.checked)}
+                      className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Authentication Methods */}
+                <div className="space-y-3 pt-3 border-t border-[#E4E2DC]">
+                  <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
+                    Connected Authentication Methods
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-[#F6F5F1] text-[#191522] flex items-center justify-center font-bold">
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-[#191522] block">Password Authentication</span>
+                          <span className="text-[11px] text-[#625D69]">Standard credentials</span>
+                        </div>
+                      </div>
                       <Badge variant="success" size="sm">✓ Active</Badge>
-                    ) : (
-                      <Badge variant="neutral" size="sm">Not Set</Badge>
-                    )}
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white/80 border border-[#E4E2DC] flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-[#F6F5F1] text-[#2563EB] flex items-center justify-center font-bold">
-                        <svg className="h-4 w-4" viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-[#191522] block">Google Sign-In</span>
-                        <span className="text-[11px] text-[#625D69]">Federated Google Identity</span>
-                      </div>
                     </div>
-                    {user?.has_google_auth ? (
-                      <Badge variant="success" size="sm">✓ Connected</Badge>
-                    ) : (
+
+                    <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-[#F6F5F1] text-[#2563EB] flex items-center justify-center font-bold">
+                          <svg className="h-4 w-4" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-[#191522] block">Google Sign-In</span>
+                          <span className="text-[11px] text-[#625D69]">Federated Google Identity</span>
+                        </div>
+                      </div>
                       <Badge variant="neutral" size="sm">Available</Badge>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Active Sessions Inspector */}
-              <div className="space-y-3 pt-3 border-t border-[#E4E2DC]/80">
-                <div className="flex items-center justify-between">
-                  <span className="swiss-eyebrow block">Active Device Sessions</span>
-                  <button
-                    type="button"
-                    onClick={handleRevokeSessions}
-                    className="text-xs font-bold text-[#E11D48] hover:underline"
-                  >
-                    Revoke all other sessions
-                  </button>
-                </div>
+                {/* Active Sessions Inspector */}
+                <div className="space-y-3 pt-3 border-t border-[#E4E2DC]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
+                      Active Device Sessions
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRevokeSessions}
+                      className="text-xs font-bold text-[#E11D48] hover:underline touch-target"
+                    >
+                      Revoke all other sessions
+                    </button>
+                  </div>
 
-                <div className="space-y-2">
-                  <div className="p-3.5 rounded-xl bg-white/80 border border-[#E4E2DC] flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold">
-                        PC
+                  <div className="space-y-2">
+                    <div className="p-3.5 rounded-xl bg-white border border-[#E4E2DC] flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-[#DCFCE7] text-[#15803D] flex items-center justify-center font-bold">
+                          <Laptop className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#191522] block">Windows • Chrome Desktop (Current Session)</span>
+                          <span className="text-[10px] font-mono text-[#898390]">IP: 127.0.0.1 • Authorized Session Active</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-bold text-[#191522] block">Windows 11 • Chrome 124 (Current Session)</span>
-                        <span className="text-[10px] text-[#898390]">IP: 127.0.0.1 • Location: India • Active Now</span>
-                      </div>
+                      <Badge variant="success" size="sm">Current</Badge>
                     </div>
-                    <Badge variant="success" size="sm">Current</Badge>
                   </div>
                 </div>
               </div>
@@ -907,40 +1013,42 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Tab 6: Data Portability & Backup */}
+        {/* =========================================================================
+            TAB 6: DATA PORTABILITY & BACKUP
+            ========================================================================= */}
         {activeTab === 'data' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="editorial-card p-6 sm:p-7 space-y-6">
-              <div className="border-b border-[#E4E2DC]/80 pb-3">
-                <h3 className="text-sm font-bold text-[#191522]">Data Portability & Encrypted Archives</h3>
+          <div className="double-bezel">
+            <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+              <div className="border-b border-[#E4E2DC] pb-3">
+                <h3 className="text-sm font-bold text-[#191522]">Data Sovereignty & Portability</h3>
                 <p className="text-xs text-[#625D69] mt-0.5">
-                  Export complete transaction ledgers in open JSON and CSV spreadsheet formats.
+                  Export complete transaction ledgers in open JSON and CSV spreadsheet formats anytime.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-white/80 border border-[#E4E2DC] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#191522]">
                     <Download className="h-4 w-4 text-[#2563EB]" />
                     <span>Complete JSON Database Backup</span>
                   </div>
                   <p className="text-[11px] text-[#625D69]">
-                    Export every transaction, category mapping, recurring payment, and budget rule into an encrypted JSON file.
+                    Export every transaction, category mapping, recurring payment, and budget rule into a clean JSON structure.
                   </p>
                   <Button
                     onClick={handleExportData}
                     variant="outline"
                     size="sm"
-                    className="text-xs w-full"
+                    className="text-xs w-full bg-white touch-target font-bold"
                   >
                     Download JSON Archive
                   </Button>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white/80 border border-[#E4E2DC] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#191522]">
                     <Download className="h-4 w-4 text-[#059669]" />
-                    <span>Spreadsheet CSV Export</span>
+                    <span>Spreadsheet CSV Ledger</span>
                   </div>
                   <p className="text-[11px] text-[#625D69]">
                     Download a clean CSV file compatible with Microsoft Excel, Apple Numbers, and Google Sheets.
@@ -949,7 +1057,7 @@ export default function SettingsPage() {
                     onClick={handleExportCSV}
                     variant="outline"
                     size="sm"
-                    className="text-xs w-full"
+                    className="text-xs w-full bg-white touch-target font-bold"
                   >
                     Download CSV Spreadsheet
                   </Button>

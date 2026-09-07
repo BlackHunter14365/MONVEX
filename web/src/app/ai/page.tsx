@@ -30,7 +30,7 @@ export default function AIPage() {
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [activeModel, setActiveModel] = useState('Gemini 2.0 Flash');
+  const [activeModel, setActiveModel] = useState('Autonomous Reasoner v2.4');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'chat' | 'workspace'>('chat');

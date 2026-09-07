@@ -16,6 +16,8 @@ import {
   EyeOff,
   Clock,
   ShieldAlert,
+  BrainCircuit,
+  TrendingUp,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -178,9 +180,6 @@ export default function RegisterPage() {
     setIsGoogleLoading(true);
     setStatusMessage('');
 
-    console.log('[MONVEX-GOOGLE] Credential received');
-    console.log('[MONVEX-GOOGLE] Backend authentication started');
-
     try {
       const res = await loginWithGoogle(credential);
 
@@ -192,12 +191,10 @@ export default function RegisterPage() {
       }
 
       if (res && res.access) {
-        console.log('[MONVEX-GOOGLE] Backend authentication successful');
         toast.success(res.is_new_user ? 'Welcome to MONVEX!' : 'Welcome back to MONVEX.');
         router.push('/dashboard');
       }
     } catch (err: any) {
-      console.error('[MONVEX-GOOGLE] Backend authentication failed:', err?.message || err);
       setStatusMessage(err.message || 'Google registration could not be completed.');
     } finally {
       setIsGoogleLoading(false);
@@ -307,283 +304,367 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-12">
-      {/* Brand Header */}
-      <div className="text-center mb-8 space-y-3">
-        <Link href="/" className="inline-flex flex-col items-center gap-3 group">
-          <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-xl ring-2 ring-white/80 transition-transform group-hover:scale-105">
-            <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
-          </div>
-          <span className="text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
-        </Link>
-        <p className="text-xs text-[#625D69] font-medium">
-          {step === 'register'
-            ? 'Create your personal financial intelligence workspace'
-            : 'Verify your email with single-use security code'}
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-10">
+      {/* Outer Double-Bezel Frame */}
+      <div className="w-full max-w-4xl p-1.5 sm:p-2 rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
+        <div className="rounded-[26px] border border-[#ECE9E0] bg-[#FBFBFA] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+          
+          {/* LEFT COLUMN: INSTITUTIONAL BRANDING & TRUST ENGINE (5 COLS) */}
+          <div className="lg:col-span-5 bg-gradient-to-br from-[#2A1F3D] to-[#1D152B] p-7 sm:p-9 text-white flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
-      {/* Card Container */}
-      <div className="w-full max-w-md editorial-card p-8 space-y-6">
-        {/* Error / Alert Message Banner */}
-        {statusMessage && uiState !== 'VERIFIED' && (
-          <div
-            className={cn(
-              'p-3.5 rounded-lg text-xs border flex items-center gap-2.5',
-              uiState === 'EXPIRED' || uiState === 'RATE_LIMITED'
-                ? 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'
-                : 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-            )}
-          >
-            {uiState === 'EXPIRED' || uiState === 'RATE_LIMITED' ? (
-              <ShieldAlert className="h-4 w-4 text-[#D97706] shrink-0" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-[#E11D48] shrink-0" />
-            )}
-            <span className="leading-snug">{statusMessage}</span>
-          </div>
-        )}
-
-        {step === 'register' ? (
-          /* STEP 1: Registration Form */
-          <form onSubmit={handleRegisterSubmit} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Username</label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="username"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">
-                Mobile Phone <span className="text-[#898390] font-normal">(Optional)</span>
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 8 chars"
-                    className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-8 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#898390] hover:text-[#191522]"
-                  >
-                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
+            {/* Brand Mark */}
+            <div className="space-y-6 relative z-10">
+              <Link href="/" className="inline-flex items-center gap-3 group">
+                <div className="h-11 w-11 rounded-2xl overflow-hidden shadow-lg p-0.5 bg-white/10 ring-1 ring-white/20 transition-transform group-hover:scale-105">
+                  <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover rounded-xl" />
                 </div>
+                <div>
+                  <span className="text-xl font-black tracking-tight text-white block leading-tight">
+                    MONVEX
+                  </span>
+                  <span className="text-[10.5px] font-mono tracking-wider text-slate-300 block uppercase">
+                    Financial Intelligence
+                  </span>
+                </div>
+              </Link>
+
+              <div className="space-y-2 pt-2">
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                  {step === 'register' ? 'Establish Your Account' : 'Security Verification'}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                  {step === 'register'
+                    ? 'Join the private wealth intelligence ecosystem. Unify your bank feeds, budgets, debts, and predictive runway.'
+                    : 'We ensure bank-grade account protection through deterministic single-use session verification codes.'}
+                </p>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Confirm</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat password"
-                    className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:outline-none"
-                  />
+              {/* Three Institutional Pillars */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-start gap-3">
+                  <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white block">Verified Tenant Isolation</span>
+                    <span className="text-[11px] text-slate-400">Strict database encryption prevents cross-account exposure.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <BrainCircuit className="h-4 w-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white block">Zero-Hallucination Math</span>
+                    <span className="text-[11px] text-slate-400">Deterministic engines verify every rupee across your balance sheet.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <TrendingUp className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-white block">Autonomous Milestone Tracking</span>
+                    <span className="text-[11px] text-slate-400">Forecast and accelerate retirement, savings, and debt payoff dates.</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Primary Currency</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
-                >
-                  <option value="INR">INR (₹)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Monthly Income</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={monthlyIncome}
-                  onChange={(e) => setMonthlyIncome(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              isLoading={uiState === 'SENDING'}
-              className="w-full mt-2"
-            >
-              Create Account
-            </Button>
-
-            {/* ─── OR ─── DIVIDER */}
-            <div className="relative flex items-center justify-center my-3">
-              <div className="border-t border-[#E4E2DC] w-full" />
-              <span className="bg-white px-3 text-[11px] font-bold text-[#898390] uppercase tracking-wider relative">
-                Or
+            {/* Bottom Security Footer */}
+            <div className="pt-6 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                Zero-Trust Shield: Active
               </span>
+              <span className="font-mono">v2.4 Core</span>
             </div>
+          </div>
 
-            {/* GOOGLE SIGN-IN BUTTON */}
-            <div>
-              <GoogleSignInButton
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                isLoading={isGoogleLoading}
-                disabled={uiState === 'SENDING'}
-                text="signup_with"
-              />
-            </div>
-          </form>
-        ) : (
-          /* STEP 2: OTP Verification Screen */
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#DCFCE7] text-[#059669] mb-1">
-                <KeyRound className="h-6 w-6" />
+          {/* RIGHT COLUMN: REGISTRATION / OTP FORM (7 COLS) */}
+          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between bg-white overflow-y-auto">
+            <div className="space-y-5 max-w-md mx-auto w-full">
+              {/* Header */}
+              <div className="space-y-1">
+                <h2 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
+                  {step === 'register' ? 'Create Your Account' : 'Verify Email Address'}
+                </h2>
+                <p className="text-xs text-[#625D69] font-medium">
+                  {step === 'register'
+                    ? 'Fill out your profile details to configure your personal workspace'
+                    : `Enter the 6-digit confirmation code dispatched to ${maskedEmail || email}`}
+                </p>
               </div>
-              <h3 className="text-base font-bold text-[#191522]">Verify Your Email</h3>
-              <p className="text-xs text-[#625D69] leading-relaxed">
-                We sent a 6-digit verification code to
-                <br />
-                <strong className="text-[#191522] font-bold">{maskedEmail || email}</strong>
-              </p>
-            </div>
 
-            {/* 6 Digit Numeric Inputs */}
-            <div className="space-y-2">
-              <div className="flex justify-center gap-2 py-1">
-                {otpDigits.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    ref={(el) => {
-                      otpInputsRef.current[idx] = el;
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleDigitChange(idx, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(idx, e)}
-                    disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED'}
-                    className={cn(
-                      'h-12 w-11 text-center text-lg font-bold rounded-xl border bg-white focus:outline-none transition-all',
-                      digit ? 'border-[#2A1F3D] text-[#191522]' : 'border-[#E4E2DC] text-[#625D69]',
-                      uiState === 'INVALID_CODE' ? 'border-[#E11D48] text-[#E11D48]' : ''
+              {/* Status banner */}
+              {statusMessage && uiState !== 'VERIFIED' && (
+                <div
+                  className={cn(
+                    'p-3.5 rounded-xl text-xs border flex items-center gap-2.5',
+                    uiState === 'EXPIRED' || uiState === 'RATE_LIMITED'
+                      ? 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'
+                      : 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                  )}
+                >
+                  {uiState === 'EXPIRED' || uiState === 'RATE_LIMITED' ? (
+                    <ShieldAlert className="h-4 w-4 text-[#D97706] shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-[#E11D48] shrink-0" />
+                  )}
+                  <span className="leading-snug font-medium">{statusMessage}</span>
+                </div>
+              )}
+
+              {step === 'register' ? (
+                /* STEP 1: Registration Form */
+                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#191522] block">Username</label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                        <input
+                          type="text"
+                          required
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder="alex"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#191522] block">Email Address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="alex@example.com"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[#191522] block">
+                      Mobile Phone <span className="text-[#898390] font-normal">(Optional)</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="+91 98765 43210"
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#191522] block">Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          minLength={8}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Min 8 chars"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-9 pr-8 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#898390] hover:text-[#191522]"
+                        >
+                          {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#191522] block">Confirm Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          minLength={8}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Repeat password"
+                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-9 pr-3.5 py-2.5 text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#191522] block">Base Currency</label>
+                      <select
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                      >
+                        <option value="INR">INR (₹)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-[#191522] block">Monthly Inflow</label>
+                      <input
+                        type="number"
+                        step="1000"
+                        required
+                        value={monthlyIncome}
+                        onChange={(e) => setMonthlyIncome(e.target.value)}
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2.5 text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    isLoading={uiState === 'SENDING'}
+                    className="w-full mt-3 font-bold min-h-[44px]"
+                  >
+                    Create Account & Continue
+                  </Button>
+
+                  {/* OR DIVIDER */}
+                  <div className="relative flex items-center justify-center my-2">
+                    <div className="border-t border-[#E4E2DC] w-full" />
+                    <span className="bg-white px-3 text-[11px] font-bold text-[#898390] uppercase tracking-wider relative">
+                      Or
+                    </span>
+                  </div>
+
+                  {/* GOOGLE SIGN-IN BUTTON */}
+                  <div>
+                    <GoogleSignInButton
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      isLoading={isGoogleLoading}
+                      disabled={uiState === 'SENDING'}
+                      text="signup_with"
+                    />
+                  </div>
+                </form>
+              ) : (
+                /* STEP 2: OTP Verification Screen */
+                <div className="space-y-6 py-2">
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-200 shadow-xs mb-1">
+                      <KeyRound className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-base font-black text-[#191522]">Enter 6-Digit Code</h3>
+                    <p className="text-xs text-[#625D69] leading-relaxed">
+                      We sent a one-time verification code to
+                      <br />
+                      <strong className="text-[#191522] font-mono font-bold">{maskedEmail || email}</strong>
+                    </p>
+                  </div>
+
+                  {/* 6 Digit Numeric Inputs */}
+                  <div className="space-y-2">
+                    <div className="flex justify-center gap-2 py-1">
+                      {otpDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={(el) => {
+                            otpInputsRef.current[idx] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleDigitChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(idx, e)}
+                          disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED'}
+                          className={cn(
+                            'h-13 w-11 text-center text-xl font-mono font-black rounded-2xl border bg-white focus:outline-none transition-all',
+                            digit ? 'border-[#2A1F3D] text-[#191522] shadow-xs' : 'border-[#E4E2DC] text-[#625D69]',
+                            uiState === 'INVALID_CODE' ? 'border-[#E11D48] text-[#E11D48] bg-rose-50/50' : ''
+                          )}
+                        />
+                      ))}
+                    </div>
+
+                    {attemptsRemaining !== null && (
+                      <div className="text-center text-[11px] text-[#E11D48] font-semibold">
+                        {attemptsRemaining} attempt{attemptsRemaining === 1 ? '' : 's'} remaining
+                      </div>
                     )}
-                  />
-                ))}
-              </div>
+                  </div>
 
-              {attemptsRemaining !== null && (
-                <div className="text-center text-[11px] text-[#E11D48] font-medium">
-                  {attemptsRemaining} attempt{attemptsRemaining === 1 ? '' : 's'} remaining
+                  {/* Expiration Timer */}
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-[#898390] font-mono">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>Code expires in:</span>
+                    <span className="font-bold text-[#191522]">{formatExpiryTime(sessionExpiresIn)}</span>
+                  </div>
+
+                  {/* Action Button */}
+                  <Button
+                    type="button"
+                    onClick={() => submitOtpVerification(otpDigits.join(''))}
+                    disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED' || otpDigits.join('').length !== 6}
+                    isLoading={uiState === 'VERIFYING'}
+                    variant="primary"
+                    size="lg"
+                    className="w-full font-bold min-h-[44px]"
+                  >
+                    Verify Code & Access Dashboard
+                  </Button>
+
+                  {/* Resend Button */}
+                  <div className="pt-2 text-center">
+                    {resendCooldown > 0 ? (
+                      <span className="text-xs text-[#898390]">
+                        Resend code in <strong className="text-[#191522] font-mono">{resendCooldown}s</strong>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResend}
+                        disabled={isResending}
+                        className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1.5"
+                      >
+                        <RefreshCw className={cn('h-3.5 w-3.5', isResending && 'animate-spin')} />
+                        <span>Resend verification code</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Expiration Timer Bar */}
-            <div className="flex items-center justify-center gap-1.5 text-xs text-[#898390] font-mono">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Code expires in:</span>
-              <span className="font-bold text-[#191522]">{formatExpiryTime(sessionExpiresIn)}</span>
-            </div>
-
-            {/* Action Button */}
-            <Button
-              type="button"
-              onClick={() => submitOtpVerification(otpDigits.join(''))}
-              disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED' || otpDigits.join('').length !== 6}
-              isLoading={uiState === 'VERIFYING'}
-              variant="primary"
-              size="lg"
-              className="w-full"
-            >
-              Verify Code & Continue
-            </Button>
-
-            {/* Resend Button */}
-            <div className="pt-2 text-center">
-              {resendCooldown > 0 ? (
-                <span className="text-xs text-[#898390]">
-                  Resend code in <strong className="text-[#191522]">{resendCooldown}s</strong>
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isResending}
-                  className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1.5"
-                >
-                  <RefreshCw className={cn('h-3.5 w-3.5', isResending && 'animate-spin')} />
-                  <span>Resend verification code</span>
-                </button>
-              )}
+            {/* Bottom Login Prompt */}
+            <div className="pt-6 border-t border-[#E4E2DC] text-center text-xs text-[#625D69] max-w-md mx-auto w-full">
+              Already have an account?{' '}
+              <Link href="/login" className="font-bold text-[#2563EB] hover:underline">
+                Sign in
+              </Link>
             </div>
           </div>
-        )}
-
-        <div className="pt-4 border-t border-[#E4E2DC] text-center text-xs text-[#625D69]">
-          Already have an account?{' '}
-          <Link href="/login" className="font-bold text-[#2563EB] hover:underline">
-            Sign in
-          </Link>
         </div>
       </div>
 

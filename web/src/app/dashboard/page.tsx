@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -8,27 +8,31 @@ import {
   TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
-  ChevronDown,
   Utensils,
   ShoppingBag,
   Home,
-  Plane,
   Car,
   ShoppingBasket,
   CreditCard,
   Plus,
-  Activity,
-  Calendar,
-  Layers,
+  ShieldCheck,
+  Receipt,
+  PieChart,
+  Target,
+  Sparkles,
+  AlertTriangle,
+  CheckCircle2,
+  Sliders,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { api } from '@/lib/api';
+import { FinancialAmount } from '@/components/ui/FinancialAmount';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { useStaggerEntrance } from '@/hooks/useAnimations';
 import { useDashboardQuery } from '@/hooks/queries/useDashboardQuery';
 import {
   ResponsiveContainer,
@@ -41,28 +45,21 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { WalletAccountsSection } from '@/components/finance/WalletAccountsSection';
-import { AnimatedValue, CardReveal, MotionCard } from '@/components/motion';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-
-  // Modern TanStack Query server state
   const { data: dashboardData, isLoading, isError, refetch } = useDashboardQuery();
 
   const summary = dashboardData?.summary || null;
   const transactions = dashboardData?.transactions || [];
   const budgets = dashboardData?.budgets || [];
   const goals = dashboardData?.goals || [];
-  const recurring = dashboardData?.recurring || [];
   const monthlyTrend = dashboardData?.monthlyTrend || [];
 
-  // Advanced Chart Controls
-  const [chartHorizon, setChartHorizon] = useState<'7D' | '30D' | '90D' | '1Y'>('30D');
+  // Chart Metric Mode
   const [chartMetric, setChartMetric] = useState<'EXPENSE' | 'DUAL' | 'NET'>('EXPENSE');
 
-  // Animation container
-  const containerRef = useStaggerEntrance('.dash-reveal', [isLoading]);
-
+  // Dynamic user name
   const [cachedName, setCachedName] = useState<string | null>(null);
 
   const loadProfileInfo = () => {
@@ -82,7 +79,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadProfileInfo();
-
     const handleTxAdded = () => refetch();
     const handleProfileUpdate = () => loadProfileInfo();
 
@@ -93,9 +89,9 @@ export default function DashboardPage() {
       window.removeEventListener('monvex:transaction-added', handleTxAdded);
       window.removeEventListener('monvex:profile-updated', handleProfileUpdate);
     };
-  }, [user]);
+  }, [user, refetch]);
 
-  // Compute live verified values from API
+  // Verified financial totals from backend API
   const totalIncome = summary?.monthly_income ?? summary?.total_income ?? 0;
   const totalExpense = summary?.monthly_expense ?? summary?.total_expense ?? 0;
   const totalNetBalance = summary?.net_balance ?? (totalIncome - totalExpense);
@@ -104,7 +100,6 @@ export default function DashboardPage() {
 
   const displayName = cachedName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'there';
 
-  // Dynamic greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -112,220 +107,214 @@ export default function DashboardPage() {
     return 'Good evening';
   };
 
-  // High-Tech Multi-Horizon Chart Dataset
-  const trajectoryChartData = React.useMemo(() => {
-    const hasData = totalExpense > 0 || totalIncome > 0 || (monthlyTrend && monthlyTrend.length > 0);
-    const baseExpense = totalExpense;
-    const baseIncome = totalIncome;
+  // Real Cashflow Trend Dataset (Strictly No Fake Data)
+  const trajectoryChartData = useMemo(() => {
+    if (!monthlyTrend || monthlyTrend.length === 0) {
+      return [];
+    }
+    return monthlyTrend.map((m: any) => ({
+      label: m.month || m.name || 'Period',
+      expense: parseFloat(m.expense || m.expenses || 0),
+      income: parseFloat(m.income || 0),
+      net: parseFloat(m.income || 0) - parseFloat(m.expense || m.expenses || 0),
+    }));
+  }, [monthlyTrend]);
 
-    if (!hasData) {
-      if (chartHorizon === '7D') {
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        return days.map((d) => ({ label: d, expense: 0, income: 0, net: 0 }));
+  // Health Score (0-100) with Transparent Diagnostics
+  const healthMetrics = useMemo(() => {
+    const sRate = parseFloat(String(savingsRate)) || 0;
+    const isPositiveCashflow = netSavings > 0;
+    const overBudgetCount = budgets.filter((b: any) => {
+      const spent = parseFloat(b.spent_amount ?? b.current_spent) || 0;
+      const limit = parseFloat(b.limit_amount ?? b.amount) || 1;
+      return spent > limit;
+    }).length;
+
+    let score = 50;
+    if (sRate >= 20) score += 30;
+    else if (sRate > 0) score += 15;
+    else score -= 20;
+
+    if (isPositiveCashflow) score += 10;
+    if (overBudgetCount === 0 && budgets.length > 0) score += 10;
+    else if (overBudgetCount > 0) score -= (overBudgetCount * 10);
+
+    const boundedScore = Math.min(100, Math.max(10, score));
+    const tier =
+      boundedScore >= 80 ? 'Optimal Financial Sovereignty' : boundedScore >= 60 ? 'Healthy Stability' : 'Elevated Burn Velocity';
+
+    return {
+      score: summary?.health_score?.score ?? boundedScore,
+      tier,
+      sRate,
+      isPositiveCashflow,
+      overBudgetCount,
+    };
+  }, [savingsRate, netSavings, budgets, summary]);
+
+  // Attention Center Items
+  const attentionItems = useMemo(() => {
+    const items: Array<{
+      id: string;
+      level: 'critical' | 'warning' | 'info' | 'success';
+      title: string;
+      desc: string;
+      actionUrl: string;
+      actionLabel: string;
+    }> = [];
+
+    // Check budget violations
+    budgets.forEach((b: any) => {
+      const spent = parseFloat(b.spent_amount ?? b.current_spent) || 0;
+      const limit = parseFloat(b.limit_amount ?? b.amount) || 1;
+      const pct = Math.round((spent / limit) * 100);
+      if (pct >= 100) {
+        items.push({
+          id: `budget-${b.id}`,
+          level: 'critical',
+          title: `Budget Cap Exceeded: ${b.category_name || b.name}`,
+          desc: `Exceeded by ${pct - 100}% (${formatCurrency(spent - limit, user?.currency)} over limit).`,
+          actionUrl: '/budgets',
+          actionLabel: 'Adjust Guardrail',
+        });
+      } else if (pct >= 80) {
+        items.push({
+          id: `budget-warn-${b.id}`,
+          level: 'warning',
+          title: `Approaching Budget Limit: ${b.category_name || b.name}`,
+          desc: `${pct}% utilized (${formatCurrency(limit - spent, user?.currency)} remaining).`,
+          actionUrl: '/budgets',
+          actionLabel: 'View Spend',
+        });
       }
-      if (chartHorizon === '90D') {
-        return [
-          { label: 'Month 1', expense: 0, income: 0, net: 0 },
-          { label: 'Month 2', expense: 0, income: 0, net: 0 },
-          { label: 'Month 3 (Cur)', expense: 0, income: 0, net: 0 },
-        ];
+    });
+
+    // Check savings goals
+    goals.forEach((g: any) => {
+      const current = parseFloat(g.current_amount) || 0;
+      const target = parseFloat(g.target_amount) || 1;
+      const pct = Math.round((current / target) * 100);
+      if (pct < 50 && g.target_date) {
+        items.push({
+          id: `goal-${g.id}`,
+          level: 'info',
+          title: `Active Goal Milestone: ${g.title || g.name}`,
+          desc: `${pct}% accumulated toward ${formatCurrency(target, user?.currency)}.`,
+          actionUrl: '/goals',
+          actionLabel: 'Contribute Capital',
+        });
       }
-      if (chartHorizon === '1Y') {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-        return months.map((m) => ({ label: m, expense: 0, income: 0, net: 0 }));
+    });
+
+    // Fallback if healthy
+    if (items.length === 0) {
+      if (transactions.length === 0) {
+        items.push({
+          id: 'setup-ledger',
+          level: 'info',
+          title: 'Ledger Ingestion Ready',
+          desc: 'Log your first income or expense transaction to unlock velocity telemetry.',
+          actionUrl: '/transactions',
+          actionLabel: 'Open Ledger',
+        });
+      } else {
+        items.push({
+          id: 'healthy-state',
+          level: 'success',
+          title: 'All Financial Guardrails Balanced',
+          desc: 'Monthly outflows are aligned within established spending limits.',
+          actionUrl: '/analytics',
+          actionLabel: 'View Analytics',
+        });
       }
-      return [
-        { label: 'Week 1', expense: 0, income: 0, net: 0 },
-        { label: 'Week 2', expense: 0, income: 0, net: 0 },
-        { label: 'Week 3', expense: 0, income: 0, net: 0 },
-        { label: 'Week 4', expense: 0, income: 0, net: 0 },
-      ];
     }
 
-    if (monthlyTrend && monthlyTrend.length > 0) {
-      return monthlyTrend.map((m: any) => ({
-        label: m.month || m.name || 'Period',
-        expense: parseFloat(m.expense || m.expenses || 0),
-        income: parseFloat(m.income || 0),
-        net: parseFloat(m.income || 0) - parseFloat(m.expense || m.expenses || 0),
-      }));
-    }
+    return items;
+  }, [budgets, goals, transactions, user?.currency]);
 
-    if (chartHorizon === '7D') {
-      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return days.map((d, i) => {
-        const exp = Math.round((baseExpense / 7) * (0.8 + (i % 3) * 0.2));
-        const inc = i === 4 ? baseIncome : 0;
-        return {
-          label: d,
-          expense: exp,
-          income: inc,
-          net: inc - exp,
-        };
-      });
-    }
-
-    if (chartHorizon === '90D') {
-      return [
-        { label: 'Month 1', expense: Math.round(baseExpense * 0.9), income: baseIncome, net: baseIncome - Math.round(baseExpense * 0.9) },
-        { label: 'Month 2', expense: Math.round(baseExpense * 0.95), income: baseIncome, net: baseIncome - Math.round(baseExpense * 0.95) },
-        { label: 'Month 3 (Cur)', expense: Math.round(baseExpense), income: baseIncome, net: baseIncome - Math.round(baseExpense) },
-      ];
-    }
-
-    if (chartHorizon === '1Y') {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-      return months.map((m, i) => {
-        const exp = Math.round(baseExpense * (0.85 + (i * 0.02)));
-        return {
-          label: m,
-          expense: exp,
-          income: baseIncome,
-          net: baseIncome - exp,
-        };
-      });
-    }
-
-    // Default 30D
-    return [
-      { label: 'Week 1', expense: Math.round(baseExpense * 0.2), income: Math.round(baseIncome * 0.25), net: Math.round(baseIncome * 0.25 - baseExpense * 0.2) },
-      { label: 'Week 2', expense: Math.round(baseExpense * 0.25), income: Math.round(baseIncome * 0.25), net: Math.round(baseIncome * 0.25 - baseExpense * 0.25) },
-      { label: 'Week 3', expense: Math.round(baseExpense * 0.3), income: Math.round(baseIncome * 0.25), net: Math.round(baseIncome * 0.25 - baseExpense * 0.3) },
-      { label: 'Week 4', expense: Math.round(baseExpense * 0.25), income: Math.round(baseIncome * 0.25), net: Math.round(baseIncome * 0.25 - baseExpense * 0.25) },
-    ];
-  }, [chartHorizon, monthlyTrend, totalExpense, totalIncome]);
-
-  // Average daily pace for reference line
-  const averageDailySpend = Math.round(totalExpense / 30);
-
-  // Primary active goal
-  const primaryGoal = goals[0] || null;
-  const goalCurrent = primaryGoal ? parseFloat(primaryGoal.current_amount) || 0 : 0;
-  const goalTarget = primaryGoal ? parseFloat(primaryGoal.target_amount) || 1 : 1;
-  const goalPct = Math.min(100, Math.round((goalCurrent / goalTarget) * 100));
-
-  const goalDeadline = primaryGoal?.deadline || primaryGoal?.target_date;
-  const goalRequiredMonthly = React.useMemo(() => {
-    if (!primaryGoal || !goalDeadline) return null;
-    const now = new Date();
-    const end = new Date(goalDeadline);
-    const monthsRemaining = Math.max(1, (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth()));
-    const remainingToSave = Math.max(0, goalTarget - goalCurrent);
-    return Math.round(remainingToSave / monthsRemaining);
-  }, [primaryGoal, goalDeadline, goalTarget, goalCurrent]);
-
-  // Primary budget category spotlight
-  const topBudget = budgets[0] || null;
-  const topBudgetSpent = topBudget ? parseFloat(topBudget.spent_amount ?? topBudget.current_spent) || 0 : 0;
-  const topBudgetLimit = topBudget ? parseFloat(topBudget.limit_amount ?? topBudget.amount) || 1 : 1;
-  const topBudgetPct = Math.min(100, Math.round((topBudgetSpent / topBudgetLimit) * 100));
-
-  // Category Icon & Color Resolver
+  // Category Icon & Badge Resolver
   const getCategoryStyles = (catName: string) => {
     const lower = (catName || '').toLowerCase();
     if (lower.includes('food') || lower.includes('dining')) {
-      return { icon: Utensils, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#625D69]', barColor: 'bg-[#10B981]' };
+      return { icon: Utensils, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', badgeBg: 'bg-[#DCFCE7]', badgeText: 'text-[#15803D]' };
     }
     if (lower.includes('shop')) {
-      return { icon: ShoppingBag, bg: 'bg-[#FEF3C7]', text: 'text-[#B45309]', badgeBg: 'bg-[#FEF3C7]', badgeText: 'text-[#B45309]', barColor: 'bg-[#F59E0B]' };
+      return { icon: ShoppingBag, bg: 'bg-[#FEF3C7]', text: 'text-[#B45309]', badgeBg: 'bg-[#FEF3C7]', badgeText: 'text-[#B45309]' };
     }
     if (lower.includes('bill') || lower.includes('util') || lower.includes('rent')) {
-      return { icon: Home, bg: 'bg-[#E0F2FE]', text: 'text-[#0369A1]', badgeBg: 'bg-[#E0F2FE]', badgeText: 'text-[#0369A1]', barColor: 'bg-[#2563EB]' };
+      return { icon: Home, bg: 'bg-[#E0F2FE]', text: 'text-[#0369A1]', badgeBg: 'bg-[#E0F2FE]', badgeText: 'text-[#0369A1]' };
     }
     if (lower.includes('grocer')) {
-      return { icon: ShoppingBasket, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', badgeBg: 'bg-[#DCFCE7]', badgeText: 'text-[#15803D]', barColor: 'bg-[#10B981]' };
+      return { icon: ShoppingBasket, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', badgeBg: 'bg-[#DCFCE7]', badgeText: 'text-[#15803D]' };
     }
     if (lower.includes('trans') || lower.includes('travel') || lower.includes('cab')) {
-      return { icon: Car, bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', badgeBg: 'bg-[#F3E8FF]', badgeText: 'text-[#7E22CE]', barColor: 'bg-[#8B5CF6]' };
+      return { icon: Car, bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', badgeBg: 'bg-[#F3E8FF]', badgeText: 'text-[#7E22CE]' };
     }
-    return { icon: CreditCard, bg: 'bg-[#F0EFEA]', text: 'text-[#625D69]', badgeBg: 'bg-[#F0EFEA]', badgeText: 'text-[#625D69]', barColor: 'bg-[#4056A1]' };
-  };
-
-  // Merchant Logo Resolver
-  const getMerchantLogo = (merchantName: string, categoryName: string) => {
-    const lower = (merchantName || categoryName || '').toLowerCase();
-    if (lower.includes('swiggy') || lower.includes('zomato')) {
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EA580C] text-white text-xs font-black shadow-sm shrink-0">
-          S
-        </div>
-      );
-    }
-    if (lower.includes('amazon')) {
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2A1F3D] text-amber-400 text-xs font-black shadow-sm shrink-0">
-          a
-        </div>
-      );
-    }
-    if (lower.includes('uber') || lower.includes('ola')) {
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#000000] text-white text-[10px] font-black shadow-sm shrink-0">
-          U
-        </div>
-      );
-    }
-    if (lower.includes('dmart') || lower.includes('blinkit')) {
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#15803D] text-white text-xs font-black shadow-sm shrink-0">
-          D
-        </div>
-      );
-    }
-    return (
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F0EFEA] text-[#191522] text-xs font-bold shadow-sm shrink-0">
-        {(merchantName || categoryName || 'T').slice(0, 1).toUpperCase()}
-      </div>
-    );
-  };
-
-  // Ultra-Precision Custom Tooltip
-  const CustomChartTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="rounded-xl bg-white border border-[#E4E2DC] p-3 shadow-lg space-y-1.5 min-w-[140px] animate-in fade-in zoom-in-95 duration-100">
-          <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-1">
-            <span className="text-[11px] font-bold text-[#898390]">{label}</span>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB]">
-              Telemetry
-            </span>
-          </div>
-
-          {payload.map((entry: any, index: number) => (
-            <div key={`item-${index}`} className="flex items-center justify-between text-xs font-bold gap-3">
-              <span className="flex items-center gap-1.5 text-[#625D69]">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                {entry.name || 'Value'}:
-              </span>
-              <span className="text-[#191522] tabular-nums">
-                {formatCurrency(entry.value, user?.currency)}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
+    return { icon: CreditCard, bg: 'bg-[#F1F0EC]', text: 'text-[#625D69]', badgeBg: 'bg-[#F1F0EC]', badgeText: 'text-[#625D69]' };
   };
 
   return (
     <AppShell>
-      <div ref={containerRef} className="space-y-6">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full">
         {/* =========================================================================
-            1. GREETING & CONTEXT HEADER
+            1. FINANCIAL COMMAND BAR & GREETING
             ========================================================================= */}
-        <div className="dash-reveal">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191522] tracking-tight flex items-center gap-2">
-            <span>{getGreeting()}, {displayName}</span>
-            <span>👋</span>
-          </h1>
-          <p className="text-sm font-medium text-[#625D69] mt-1">
-            Here&apos;s how your money moved today.
-          </p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#E4E2DC]">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
+                {getGreeting()}, {displayName}
+              </h1>
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E8F7F1] text-[#059669] border border-[#A7F3D0] text-[10px] font-bold">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                Live Telemetry
+              </span>
+            </div>
+            <p className="text-xs text-[#625D69] font-medium mt-0.5">
+              Financial command center and deterministic capital overview.
+            </p>
+          </div>
+
+          {/* Quick Action Group */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="h-3.5 w-3.5" />}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new Event('monvex:open-add-transaction'));
+                }
+              }}
+              className="touch-target"
+            >
+              Add Record
+            </Button>
+            <Link href="/receipts">
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<Receipt className="h-3.5 w-3.5 text-[#4056A1]" />}
+                className="touch-target"
+              >
+                Scan Receipt
+              </Button>
+            </Link>
+            <Link href="/budgets">
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<PieChart className="h-3.5 w-3.5 text-[#059669]" />}
+                className="touch-target hidden sm:inline-flex"
+              >
+                Set Budget
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* =========================================================================
-            2. WALLETS, CARDS & BANK ACCOUNTS COMMAND CENTER (Full-Width 12 Columns)
+            2. WALLET & ACCOUNTS BAR
             ========================================================================= */}
         <WalletAccountsSection
           userCurrency={user?.currency}
@@ -345,591 +334,516 @@ export default function DashboardPage() {
           />
         ) : (
           /* =========================================================================
-              3. MAIN DASHBOARD GRID (8 COLS LEFT, 4 COLS RIGHT)
+              3. ASYMMETRIC COMMAND GRID (8 COLS MAIN / 4 COLS INTEL)
               ========================================================================= */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* =======================================================================
-              LEFT & CENTER COLUMN (8 COLS)
-              ======================================================================= */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* AVAILABLE BALANCE & SUMMARY CARD */}
-            <MotionCard hoverLift={-2} hoverScale={1.002} className="editorial-card p-6 sm:p-7">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                {/* Available Balance Main Stat */}
-                <div className="space-y-1.5">
-                  <span className="swiss-eyebrow">
-                    Available balance
-                  </span>
-                  {isLoading ? (
-                    <Skeleton className="h-10 w-48 mt-1" />
-                  ) : (
-                    <div className="swiss-metric text-3xl sm:text-4xl text-[#191522]">
-                      <AnimatedValue value={totalNetBalance} currency={user?.currency} />
-                    </div>
-                  )}
-                  <div className="pt-1 flex items-center gap-2">
-                    <span className="brutalist-tag-emerald">
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                      <span>+8.4%</span>
-                    </span>
-                    <span className="text-xs font-semibold text-[#625D69]">vs last month</span>
-                  </div>
-                </div>
-
-                {/* Supporting Income, Spending, Savings Stats */}
-                <div className="grid grid-cols-3 gap-6 sm:gap-8 pt-4 md:pt-0 border-t md:border-t-0 border-[#E4E2DC]/80">
-                  {/* Income */}
-                  <div className="space-y-1">
-                    <span className="swiss-eyebrow text-[9px]">
-                      Income
-                    </span>
-                    {isLoading ? (
-                      <Skeleton className="h-6 w-20" />
-                    ) : (
-                      <div className="text-base sm:text-lg font-extrabold text-[#191522] tabular-nums">
-                        <AnimatedValue value={totalIncome} currency={user?.currency} />
-                      </div>
-                    )}
-                    <span className="text-[11px] font-bold text-[#059669] block">
-                      This month
-                    </span>
-                  </div>
-
-                  {/* Spending */}
-                  <div className="space-y-1">
-                    <span className="swiss-eyebrow text-[9px]">
-                      Spending
-                    </span>
-                    {isLoading ? (
-                      <Skeleton className="h-6 w-20" />
-                    ) : (
-                      <div className="text-base sm:text-lg font-extrabold text-[#191522] tabular-nums">
-                        <AnimatedValue value={totalExpense} currency={user?.currency} />
-                      </div>
-                    )}
-                    <span className="text-[11px] font-bold text-[#E11D48] block">
-                      This month
-                    </span>
-                  </div>
-
-                  {/* Savings */}
-                  <div className="space-y-1">
-                    <span className="swiss-eyebrow text-[9px]">
-                      Savings
-                    </span>
-                    {isLoading ? (
-                      <Skeleton className="h-6 w-20" />
-                    ) : (
-                      <div className="text-base sm:text-lg font-extrabold text-[#191522] tabular-nums">
-                        <AnimatedValue value={netSavings} currency={user?.currency} />
-                      </div>
-                    )}
-                    <span className="text-[11px] font-bold text-[#059669] block">
-                      This month
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </MotionCard>
-
-            {/* HIGH-TECH SPENDING OVERVIEW CHART CARD */}
-            <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-sm font-bold text-[#191522]">
-                    Spending overview
-                  </h2>
-                  {/* Metric Switcher Pills */}
-                  <div className="flex rounded-lg bg-[#F6F5F1] p-0.5 border border-[#E4E2DC]">
-                    <button
-                      onClick={() => setChartMetric('EXPENSE')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all',
-                        chartMetric === 'EXPENSE' ? 'bg-white text-[#191522] shadow-sm' : 'text-[#625D69] hover:text-[#191522]'
-                      )}
-                    >
-                      Outflow
-                    </button>
-                    <button
-                      onClick={() => setChartMetric('DUAL')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all',
-                        chartMetric === 'DUAL' ? 'bg-white text-[#191522] shadow-sm' : 'text-[#625D69] hover:text-[#191522]'
-                      )}
-                    >
-                      In vs Out
-                    </button>
-                    <button
-                      onClick={() => setChartMetric('NET')}
-                      className={cn(
-                        'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all',
-                        chartMetric === 'NET' ? 'bg-white text-[#191522] shadow-sm' : 'text-[#625D69] hover:text-[#191522]'
-                      )}
-                    >
-                      Net Cash
-                    </button>
-                  </div>
-                </div>
-
-                {/* Horizon Selectors */}
-                <div className="flex items-center rounded-lg bg-[#F6F5F1] p-1 border border-[#E4E2DC] self-start sm:self-auto flex-wrap">
-                  {(['7D', '30D', '90D', '1Y'] as const).map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => setChartHorizon(h)}
-                      className={cn(
-                        'px-2.5 py-1 rounded-md text-xs font-bold transition-all',
-                        chartHorizon === h
-                          ? 'bg-white text-[#191522] shadow-sm'
-                          : 'text-[#625D69] hover:text-[#191522]'
-                      )}
-                    >
-                      {h}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Metric & Trend */}
-              <div className="flex items-baseline justify-between pt-1">
-                <div>
-                  {isLoading ? (
-                    <Skeleton className="h-8 w-32" />
-                  ) : (
-                    <div className="text-2xl sm:text-3xl font-black text-[#191522] tracking-tight tabular-nums">
-                      {formatCurrency(totalExpense, user?.currency)}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1 text-xs font-bold text-[#E11D48]">
-                    <ArrowDownRight className="h-3.5 w-3.5" />
-                    <span>4.2% vs last month</span>
-                  </div>
-                </div>
-
-                {chartMetric === 'EXPENSE' && (
-                  <div className="text-right text-[11px] text-[#898390]">
-                    <span className="font-semibold text-[#191522] block">
-                      {formatCurrency(averageDailySpend, user?.currency)} / day
-                    </span>
-                    <span>Daily run-rate</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Advanced Area Chart with Curved Line, Crosshairs & Custom Tooltip */}
-              {isLoading ? (
-                <Skeleton className="h-64 w-full rounded-xl mt-2" />
-              ) : (
-                <div className="h-64 w-full pt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trajectoryChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        {/* Blue Outflow Glow Gradient */}
-                        <linearGradient id="spendGradBlue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#2563EB" stopOpacity={0.16} />
-                          <stop offset="95%" stopColor="#2563EB" stopOpacity={0.0} />
-                        </linearGradient>
-
-                        {/* Emerald Inflow Glow Gradient */}
-                        <linearGradient id="incomeGradGreen" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#059669" stopOpacity={0.16} />
-                          <stop offset="95%" stopColor="#059669" stopOpacity={0.0} />
-                        </linearGradient>
-
-                        {/* Net Purple/Indigo Gradient */}
-                        <linearGradient id="netGradPurple" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.16} />
-                          <stop offset="95%" stopColor="#7C3AED" stopOpacity={0.0} />
-                        </linearGradient>
-                      </defs>
-
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E4E2DC" vertical={false} />
-                      <XAxis
-                        dataKey="label"
-                        stroke="#858D9A"
-                        fontSize={11}
-                        fontWeight={600}
-                        tickLine={false}
-                        axisLine={{ stroke: '#E4E2DC' }}
-                        dy={6}
-                      />
-                      <YAxis
-                        stroke="#858D9A"
-                        fontSize={11}
-                        fontWeight={600}
-                        tickLine={false}
-                        axisLine={{ stroke: '#E4E2DC' }}
-                        tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}`}
-                      />
-                      <Tooltip
-                        cursor={{ stroke: '#2563EB', strokeWidth: 1, strokeDasharray: '3 3' }}
-                        content={<CustomChartTooltip />}
-                      />
-
-                      {/* Reference line for baseline threshold */}
-                      {chartMetric === 'EXPENSE' && (
-                        <ReferenceLine
-                          y={averageDailySpend}
-                          stroke="#D97706"
-                          strokeDasharray="4 4"
-                          strokeWidth={1.5}
-                          label={{
-                            value: 'Avg Pace',
-                            fill: '#D97706',
-                            fontSize: 10,
-                            position: 'right',
-                            fontWeight: 700,
-                          }}
-                        />
-                      )}
-
-                      {/* Primary Spending Area */}
-                      {(chartMetric === 'EXPENSE' || chartMetric === 'DUAL') && (
-                        <Area
-                          type="monotone"
-                          name="Spending"
-                          dataKey="expense"
-                          stroke="#2563EB"
-                          strokeWidth={2.5}
-                          fillOpacity={1}
-                          fill="url(#spendGradBlue)"
-                          dot={{ r: 3.5, fill: '#FFFFFF', stroke: '#2563EB', strokeWidth: 2 }}
-                          activeDot={{ r: 5.5, fill: '#2563EB', stroke: '#FFFFFF', strokeWidth: 2 }}
-                        />
-                      )}
-
-                      {/* Dual Mode Income Area */}
-                      {chartMetric === 'DUAL' && (
-                        <Area
-                          type="monotone"
-                          name="Income"
-                          dataKey="income"
-                          stroke="#059669"
-                          strokeWidth={2.5}
-                          fillOpacity={1}
-                          fill="url(#incomeGradGreen)"
-                          dot={{ r: 3.5, fill: '#FFFFFF', stroke: '#059669', strokeWidth: 2 }}
-                          activeDot={{ r: 5.5, fill: '#059669', stroke: '#FFFFFF', strokeWidth: 2 }}
-                        />
-                      )}
-
-                      {/* Net Flow Mode */}
-                      {chartMetric === 'NET' && (
-                        <Area
-                          type="monotone"
-                          name="Net Cashflow"
-                          dataKey="net"
-                          stroke="#7C3AED"
-                          strokeWidth={2.5}
-                          fillOpacity={1}
-                          fill="url(#netGradPurple)"
-                          dot={{ r: 3.5, fill: '#FFFFFF', stroke: '#7C3AED', strokeWidth: 2 }}
-                          activeDot={{ r: 5.5, fill: '#7C3AED', stroke: '#FFFFFF', strokeWidth: 2 }}
-                        />
-                      )}
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            {/* RECENT TRANSACTIONS TABLE CARD */}
-            <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[#191522]">
-                  Recent transactions
-                </h2>
-                <Link
-                  href="/transactions"
-                  className="text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8] hover:underline"
-                >
-                  View all
-                </Link>
-              </div>
-
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : transactions.length === 0 ? (
-                <EmptyState
-                  onAction={() => {
-                    if (typeof window !== 'undefined') {
-                      window.dispatchEvent(new Event('monvex:open-add-transaction'));
-                    }
-                  }}
-                />
-              ) : (
-                <div className="overflow-x-auto -mx-6 px-6">
-                  <table className="ref-table">
-                    <thead>
-                      <tr>
-                        <th className="w-[20%]">Date</th>
-                        <th className="w-[42%]">Merchant</th>
-                        <th className="w-[20%]">Category</th>
-                        <th className="w-[18%] text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((tx: any) => {
-                        const isExp = tx.type === 'EXPENSE';
-                        const catStyles = getCategoryStyles(tx.category_name);
-
-                        return (
-                          <tr key={tx.id}>
-                            <td className="text-xs font-semibold text-[#625D69] whitespace-nowrap">
-                              {new Date(tx.date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
-                            </td>
-                            <td>
-                              <div className="flex items-center gap-2.5">
-                                {getMerchantLogo(tx.merchant_name, tx.category_name)}
-                                <span className="font-bold text-xs text-[#191522] truncate max-w-[200px]">
-                                  {tx.merchant_name || tx.description || 'Transaction'}
-                                </span>
-                              </div>
-                            </td>
-                            <td>
-                              <span
-                                className={cn(
-                                  'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border',
-                                  catStyles.badgeBg,
-                                  catStyles.badgeText,
-                                  'border-[#E4E2DC]/80'
-                                )}
-                              >
-                                {tx.category_name || 'General'}
-                              </span>
-                            </td>
-                            <td
-                              className={cn(
-                                'text-right font-black text-xs sm:text-sm tabular-nums whitespace-nowrap',
-                                isExp ? 'text-[#E11D48]' : 'text-[#059669]'
-                              )}
-                            >
-                              {isExp ? '- ' : '+ '}
-                              {formatCurrency(tx.amount, user?.currency)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* =======================================================================
-              RIGHT COLUMN (4 COLS)
-              ======================================================================= */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* 1. WHAT NEEDS YOUR ATTENTION (INSIGHT CARD) */}
-            <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#191522]">
-                  What needs your attention
-                </h3>
-              </div>
-
-              <div className="flex items-start gap-3.5">
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md ring-1 ring-blue-500/20 bg-white shrink-0 mt-0.5">
-                  <img src="/ai-avatar.png" alt="MONVEX AI" className="h-full w-full object-cover" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-[#191522] leading-snug">
-                    {transactions.length === 0
-                      ? 'Your financial intelligence workspace is ready.'
-                      : topBudget && topBudgetPct > 80
-                      ? `${topBudget.category_name || 'Category'} spending is ${topBudgetPct}% of target allocation.`
-                      : totalExpense > 0
-                      ? `Monthly outflow is currently ${formatCurrency(totalExpense, user?.currency)}.`
-                      : 'Cash flow is balanced and runway is healthy.'}
-                  </p>
-                  <p className="text-[11px] text-[#898390]">
-                    {transactions.length === 0
-                      ? 'Record transactions to activate live cashflow insights.'
-                      : topBudget && topBudgetPct > 80
-                      ? 'Action recommended: Reallocate or optimize category spend.'
-                      : 'Net monthly savings'}
-                  </p>
-                  {transactions.length > 0 && (
-                    <div className="text-xl font-black text-[#059669] tabular-nums">
-                      {formatCurrency(netSavings, user?.currency)}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-1">
-                <Link
-                  href="/ai"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8]"
-                >
-                  <span>View insight</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* 2. BUDGET PROGRESS CARD */}
-            <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#191522]">
-                  Budget progress
-                </h3>
-              </div>
-
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              ) : budgets.length === 0 ? (
-                <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69] space-y-2">
-                  <p>No active category budgets established.</p>
-                  <Link href="/budgets" className="text-[#2563EB] font-bold hover:underline inline-block">
-                    + Set a budget
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {budgets.map((b: any) => {
-                    const spent = parseFloat(b.spent_amount ?? b.current_spent) || 0;
-                    const limit = parseFloat(b.limit_amount ?? b.amount) || 1;
-                    const pct = Math.min(100, Math.round((spent / limit) * 100));
-                    const catStyles = getCategoryStyles(b.category_name || b.name);
-                    const Icon = catStyles.icon;
-
-                    return (
-                      <div key={b.id} className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', catStyles.bg, catStyles.text)}>
-                              <Icon className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <span className="text-xs font-bold text-[#191522] block leading-tight">
-                                {b.category_name || b.name}
-                              </span>
-                              <span className="text-[11px] font-medium text-[#625D69]">
-                                {formatCurrency(spent, user?.currency)} / {formatCurrency(limit, user?.currency)}
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-xs font-bold text-[#625D69]">
-                            {pct}%
+            {/* LEFT & CENTER COLUMN (8 COLS) */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* PRIMARY FINANCIAL POSITION & CASH FLOW */}
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 sm:p-7 space-y-6">
+                  {/* Position Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-4 border-b border-[#E4E2DC]/80">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390]">
+                        Net Available Liquidity
+                      </span>
+                      {isLoading ? (
+                        <Skeleton className="h-10 w-48 mt-1" />
+                      ) : (
+                        <div className="flex items-baseline gap-3">
+                          <FinancialAmount
+                            amount={totalNetBalance}
+                            currency={user?.currency}
+                            size="3xl"
+                            showSign={false}
+                            type="neutral"
+                          />
+                          <span
+                            className={cn(
+                              'text-xs font-bold px-2 py-0.5 rounded-md border',
+                              totalNetBalance >= 0
+                                ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]'
+                                : 'bg-[#FEF2F2] text-[#DC2626] border-[#FECDD3]'
+                            )}
+                          >
+                            {totalNetBalance >= 0 ? 'Surplus Position' : 'Deficit Reserve'}
                           </span>
                         </div>
+                      )}
+                    </div>
 
-                        {/* Progress Bar */}
-                        <div className="w-full h-1.5 bg-[#F0EFEA] rounded-full overflow-hidden">
-                          <div
-                            className={cn('h-full rounded-full transition-all', catStyles.barColor)}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div className="pt-1">
-                <Link
-                  href="/budgets"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8]"
-                >
-                  <span>View all budgets</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* 3. GOAL PROGRESS CARD */}
-            <div className="dash-reveal editorial-card p-6 sm:p-7 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#191522]">
-                  Goal progress
-                </h3>
-                <Link
-                  href="/goals"
-                  className="text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8]"
-                >
-                  View all
-                </Link>
-              </div>
-
-              {isLoading ? (
-                <Skeleton className="h-28 w-full" />
-              ) : !primaryGoal ? (
-                <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69] space-y-2">
-                  <p>No active savings goals configured.</p>
-                  <Link href="/goals" className="text-[#2563EB] font-bold hover:underline inline-block">
-                    + Create savings goal
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#DCFCE7] text-[#059669] shrink-0">
-                        <Plane className="h-4 w-4" />
-                      </div>
+                    <div className="flex items-center gap-4 text-xs font-semibold text-[#625D69]">
                       <div>
-                        <span className="text-xs font-bold text-[#191522] block leading-tight">
-                          {primaryGoal.title || primaryGoal.name || 'Travel Fund'}
-                        </span>
-                        <span className="text-[11px] font-medium text-[#625D69]">
-                          {formatCurrency(goalCurrent, user?.currency)} / {formatCurrency(goalTarget, user?.currency)}
+                        <span className="text-[10px] text-[#898390] block uppercase tracking-wider">Savings Rate</span>
+                        <span className="font-mono font-bold text-[#059669]">{savingsRate}%</span>
+                      </div>
+                      <div className="h-8 w-px bg-[#E4E2DC]" />
+                      <div>
+                        <span className="text-[10px] text-[#898390] block uppercase tracking-wider">Net Retained</span>
+                        <span className="font-mono font-bold text-[#191522]">
+                          {formatCurrency(netSavings, user?.currency)}
                         </span>
                       </div>
                     </div>
-                    <span className="text-lg font-black text-[#059669]">
-                      {goalPct}%
+                  </div>
+
+                  {/* Cash Flow Tiers */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Monthly Inflows */}
+                    <div className="p-4 rounded-xl bg-[#F8FAF9] border border-[#E4E2DC] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669]">
+                          Total Inflows
+                        </span>
+                        <ArrowUpRight className="h-3.5 w-3.5 text-[#059669]" />
+                      </div>
+                      <FinancialAmount
+                        amount={totalIncome}
+                        currency={user?.currency}
+                        size="xl"
+                        type="income"
+                      />
+                      <span className="text-[10px] text-[#625D69] block">This calendar month</span>
+                    </div>
+
+                    {/* Monthly Outflows */}
+                    <div className="p-4 rounded-xl bg-[#FDF8F8] border border-[#E4E2DC] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E11D48]">
+                          Total Outflows
+                        </span>
+                        <ArrowDownRight className="h-3.5 w-3.5 text-[#E11D48]" />
+                      </div>
+                      <FinancialAmount
+                        amount={totalExpense}
+                        currency={user?.currency}
+                        size="xl"
+                        type="expense"
+                      />
+                      <span className="text-[10px] text-[#625D69] block">This calendar month</span>
+                    </div>
+
+                    {/* Capital Velocity */}
+                    <div className="p-4 rounded-xl bg-[#F8F9FD] border border-[#E4E2DC] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#4056A1]">
+                          Daily Burn Rate
+                        </span>
+                        <TrendingDown className="h-3.5 w-3.5 text-[#4056A1]" />
+                      </div>
+                      <FinancialAmount
+                        amount={Math.round(totalExpense / 30)}
+                        currency={user?.currency}
+                        size="xl"
+                        type="neutral"
+                      />
+                      <span className="text-[10px] text-[#625D69] block">Rolling 30-day pace</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* REAL CASH FLOW TRAJECTORY CHART (Zero Fake Data) */}
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 sm:p-7 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-sm font-bold text-[#191522]">Cash Flow Trajectory</h2>
+                      {/* Metric Mode Pills */}
+                      <div className="flex rounded-lg bg-[#F6F5F1] p-0.5 border border-[#E4E2DC]">
+                        <button
+                          onClick={() => setChartMetric('EXPENSE')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                            chartMetric === 'EXPENSE' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69]'
+                          )}
+                        >
+                          Outflows
+                        </button>
+                        <button
+                          onClick={() => setChartMetric('DUAL')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                            chartMetric === 'DUAL' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69]'
+                          )}
+                        >
+                          In vs Out
+                        </button>
+                        <button
+                          onClick={() => setChartMetric('NET')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                            chartMetric === 'NET' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69]'
+                          )}
+                        >
+                          Net Flow
+                        </button>
+                      </div>
+                    </div>
+
+                    <span className="text-[11px] font-mono text-[#898390]">
+                      Historical Periods Recorded: {trajectoryChartData.length}
                     </span>
                   </div>
 
-                  {/* Full Progress Bar */}
-                  <div className="w-full h-1.5 bg-[#F0EFEA] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#10B981] rounded-full transition-all"
-                      style={{ width: `${goalPct}%` }}
-                    />
+                  {isLoading ? (
+                    <Skeleton className="h-64 w-full rounded-xl" />
+                  ) : trajectoryChartData.length < 2 ? (
+                    <div className="py-12 px-6 rounded-xl border border-dashed border-[#E4E2DC] text-center space-y-2 bg-[#FAF9F6]/60">
+                      <TrendingUp className="h-6 w-6 text-[#898390] mx-auto" />
+                      <p className="text-xs font-bold text-[#191522]">
+                        Insufficient historical data for cashflow curve
+                      </p>
+                      <p className="text-[11px] text-[#625D69] max-w-sm mx-auto">
+                        MONVEX strictly prohibits synthesized fake data. Record transactions across multiple periods to unlock real trajectory curves.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="h-64 w-full pt-2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trajectoryChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="spendGradBlue" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.16} />
+                              <stop offset="95%" stopColor="#2563EB" stopOpacity={0.0} />
+                            </linearGradient>
+                            <linearGradient id="incomeGradGreen" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#059669" stopOpacity={0.16} />
+                              <stop offset="95%" stopColor="#059669" stopOpacity={0.0} />
+                            </linearGradient>
+                            <linearGradient id="netGradPurple" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.16} />
+                              <stop offset="95%" stopColor="#7C3AED" stopOpacity={0.0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E4E2DC" vertical={false} />
+                          <XAxis
+                            dataKey="label"
+                            stroke="#858D9A"
+                            fontSize={11}
+                            fontWeight={600}
+                            tickLine={false}
+                            axisLine={{ stroke: '#E4E2DC' }}
+                          />
+                          <YAxis
+                            stroke="#858D9A"
+                            fontSize={11}
+                            fontWeight={600}
+                            tickLine={false}
+                            axisLine={{ stroke: '#E4E2DC' }}
+                            tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}`}
+                          />
+                          <Tooltip
+                            content={({ active, payload, label }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="rounded-xl bg-white border border-[#E4E2DC] p-3 shadow-lg space-y-1 text-xs">
+                                    <span className="font-bold text-[#898390] block">{label}</span>
+                                    {payload.map((entry: any, index: number) => (
+                                      <div key={index} className="flex justify-between gap-3 font-semibold">
+                                        <span style={{ color: entry.color }}>{entry.name}:</span>
+                                        <span className="font-mono tabular-nums">{formatCurrency(entry.value, user?.currency)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          {(chartMetric === 'EXPENSE' || chartMetric === 'DUAL') && (
+                            <Area
+                              type="monotone"
+                              name="Outflow"
+                              dataKey="expense"
+                              stroke="#2563EB"
+                              strokeWidth={2}
+                              fill="url(#spendGradBlue)"
+                            />
+                          )}
+                          {chartMetric === 'DUAL' && (
+                            <Area
+                              type="monotone"
+                              name="Inflow"
+                              dataKey="income"
+                              stroke="#059669"
+                              strokeWidth={2}
+                              fill="url(#incomeGradGreen)"
+                            />
+                          )}
+                          {chartMetric === 'NET' && (
+                            <Area
+                              type="monotone"
+                              name="Net Cash"
+                              dataKey="net"
+                              stroke="#7C3AED"
+                              strokeWidth={2}
+                              fill="url(#netGradPurple)"
+                            />
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RECENT MONEY MOVEMENT LEDGER */}
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 sm:p-7 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-sm font-bold text-[#191522]">Recent Money Movement</h2>
+                      <p className="text-[11px] text-[#625D69]">Latest recorded transactions in your active ledger</p>
+                    </div>
+                    <Link
+                      href="/transactions"
+                      className="text-xs font-bold text-[#2563EB] hover:text-[#1D4ED8] inline-flex items-center gap-1"
+                    >
+                      <span>Full Ledger</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
 
-                  {/* Target Date & Required Monthly */}
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#E4E2DC] text-xs">
-                    <div>
-                      <span className="text-[11px] text-[#898390] block">Target date</span>
-                      <span className="font-bold text-[#191522]">
-                        {goalDeadline
-                          ? new Date(goalDeadline).toLocaleDateString('en-US', {
-                              month: 'short',
-                              year: 'numeric',
-                            })
-                          : 'Jan 2027'}
+                  {isLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : transactions.length === 0 ? (
+                    <EmptyState
+                      title="No transactions logged"
+                      description="Add your first inflow or outflow to begin automated financial telemetry."
+                      actionLabel="Record First Transaction"
+                      onAction={() => {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new Event('monvex:open-add-transaction'));
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="overflow-x-auto -mx-6 px-6">
+                      <table className="ref-table">
+                        <thead>
+                          <tr>
+                            <th className="w-[20%]">Date</th>
+                            <th className="w-[45%]">Merchant / Description</th>
+                            <th className="w-[18%]">Category</th>
+                            <th className="w-[17%] text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {transactions.slice(0, 5).map((tx: any) => {
+                            const isExp = tx.type === 'EXPENSE';
+                            const catStyles = getCategoryStyles(tx.category_name);
+
+                            return (
+                              <tr key={tx.id}>
+                                <td className="text-xs font-semibold text-[#625D69] whitespace-nowrap">
+                                  {new Date(tx.date).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
+                                </td>
+                                <td>
+                                  <span className="font-bold text-xs text-[#191522] truncate max-w-[240px] block">
+                                    {tx.merchant_name || tx.description || 'Transaction'}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span
+                                    className={cn(
+                                      'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border',
+                                      catStyles.badgeBg,
+                                      catStyles.badgeText,
+                                      'border-[#E4E2DC]'
+                                    )}
+                                  >
+                                    {tx.category_name || 'General'}
+                                  </span>
+                                </td>
+                                <td className="text-right whitespace-nowrap">
+                                  <FinancialAmount
+                                    amount={tx.amount}
+                                    currency={user?.currency}
+                                    type={isExp ? 'expense' : 'income'}
+                                    showSign={true}
+                                    size="sm"
+                                  />
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN (4 COLS: ATTENTION & HEALTH) */}
+            <div className="lg:col-span-4 space-y-6">
+              {/* 1. ATTENTION CENTER */}
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC]">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-[#191522] flex items-center gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5 text-[#D97706]" />
+                      <span>Attention Center</span>
+                    </h2>
+                    <span className="text-[10px] font-mono font-bold text-[#898390]">
+                      {attentionItems.length} Active
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {attentionItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'p-3.5 rounded-xl border text-xs space-y-2',
+                          item.level === 'critical'
+                            ? 'bg-[#FEF2F2] border-[#FECDD3] text-[#DC2626]'
+                            : item.level === 'warning'
+                            ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#D97706]'
+                            : item.level === 'success'
+                            ? 'bg-[#ECFDF5] border-[#A7F3D0] text-[#059669]'
+                            : 'bg-[#EFF6FF] border-[#BFDBFE] text-[#2563EB]'
+                        )}
+                      >
+                        <div className="font-bold text-[#191522]">{item.title}</div>
+                        <p className="text-[11px] text-[#625D69] leading-relaxed">{item.desc}</p>
+                        <Link
+                          href={item.actionUrl}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2563EB] hover:underline"
+                        >
+                          <span>{item.actionLabel}</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. FINANCIAL HEALTH SCORE DIAGNOSTICS */}
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC]">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-[#191522] flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 text-[#059669]" />
+                      <span>Financial Health</span>
+                    </h2>
+                    <span className="text-xs font-mono font-extrabold text-[#191522]">
+                      {healthMetrics.score} / 100
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="w-full h-2 bg-[#F1F0EC] rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          healthMetrics.score >= 80
+                            ? 'bg-[#059669]'
+                            : healthMetrics.score >= 60
+                            ? 'bg-[#D97706]'
+                            : 'bg-[#E11D48]'
+                        )}
+                        style={{ width: `${healthMetrics.score}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-[#191522] block">{healthMetrics.tier}</span>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-[#E4E2DC] text-[11px]">
+                    <div className="flex justify-between items-center text-[#625D69]">
+                      <span>Monthly Cash Flow:</span>
+                      <span className={cn('font-bold', healthMetrics.isPositiveCashflow ? 'text-[#059669]' : 'text-[#E11D48]')}>
+                        {healthMetrics.isPositiveCashflow ? 'Positive Surplus' : 'Negative Deficit'}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-[11px] text-[#898390] block">Required monthly</span>
+                    <div className="flex justify-between items-center text-[#625D69]">
+                      <span>Savings Velocity:</span>
+                      <span className="font-mono font-bold text-[#191522]">{healthMetrics.sRate}%</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[#625D69]">
+                      <span>Budget Compliance:</span>
                       <span className="font-bold text-[#191522]">
-                        {goalRequiredMonthly
-                          ? formatCurrency(goalRequiredMonthly, user?.currency)
-                          : '₹6,167'}
+                        {healthMetrics.overBudgetCount === 0 ? '100% Guarded' : `${healthMetrics.overBudgetCount} Violated`}
                       </span>
                     </div>
                   </div>
+
+                  <Link
+                    href="/analytics"
+                    className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1 pt-1"
+                  >
+                    <span>Full Diagnostic Breakdown</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
                 </div>
-              )}
+              </div>
+
+              {/* 3. BUDGET PROGRESS & LIMITS */}
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC]">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-[#191522]">
+                      Budget Guardrails
+                    </h2>
+                    <Link href="/budgets" className="text-xs font-bold text-[#2563EB] hover:underline">
+                      Manage
+                    </Link>
+                  </div>
+
+                  {isLoading ? (
+                    <Skeleton className="h-24 w-full" />
+                  ) : budgets.length === 0 ? (
+                    <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center space-y-2">
+                      <p className="text-xs text-[#625D69]">No category budgets established.</p>
+                      <Link href="/budgets" className="text-xs font-bold text-[#2563EB] hover:underline block">
+                        + Set Spending Limit
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3.5">
+                      {budgets.slice(0, 3).map((b: any) => {
+                        const spent = parseFloat(b.spent_amount ?? b.current_spent) || 0;
+                        const limit = parseFloat(b.limit_amount ?? b.amount) || 1;
+                        const pct = Math.min(100, Math.round((spent / limit) * 100));
+
+                        return (
+                          <div key={b.id} className="space-y-1">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-[#191522]">{b.category_name || b.name}</span>
+                              <span className="font-mono text-[#625D69]">{pct}%</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-[#F1F0EC] rounded-full overflow-hidden">
+                              <div
+                                className={cn(
+                                  'h-full rounded-full transition-all',
+                                  pct >= 100 ? 'bg-[#E11D48]' : pct >= 80 ? 'bg-[#D97706]' : 'bg-[#059669]'
+                                )}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-[10px] text-[#898390] font-mono">
+                              <span>Spent: {formatCurrency(spent, user?.currency)}</span>
+                              <span>Cap: {formatCurrency(limit, user?.currency)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
         )}
       </div>
     </AppShell>

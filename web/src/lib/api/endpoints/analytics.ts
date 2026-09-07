@@ -19,13 +19,13 @@ export class AnalyticsEndpoints {
     return this.client.request<any>(`/analytics/cashflow-forecast/?days=${days}`);
   }
 
-  async getSpendingByCategory() {
-    const dash = await this.getDashboardMetrics().catch(() => null);
+  async getSpendingByCategory(cachedDash?: any) {
+    const dash = cachedDash || (await this.getDashboardMetrics().catch(() => null));
     return dash?.category_breakdown || dash?.spending_by_category || [];
   }
 
-  async getMonthlyTrend() {
-    const dash = await this.getDashboardMetrics().catch(() => null);
+  async getMonthlyTrend(cachedDash?: any) {
+    const dash = cachedDash || (await this.getDashboardMetrics().catch(() => null));
     return dash?.monthly_trends || dash?.monthly_trend || [];
   }
 

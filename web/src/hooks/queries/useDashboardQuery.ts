@@ -6,14 +6,15 @@ export function useDashboardQuery() {
   return useQuery({
     queryKey: queryKeys.dashboard.summary(),
     queryFn: async () => {
-      const [summary, transactions, budgets, goals, recurring, monthlyTrend] = await Promise.all([
+      const [summary, transactions, budgets, goals, recurring] = await Promise.all([
         api.getAnalyticsSummary().catch(() => null),
         api.getTransactions().catch(() => []),
         api.getBudgets().catch(() => []),
         api.getGoals().catch(() => []),
         api.getRecurringPayments().catch(() => []),
-        api.getMonthlyTrend().catch(() => []),
       ]);
+
+      const monthlyTrend = summary?.monthly_trends || summary?.monthly_trend || [];
 
       return {
         summary,
@@ -21,7 +22,7 @@ export function useDashboardQuery() {
         budgets: Array.isArray(budgets) ? budgets.slice(0, 3) : budgets?.results?.slice(0, 3) || [],
         goals: Array.isArray(goals) ? goals.slice(0, 4) : goals?.results?.slice(0, 4) || [],
         recurring: Array.isArray(recurring) ? recurring.slice(0, 4) : recurring?.results?.slice(0, 4) || [],
-        monthlyTrend: Array.isArray(monthlyTrend) ? monthlyTrend : monthlyTrend?.results || [],
+        monthlyTrend: Array.isArray(monthlyTrend) ? monthlyTrend : [],
       };
     },
     staleTime: 1000 * 60 * 2, // 2 mins

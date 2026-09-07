@@ -15,6 +15,7 @@ interface UserProfile {
   status?: string;
   currency: string;
   monthly_income: number;
+  savings_target_percentage?: number;
   has_google_auth?: boolean;
   has_password_auth?: boolean;
 }

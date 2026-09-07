@@ -1,0 +1,22 @@
+{
+  "id": "chat",
+  "title": "Chat with optimistic send + offline queue",
+  "prompt": "Create a chat / messaging screen in {framework}.",
+  "industry": "social-messaging",
+  "required_states": ["ideal", "empty", "loading", "error", "offline", "success", "permission-denied"],
+  "must_pass": ["token_lint", "contrast_check", "target_size_lint", "state_coverage", "dynamic_type_check", "rtl_check"],
+  "with_skill": {
+    "flutter": "examples/chat/flutter",
+    "react-native": "examples/chat/react-native",
+    "swiftui": "examples/chat/swiftui",
+    "jetpack-compose": "examples/chat/jetpack-compose",
+    "ionic": "examples/chat/ionic"
+  },
+  "baseline": {
+    "flutter": "eval/baselines/chat/flutter",
+    "react-native": "eval/baselines/chat/react-native",
+    "swiftui": "eval/baselines/chat/swiftui",
+    "jetpack-compose": "eval/baselines/chat/jetpack-compose",
+    "ionic": "eval/baselines/chat/ionic"
+  }
+}

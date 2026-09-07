@@ -464,6 +464,75 @@ export const MobileAIWorkspace: React.FC<MobileAIWorkspaceProps> = ({
           </button>
         </div>
       </footer>
+
+      {/* Mobile Model Selector Bottom Sheet */}
+      {isModelSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsModelSheetOpen(false)}
+          />
+          <div className="relative w-full bg-white rounded-t-3xl shadow-2xl p-5 z-10 border-t border-[#E4E2DC] space-y-4 animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-black text-[#191522] uppercase tracking-wider block">
+                  Select Execution Engine
+                </span>
+                <span className="text-[11px] text-[#625D69]">Choose how queries are processed</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModelSheetOpen(false)}
+                className="p-1 rounded-lg text-[#898390] hover:text-[#191522]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModel('Autonomous Reasoner v2.4');
+                  setIsModelSheetOpen(false);
+                }}
+                className={cn(
+                  'w-full text-left p-3.5 rounded-2xl text-xs transition-all space-y-1 border min-h-[48px]',
+                  activeModel.includes('Autonomous')
+                    ? 'bg-blue-50/70 border-blue-200 text-[#191522]'
+                    : 'bg-[#FBFBFA] border-[#E4E2DC] text-[#191522]'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm">Deterministic Reasoner v2.4</span>
+                  <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Verified Zero-Slop</span>
+                </div>
+                <p className="text-[11px] text-[#625D69]">Direct Django database telemetry, anomaly Z-scores, and deterministic calculation math.</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModel('Gemini 2.0 Flash');
+                  setIsModelSheetOpen(false);
+                }}
+                className={cn(
+                  'w-full text-left p-3.5 rounded-2xl text-xs transition-all space-y-1 border min-h-[48px]',
+                  activeModel === 'Gemini 2.0 Flash'
+                    ? 'bg-blue-50/70 border-blue-200 text-[#191522]'
+                    : 'bg-[#FBFBFA] border-[#E4E2DC] text-[#191522]'
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm">Gemini 2.0 Flash</span>
+                  <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">Cloud Hybrid</span>
+                </div>
+                <p className="text-[11px] text-[#625D69]">Natural language synthesis with multimodal receipt OCR & context parsing.</p>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

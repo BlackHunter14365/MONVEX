@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Receipt as ReceiptIcon,
   Upload,
@@ -17,17 +17,25 @@ import {
   Edit2,
   ArrowRight,
   ShieldCheck,
+  Zap,
+  Layers,
+  ChevronRight,
+  Filter,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { FinancialAmount } from '@/components/ui/FinancialAmount';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { CardReveal } from '@/components/motion';
 
 export default function ReceiptsPage() {
+  const { user } = useAuth();
   const toast = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -36,6 +44,7 @@ export default function ReceiptsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
   // Active Pending Receipt to Review
   const [activeReceipt, setActiveReceipt] = useState<any>(null);
@@ -45,15 +54,18 @@ export default function ReceiptsPage() {
   const [isConfirming, setIsConfirming] = useState(false);
 
   const fetchReceipts = async () => {
+    setIsLoading(true);
     try {
       const data = await api.getReceipts();
-      setReceipts(data);
+      const list = Array.isArray(data) ? data : data?.results || [];
+      setReceipts(list);
+
       // Auto select first pending receipt if none active
-      const pending = data.find((r: any) => r.status === 'PENDING_REVIEW');
+      const pending = list.find((r: any) => r.status === 'PENDING_REVIEW');
       if (pending && !activeReceipt) {
         setActiveReceipt(pending);
-        setEditMerchant(pending.merchant_name);
-        setEditAmount(String(pending.total_amount));
+        setEditMerchant(pending.merchant_name || '');
+        setEditAmount(String(pending.total_amount || ''));
         setEditCategory(pending.predicted_category || 'Groceries');
       }
     } catch {
@@ -216,6 +228,29 @@ export default function ReceiptsPage() {
     }
   };
 
+  // Metrics
+  const totalValueCaptured = useMemo(() => {
+    return receipts
+      .filter((r) => r.status === 'CONFIRMED')
+      .reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0);
+  }, [receipts]);
+
+  const pendingCount = useMemo(() => {
+    return receipts.filter((r) => r.status === 'PENDING_REVIEW').length;
+  }, [receipts]);
+
+  const filteredReceipts = useMemo(() => {
+    if (filterStatus === 'ALL') return receipts;
+    return receipts.filter((r) => r.status === filterStatus);
+  }, [receipts, filterStatus]);
+
+  // Current pipeline active step
+  const currentPipelineStep = useMemo(() => {
+    if (isUploading) return 2; // Processing
+    if (activeReceipt && activeReceipt.status === 'PENDING_REVIEW') return 3; // Review / Classification
+    return 1; // Idle / Ready to upload
+  }, [isUploading, activeReceipt]);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
@@ -242,7 +277,7 @@ export default function ReceiptsPage() {
 
         <PageHeader
           title="Receipt Intelligence & Vision Studio"
-          description="Upload receipt photos to automatically extract merchant names, line items, taxes, and category tags with human-in-the-loop confirmation."
+          description="Multimodal document OCR, automatic line-item parsing, and human-in-the-loop double-entry reconciliation."
           actionSlot={
             <div className="flex items-center gap-2">
               <Button
@@ -250,7 +285,7 @@ export default function ReceiptsPage() {
                 size="sm"
                 onClick={fetchReceipts}
                 leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isLoading ? 'animate-spin' : '')} />}
-                className="text-xs font-bold"
+                className="text-xs font-bold touch-target"
               >
                 Refresh
               </Button>
@@ -259,8 +294,8 @@ export default function ReceiptsPage() {
                 size="sm"
                 onClick={handleSimulateScan}
                 isLoading={isUploading}
-                leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-                className="text-xs font-bold"
+                leftIcon={<Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />}
+                className="text-xs font-bold touch-target"
               >
                 Load Sample
               </Button>
@@ -270,7 +305,7 @@ export default function ReceiptsPage() {
                 onClick={() => fileInputRef.current?.click()}
                 isLoading={isUploading}
                 leftIcon={<Camera className="h-3.5 w-3.5" />}
-                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
+                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm touch-target"
               >
                 Scan Receipt Photo
               </Button>
@@ -278,11 +313,111 @@ export default function ReceiptsPage() {
           }
         />
 
-        {/* 2-COLUMN STUDIO LAYOUT */}
+        {/* =========================================================================
+            1. FIVE-STAGE PIPELINE STEPPER HERO
+            ========================================================================= */}
+        <div className="double-bezel">
+          <div className="double-bezel-inner p-6 sm:p-7 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E2DC] pb-4">
+              <div>
+                <div className="flex items-center gap-2 text-[#898390]">
+                  <ReceiptIcon className="h-4 w-4 text-[#4056A1]" />
+                  <span className="text-[11px] font-mono uppercase tracking-wider font-bold">
+                    Vision Reconciliation Pipeline
+                  </span>
+                </div>
+                <span className="text-xs text-[#625D69] block mt-0.5">
+                  End-to-end receipt extraction & human verification sequence
+                </span>
+              </div>
+
+              {/* Aggregates Summary */}
+              <div className="flex items-center gap-6 text-xs">
+                <div>
+                  <span className="text-[10px] font-mono text-[#898390] block uppercase">Captured Value</span>
+                  <FinancialAmount
+                    amount={totalValueCaptured}
+                    currency={user?.currency}
+                    size="md"
+                    type="income"
+                    showSign={false}
+                  />
+                </div>
+                <div className="h-8 w-px bg-[#E4E2DC]" />
+                <div>
+                  <span className="text-[10px] font-mono text-[#898390] block uppercase">Pending Review</span>
+                  <span className="text-sm font-mono font-black text-[#D97706] tnum">
+                    {pendingCount}
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-[#E4E2DC]" />
+                <div>
+                  <span className="text-[10px] font-mono text-[#898390] block uppercase">Audit History</span>
+                  <span className="text-sm font-mono font-black text-[#191522] tnum">
+                    {receipts.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 5-Step Visual Pipeline Stepper */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none sm:grid sm:grid-cols-5 pt-1">
+              {[
+                { step: 1, title: 'Upload', desc: 'Photo or PDF' },
+                { step: 2, title: 'Neural OCR', desc: 'Text & Bounding' },
+                { step: 3, title: 'Extraction', desc: 'Line Items & Tax' },
+                { step: 4, title: 'Classification', desc: 'Category Matching' },
+                { step: 5, title: 'Reconciliation', desc: 'Atomic Ledger Post' },
+              ].map((s) => {
+                const isActive = currentPipelineStep === s.step;
+                const isCompleted = currentPipelineStep > s.step;
+
+                return (
+                  <div
+                    key={s.step}
+                    className={cn(
+                      'min-w-[110px] sm:min-w-0 flex-shrink-0 sm:flex-shrink p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-between',
+                      isActive
+                        ? 'bg-[#EFF6FF] border-[#2563EB] shadow-xs'
+                        : isCompleted
+                        ? 'bg-[#ECFDF5] border-[#A7F3D0]'
+                        : 'bg-[#F6F5F1] border-[#E4E2DC]'
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span
+                        className={cn(
+                          'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold',
+                          isActive
+                            ? 'bg-[#2563EB] text-white'
+                            : isCompleted
+                            ? 'bg-[#059669] text-white'
+                            : 'bg-[#E4E2DC] text-[#625D69]'
+                        )}
+                      >
+                        {isCompleted ? '✓' : s.step}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-[#191522] block truncate max-w-full">
+                      {s.title}
+                    </span>
+                    <span className="text-[9px] font-mono text-[#898390] block truncate max-w-full">
+                      {s.desc}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* =========================================================================
+            2. STUDIO WORK AREA (2 COLUMNS)
+            ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* LEFT: DROPZONE & REVIEW CONFIRMATION CARD */}
+          {/* LEFT: DROPZONE & REVIEW CONFIRMATION CARD (7 cols) */}
           <div className="lg:col-span-7 space-y-5">
-            {/* DRAG & DROP UPLOAD ZONE */}
+            {/* DROPZONE */}
             <div
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => {
@@ -300,195 +435,259 @@ export default function ReceiptsPage() {
                 if (file) handleFileUpload(file);
               }}
               className={cn(
-                'p-8 rounded-3xl border-2 border-dashed text-center cursor-pointer transition-all space-y-3 shadow-xs group',
-                isDragOver
-                  ? 'border-[#4056A1] bg-[#E9EDFA]'
-                  : 'border-[#E4E2DC] hover:border-[#4056A1] bg-white/70 hover:bg-white'
+                'double-bezel cursor-pointer transition-all',
+                isDragOver ? 'ring-2 ring-[#2563EB]' : ''
               )}
             >
-              <div className="h-14 w-14 rounded-2xl bg-[#F6F5F1] group-hover:bg-[#2A1F3D] text-[#191522] group-hover:text-white flex items-center justify-center mx-auto transition-all shadow-sm">
-                {isUploading ? <RefreshCw className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-[#191522]">
-                  {isUploading ? 'Analyzing Receipt with Neural OCR...' : 'Click or drag receipt photo to scan'}
-                </h3>
-                <p className="text-xs text-[#625D69] mt-1 font-medium">
-                  Supports JPEG, PNG, WEBP, and PDF receipts up to 10MB
-                </p>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <span className="brutalist-tag-emerald text-[10px] py-0.5 px-2">
-                  ✓ Multimodal Vision OCR
-                </span>
-                <span className="brutalist-tag text-[10px] py-0.5 px-2 bg-slate-100 text-slate-700">
-                  Private Storage
-                </span>
+              <div
+                className={cn(
+                  'double-bezel-inner p-8 text-center space-y-3 transition-colors',
+                  isDragOver ? 'bg-[#EFF6FF]' : 'hover:bg-[#FBFBFA]'
+                )}
+              >
+                <div className="h-14 w-14 rounded-2xl bg-[#F6F5F1] text-[#2A1F3D] flex items-center justify-center mx-auto transition-all shadow-sm border border-[#E4E2DC]">
+                  {isUploading ? <RefreshCw className="h-6 w-6 animate-spin text-[#2563EB]" /> : <Upload className="h-6 w-6" />}
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#191522]">
+                    {isUploading ? 'Analyzing Receipt with Neural OCR...' : 'Click or drop receipt photo to scan'}
+                  </h3>
+                  <p className="text-xs text-[#625D69] mt-1 font-medium">
+                    Supports JPEG, PNG, WEBP, and PDF receipts up to 10MB
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] font-bold">
+                    ✓ Multimodal Vision OCR
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
+                    Encrypted Storage
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* ACTIVE RECEIPT HUMAN-IN-THE-LOOP CONFIRMATION */}
-            {activeReceipt && activeReceipt.status === 'PENDING_REVIEW' ? (
-              <div className="editorial-card p-6 rounded-2xl space-y-5 border-2 border-amber-400/50 bg-white/95 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-                      <Sparkles className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-black text-[#191522]">
-                        Review Extracted Receipt Data
-                      </h3>
-                      <span className="text-[11px] text-[#625D69]">
-                        Confidence: {(Number(activeReceipt.confidence_score) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant="warning" size="sm">Pending Approval</Badge>
-                </div>
-
-                {/* Preview Thumbnail if available */}
-                {previewImage && (
-                  <div className="rounded-xl overflow-hidden border border-[#E4E2DC] bg-[#F6F5F1] max-h-56 flex items-center justify-center p-2">
-                    <img
-                      src={previewImage}
-                      alt="Receipt preview"
-                      className="max-h-52 w-auto object-contain rounded-lg shadow-xs"
-                    />
-                  </div>
-                )}
-
-                {/* Editable Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="swiss-eyebrow mb-1 block">Merchant</label>
-                    <input
-                      type="text"
-                      value={editMerchant}
-                      onChange={(e) => setEditMerchant(e.target.value)}
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="swiss-eyebrow mb-1 block">Total Amount (₹)</label>
-                    <input
-                      type="number"
-                      value={editAmount}
-                      onChange={(e) => setEditAmount(e.target.value)}
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="swiss-eyebrow mb-1 block">Category</label>
-                    <select
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value)}
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-                    >
-                      <option value="Groceries">Groceries</option>
-                      <option value="Food & Dining">Food & Dining</option>
-                      <option value="Shopping">Shopping</option>
-                      <option value="Healthcare">Healthcare</option>
-                      <option value="Transportation">Transportation</option>
-                      <option value="Bills & Utilities">Bills & Utilities</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Line Items Breakdown */}
-                <div className="space-y-2 pt-2 border-t border-[#E4E2DC]/80">
-                  <span className="swiss-eyebrow block">Detected Line Items</span>
-                  <div className="divide-y divide-[#E4E2DC] rounded-xl border border-[#E4E2DC] bg-white overflow-hidden text-xs">
-                    {(activeReceipt.items || []).map((item: any, idx: number) => (
-                      <div key={idx} className="p-2.5 flex items-center justify-between">
-                        <span className="font-bold text-[#191522]">
-                          {item.name} <span className="text-[#898390] font-normal font-mono">x{item.qty}</span>
-                        </span>
-                        <span className="font-mono font-bold text-[#191522]">
-                          {formatCurrency(item.price)}
+            {activeReceipt && (
+              <div className="double-bezel">
+                <div className="double-bezel-inner p-6 space-y-5">
+                  <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-[#191522]">
+                          Review Extracted Receipt Data
+                        </h3>
+                        <span className="text-[11px] font-mono text-[#625D69]">
+                          Confidence: {Math.round((Number(activeReceipt.confidence_score) || 0.96) * 100)}%
                         </span>
                       </div>
-                    ))}
+                    </div>
+                    {getStatusBadge(activeReceipt.status)}
                   </div>
-                </div>
 
-                {/* Confirm / Reject Action Buttons */}
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E2DC]">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRejectReceipt(activeReceipt.id)}
-                    leftIcon={<XCircle className="h-3.5 w-3.5 text-[#E11D48]" />}
-                    className="text-xs font-bold text-[#E11D48] hover:bg-rose-50"
-                  >
-                    Reject Receipt
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleConfirmReceipt}
-                    isLoading={isConfirming}
-                    leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                    className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-md px-5"
-                  >
-                    Confirm & Add Transaction
-                  </Button>
+                  {/* Preview Thumbnail if available */}
+                  {previewImage && (
+                    <div className="rounded-xl overflow-hidden border border-[#E4E2DC] bg-[#F6F5F1] max-h-56 flex items-center justify-center p-2">
+                      <img
+                        src={previewImage}
+                        alt="Receipt preview"
+                        className="max-h-52 w-auto object-contain rounded-lg shadow-xs"
+                      />
+                    </div>
+                  )}
+
+                  {/* Editable Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-[#625D69] mb-1 block">Merchant</label>
+                      <input
+                        type="text"
+                        value={editMerchant}
+                        onChange={(e) => setEditMerchant(e.target.value)}
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1] touch-target"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-[#625D69] mb-1 block">Total Amount</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-bold text-[#191522] focus:outline-none focus:border-[#4056A1] touch-target"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-[#625D69] mb-1 block">Category</label>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1] touch-target"
+                      >
+                        <option value="Groceries">Groceries</option>
+                        <option value="Food & Dining">Food & Dining</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Bills & Utilities">Bills & Utilities</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Line Items Breakdown */}
+                  <div className="space-y-2 pt-2 border-t border-[#E4E2DC]">
+                    <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
+                      Detected Line Items
+                    </span>
+                    {(activeReceipt.items || []).length === 0 ? (
+                      <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-xs text-[#625D69] text-center">
+                        Total receipt amount detected without individual item lines.
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[#E4E2DC] rounded-xl border border-[#E4E2DC] bg-white overflow-hidden text-xs">
+                        {activeReceipt.items.map((item: any, idx: number) => (
+                          <div key={idx} className="p-2.5 flex items-center justify-between">
+                            <span className="font-bold text-[#191522]">
+                              {item.name} <span className="text-[#898390] font-normal font-mono">x{item.qty || 1}</span>
+                            </span>
+                            <FinancialAmount
+                              amount={item.price}
+                              currency={user?.currency}
+                              size="xs"
+                              showSign={false}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Confirm / Reject Action Buttons */}
+                  {activeReceipt.status === 'PENDING_REVIEW' && (
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E2DC]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRejectReceipt(activeReceipt.id)}
+                        leftIcon={<XCircle className="h-3.5 w-3.5 text-[#E11D48]" />}
+                        className="text-xs font-bold text-[#E11D48] hover:bg-rose-50 touch-target"
+                      >
+                        Dismiss
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleConfirmReceipt}
+                        isLoading={isConfirming}
+                        leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                        className="bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-sm px-5 touch-target"
+                      >
+                        Confirm & Post to Ledger
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
 
-          {/* RIGHT: PROCESSED RECEIPTS RECENT GALLERY */}
+          {/* RIGHT: PROCESSED RECEIPTS RECENT AUDIT LEDGER (5 cols) */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="editorial-card p-6 rounded-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-                <h3 className="text-sm font-black text-[#191522]">
-                  Receipt History & Audit Logs
-                </h3>
-                <span className="text-xs font-mono font-bold text-[#625D69]">
-                  {receipts.length} Total
-                </span>
-              </div>
+            <div className="double-bezel">
+              <div className="double-bezel-inner p-6 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E4E2DC]">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-[#4056A1]" />
+                    <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
+                      Receipt Audit Log ({receipts.length})
+                    </h3>
+                  </div>
 
-              {receipts.length === 0 ? (
-                <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
-                  No receipts uploaded yet. Scan a receipt to start!
+                  <span className="text-[10px] font-mono text-[#898390]">
+                    Select to inspect
+                  </span>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {receipts.map((rec) => (
-                    <div
-                      key={rec.id}
-                      onClick={() => {
-                        setActiveReceipt(rec);
-                        setEditMerchant(rec.merchant_name);
-                        setEditAmount(String(rec.total_amount));
-                        setEditCategory(rec.predicted_category || 'Groceries');
-                      }}
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {['ALL', 'PENDING_REVIEW', 'CONFIRMED'].map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setFilterStatus(st)}
                       className={cn(
-                        'p-4 rounded-2xl border transition-all cursor-pointer space-y-2',
-                        activeReceipt?.id === rec.id
-                          ? 'border-[#4056A1] bg-[#E9EDFA] shadow-sm ring-1 ring-[#4056A1]'
-                          : 'border-[#E4E2DC] bg-[#F6F5F1] hover:bg-white'
+                        'px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all touch-target',
+                        filterStatus === st
+                          ? 'bg-[#2A1F3D] text-white shadow-xs'
+                          : 'bg-[#F6F5F1] text-[#625D69] hover:bg-[#EAE8E1]'
                       )}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#191522]">{rec.merchant_name}</span>
-                        <span className="text-xs font-mono font-black text-[#191522]">
-                          {formatCurrency(rec.total_amount)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-[#625D69]">
-                        <span>{rec.date || 'Today'} • {rec.predicted_category}</span>
-                        {getStatusBadge(rec.status)}
-                      </div>
-                    </div>
+                      {st === 'PENDING_REVIEW' ? 'Pending' : st === 'CONFIRMED' ? 'Confirmed' : 'All'}
+                    </button>
                   ))}
                 </div>
-              )}
+
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-16 w-full rounded-xl" />
+                    <Skeleton className="h-16 w-full rounded-xl" />
+                    <Skeleton className="h-16 w-full rounded-xl" />
+                  </div>
+                ) : filteredReceipts.length === 0 ? (
+                  <EmptyState
+                    title="No receipts found"
+                    description="Upload or scan a receipt photo to populate your audit log."
+                    actionLabel="Scan Receipt"
+                    onAction={() => fileInputRef.current?.click()}
+                  />
+                ) : (
+                  <div className="space-y-2.5">
+                    {filteredReceipts.map((rec) => {
+                      const isSelected = activeReceipt?.id === rec.id;
+
+                      return (
+                        <div
+                          key={rec.id}
+                          onClick={() => {
+                            setActiveReceipt(rec);
+                            setEditMerchant(rec.merchant_name || '');
+                            setEditAmount(String(rec.total_amount || ''));
+                            setEditCategory(rec.predicted_category || 'Groceries');
+                          }}
+                          className={cn(
+                            'p-3.5 rounded-xl border transition-all cursor-pointer space-y-2',
+                            isSelected
+                              ? 'border-[#2563EB] bg-white shadow-sm ring-1 ring-[#2563EB]/20'
+                              : 'border-[#E4E2DC] bg-[#F6F5F1] hover:bg-white'
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#191522] truncate max-w-[150px]">
+                              {rec.merchant_name || 'Receipt Document'}
+                            </span>
+                            <FinancialAmount
+                              amount={rec.total_amount}
+                              currency={user?.currency}
+                              size="xs"
+                              showSign={false}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] font-mono text-[#625D69]">
+                            <span>{rec.created_at ? new Date(rec.created_at).toLocaleDateString() : 'Recent'} • {rec.predicted_category || 'Groceries'}</span>
+                            {getStatusBadge(rec.status)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

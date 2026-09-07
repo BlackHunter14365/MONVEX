@@ -74,11 +74,13 @@ class ForecastService:
             })
 
         projected_end_balance = daily_projection[-1]['projected_balance'] if daily_projection else float(starting_balance)
+        has_sufficient_data = bool(past_expenses > 0 or total_income > 0 or recurring_bills.exists())
 
         return {
             "starting_balance": float(starting_balance),
             "forecast_days": days,
             "projected_end_balance": projected_end_balance,
             "daily_burn_rate": float(round(daily_avg_expense, 2)),
-            "daily_trajectory": daily_projection
+            "daily_trajectory": daily_projection,
+            "has_sufficient_data": has_sufficient_data
         }

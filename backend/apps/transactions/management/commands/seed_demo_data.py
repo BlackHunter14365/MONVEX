@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from apps.transactions.models import Category, Merchant, Transaction, RecurringPayment
+from apps.transactions.models import Category, Merchant, Transaction, RecurringPayment, Asset
 from apps.budgets.models import Budget
 from apps.goals.models import SavingsGoal, GoalContribution
 from services.transaction_service import TransactionService
@@ -55,6 +55,7 @@ class Command(BaseCommand):
             Budget.objects.filter(user=user).delete()
             SavingsGoal.objects.filter(user=user).delete()
             RecurringPayment.objects.filter(user=user).delete()
+            Asset.objects.filter(user=user).delete()
 
             # Seed 6 months of historical salaries & expenses
             for i in range(5, -1, -1):
@@ -201,6 +202,24 @@ class Command(BaseCommand):
                 frequency='MONTHLY',
                 next_due_date=today + timedelta(days=8),
                 is_active=True
+            )
+
+            # Create Linked Accounts / Assets
+            Asset.objects.create(
+                user=user,
+                name='HDFC Salary Account',
+                asset_type='BANK',
+                value=Decimal('125000.00'),
+                institution='HDFC Bank',
+                notes='{"theme": "sapphire", "lastFour": "4892", "accountType": "SAVINGS", "network": "VISA"}'
+            )
+            Asset.objects.create(
+                user=user,
+                name='ICICI Wealth Reserve',
+                asset_type='BANK',
+                value=Decimal('145730.00'),
+                institution='ICICI Bank',
+                notes='{"theme": "obsidian", "lastFour": "6712", "accountType": "CHECKING", "network": "MASTERCARD"}'
             )
 
             self.stdout.write(self.style.SUCCESS(f"Successfully seeded demo user '{username}' (Password: AlexDemo2026!)"))

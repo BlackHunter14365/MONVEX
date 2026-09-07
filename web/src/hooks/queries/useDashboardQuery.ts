@@ -6,8 +6,10 @@ export function useDashboardQuery() {
   return useQuery({
     queryKey: queryKeys.dashboard.summary(),
     queryFn: async () => {
-      const [summary, transactions, budgets, goals, recurring] = await Promise.all([
-        api.getAnalyticsSummary().catch(() => null),
+      // Core financial summary must succeed; network/auth failures propagate to trigger isError
+      const summary = await api.getAnalyticsSummary();
+
+      const [transactions, budgets, goals, recurring] = await Promise.all([
         api.getTransactions().catch(() => []),
         api.getBudgets().catch(() => []),
         api.getGoals().catch(() => []),

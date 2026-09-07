@@ -122,12 +122,18 @@ export default function TransactionsPage() {
   const filteredMetrics = useMemo(() => {
     let inflow = 0;
     let outflow = 0;
+    let transfers = 0;
     filtered.forEach((tx: any) => {
       const amt = parseFloat(tx.amount) || 0;
-      if (tx.type === 'INCOME') inflow += amt;
-      else outflow += amt;
+      if (tx.type === 'INCOME') {
+        inflow += amt;
+      } else if (tx.type === 'EXPENSE') {
+        outflow += amt;
+      } else if (tx.type === 'TRANSFER') {
+        transfers += amt;
+      }
     });
-    return { inflow, outflow, count: filtered.length };
+    return { inflow, outflow, transfers, count: filtered.length };
   }, [filtered]);
 
   // Unique categories for filtering

@@ -46,6 +46,15 @@ import {
 } from 'recharts';
 import { WalletAccountsSection } from '@/components/finance/WalletAccountsSection';
 
+interface DashboardAttentionItem {
+  id: string;
+  level: 'critical' | 'warning' | 'info' | 'success';
+  title: string;
+  desc: string;
+  actionUrl: string;
+  actionLabel: string;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const { data: dashboardData, isLoading, isError, refetch } = useDashboardQuery();
@@ -63,14 +72,12 @@ export default function DashboardPage() {
   const [cachedName, setCachedName] = useState<string | null>(null);
 
   const loadProfileInfo = () => {
-    if (!user) return;
     try {
-      const profileRaw = localStorage.getItem(`monvex_user_profile_${user.username}`);
-      if (profileRaw) {
-        const parsed = JSON.parse(profileRaw);
-        if (parsed.firstName || parsed.lastName) {
-          setCachedName(`${parsed.firstName || ''} ${parsed.lastName || ''}`.trim());
-        }
+      const stored = localStorage.getItem('user_profile');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const name = `${parsed.first_name || ''} ${parsed.last_name || ''}`.trim();
+        if (name) setCachedName(name);
       }
     } catch {
       // ignore
@@ -79,14 +86,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadProfileInfo();
-    const handleTxAdded = () => refetch();
-    const handleProfileUpdate = () => loadProfileInfo();
-
-    window.addEventListener('monvex:transaction-added', handleTxAdded);
+    const handleProfileUpdate = () => {
+      loadProfileInfo();
+      refetch();
+    };
     window.addEventListener('monvex:profile-updated', handleProfileUpdate);
-
     return () => {
-      window.removeEventListener('monvex:transaction-added', handleTxAdded);
       window.removeEventListener('monvex:profile-updated', handleProfileUpdate);
     };
   }, [user, refetch]);
@@ -95,6 +100,9 @@ export default function DashboardPage() {
   const totalIncome = summary?.monthly_income ?? summary?.total_income ?? 0;
   const totalExpense = summary?.monthly_expense ?? summary?.total_expense ?? 0;
   const totalNetBalance = summary?.net_balance ?? (totalIncome - totalExpense);
+  const netLiquidity = summary?.net_liquidity ?? totalNetBalance;
+  const dailyBurnRate = summary?.daily_burn_rate ?? (totalExpense > 0 ? Math.round(totalExpense / Math.max(1, new Date().getDate())) : 0);
+  const runwayDays = summary?.runway_days ?? (dailyBurnRate > 0 ? Math.round(netLiquidity / dailyBurnRate) : null);
   const netSavings = summary?.net_savings ?? Math.max(0, totalIncome - totalExpense);
   const savingsRate = summary?.savings_rate ?? summary?.savings_rate_pct ?? (totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0);
 
@@ -152,16 +160,13 @@ export default function DashboardPage() {
     };
   }, [savingsRate, netSavings, budgets, summary]);
 
-  // Attention Center Items
-  const attentionItems = useMemo(() => {
-    const items: Array<{
-      id: string;
-      level: 'critical' | 'warning' | 'info' | 'success';
-      title: string;
-      desc: string;
-      actionUrl: string;
-      actionLabel: string;
-    }> = [];
+  // Attention Center Items (Authoritative backend guardrails with client fallback)
+  const attentionItems: DashboardAttentionItem[] = useMemo(() => {
+    if (summary?.attention_items && Array.isArray(summary.attention_items) && summary.attention_items.length > 0) {
+      return summary.attention_items as DashboardAttentionItem[];
+    }
+
+    const items: DashboardAttentionItem[] = [];
 
     // Check budget violations
     budgets.forEach((b: any) => {
@@ -194,7 +199,7 @@ export default function DashboardPage() {
       const current = parseFloat(g.current_amount) || 0;
       const target = parseFloat(g.target_amount) || 1;
       const pct = Math.round((current / target) * 100);
-      if (pct < 50 && g.target_date) {
+      if (pct < 50 && (g.target_date || g.deadline)) {
         items.push({
           id: `goal-${g.id}`,
           level: 'info',
@@ -230,7 +235,7 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [budgets, goals, transactions, user?.currency]);
+  }, [summary?.attention_items, budgets, goals, transactions, user?.currency]);
 
   // Category Icon & Badge Resolver
   const getCategoryStyles = (catName: string) => {
@@ -353,7 +358,7 @@ export default function DashboardPage() {
                       ) : (
                         <div className="flex items-baseline gap-3">
                           <FinancialAmount
-                            amount={totalNetBalance}
+                            amount={netLiquidity}
                             currency={user?.currency}
                             size="3xl"
                             showSign={false}
@@ -362,12 +367,12 @@ export default function DashboardPage() {
                           <span
                             className={cn(
                               'text-xs font-bold px-2 py-0.5 rounded-md border',
-                              totalNetBalance >= 0
+                              netLiquidity >= 0
                                 ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]'
                                 : 'bg-[#FEF2F2] text-[#DC2626] border-[#FECDD3]'
                             )}
                           >
-                            {totalNetBalance >= 0 ? 'Surplus Position' : 'Deficit Reserve'}
+                            {netLiquidity >= 0 ? 'Surplus Position' : 'Deficit Reserve'}
                           </span>
                         </div>
                       )}
@@ -433,12 +438,16 @@ export default function DashboardPage() {
                         <TrendingDown className="h-3.5 w-3.5 text-[#4056A1]" />
                       </div>
                       <FinancialAmount
-                        amount={Math.round(totalExpense / 30)}
+                        amount={dailyBurnRate}
                         currency={user?.currency}
                         size="xl"
                         type="neutral"
                       />
-                      <span className="text-[10px] text-[#625D69] block">Rolling 30-day pace</span>
+                      <span className="text-[10px] text-[#625D69] block">
+                        {runwayDays && runwayDays < 999
+                          ? `${runwayDays} days reserve runway`
+                          : 'Rolling 30-day pace'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -700,7 +709,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="space-y-3">
-                    {attentionItems.map((item) => (
+                    {attentionItems.map((item: DashboardAttentionItem) => (
                       <div
                         key={item.id}
                         className={cn(

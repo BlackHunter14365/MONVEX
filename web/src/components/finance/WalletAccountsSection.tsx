@@ -316,6 +316,14 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       // 2. Add to Destination Asset
       await api.updateAsset(toAcc.id, { value: toAcc.balance + amt });
 
+      // 3. Record audit trail transfer transaction
+      await api.createTransaction({
+        amount: amt,
+        type: 'TRANSFER',
+        description: `Internal Transfer: ${fromAcc.name} → ${toAcc.name}`,
+        date: new Date().toISOString().split('T')[0],
+      }).catch(() => null);
+
       setAccounts((prev) =>
         prev.map((a) => {
           if (a.id === fromAcc.id) return { ...a, balance: a.balance - amt };
@@ -328,6 +336,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       setTransferAmount('');
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
       toast.success(`✓ Transferred ${formatCurrency(amt, userCurrency)} successfully!`);
     } catch (err: any) {
       toast.error(err?.message || 'Transfer failed.');

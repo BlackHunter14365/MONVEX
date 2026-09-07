@@ -18,12 +18,15 @@ class NetWorthService:
         # 1. Assets Aggregation
         total_assets_val = sum((float(a.value) for a in assets), 0.0)
 
-        # Add liquid cash from ledger transactions if user has no manual cash assets
+        # Add liquid cash from ledger transactions only if user has NO liquid accounts (neither CASH nor BANK)
         cash_tx = Transaction.objects.filter(user=user, type='INCOME').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
         exp_tx = Transaction.objects.filter(user=user, type='EXPENSE').aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
         ledger_balance = float(cash_tx - exp_tx)
 
-        if not assets.filter(asset_type='CASH').exists() and ledger_balance > 0:
+        has_liquid_accounts = assets.filter(asset_type__in=['CASH', 'BANK']).exists()
+        include_ledger_cash = not has_liquid_accounts and ledger_balance > 0
+
+        if include_ledger_cash:
             total_assets_val += ledger_balance
 
         # 2. Liabilities Aggregation
@@ -38,7 +41,7 @@ class NetWorthService:
             atype = a.asset_type
             asset_types[atype] = asset_types.get(atype, 0.0) + float(a.value)
 
-        if not assets.filter(asset_type='CASH').exists() and ledger_balance > 0:
+        if include_ledger_cash:
             asset_types['CASH'] = asset_types.get('CASH', 0.0) + ledger_balance
 
         asset_allocation = [
@@ -70,6 +73,25 @@ class NetWorthService:
         # 6. Solvency Ratio
         debt_to_asset_ratio = round((total_liabilities_val / max(1.0, total_assets_val)) * 100, 1)
 
+        assets_list = [
+            {
+                "id": str(a.id),
+                "name": a.name,
+                "asset_type": a.asset_type,
+                "value": float(a.value),
+                "institution": a.institution
+            }
+            for a in assets
+        ]
+        if include_ledger_cash:
+            assets_list.append({
+                "id": "ledger-cash",
+                "name": "Cash & Liquid Wallet",
+                "asset_type": "CASH",
+                "value": round(ledger_balance, 2),
+                "institution": "Self-Custody"
+            })
+
         return {
             "total_assets": round(total_assets_val, 2),
             "total_liabilities": round(total_liabilities_val, 2),
@@ -78,16 +100,7 @@ class NetWorthService:
             "solvency_status": "STRONG" if debt_to_asset_ratio < 30 else ("MODERATE" if debt_to_asset_ratio < 60 else "OVERLEVERAGED"),
             "asset_allocation": asset_allocation,
             "liability_allocation": liability_allocation,
-            "assets_list": [
-                {
-                    "id": str(a.id),
-                    "name": a.name,
-                    "asset_type": a.asset_type,
-                    "value": float(a.value),
-                    "institution": a.institution
-                }
-                for a in assets
-            ],
+            "assets_list": assets_list,
             "liabilities_list": [
                 {
                     "id": str(l.id),

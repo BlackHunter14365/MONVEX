@@ -820,7 +820,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                             <span
                               className={cn(
                                 'text-xs font-black tabular-nums shrink-0',
-                                isInc ? 'text-[#059669]' : 'text-[#191522]'
+                                isInc ? 'text-[#059669]' : 'text-[#E11D48]'
                               )}
                             >
                               {isInc ? '+' : '-'}{formatCurrency(amountNum, userCurrency)}

@@ -222,7 +222,7 @@ export default function ReportsPage() {
                 <div>
                   <span className="text-[10px] text-[#898390] block font-mono font-bold uppercase">Total Outflow</span>
                   <FinancialAmount
-                    amount={-totalOutflow}
+                    amount={totalOutflow}
                     currency={user?.currency}
                     size="lg"
                     type="expense"
@@ -277,6 +277,7 @@ export default function ReportsPage() {
                           size="xs"
                           type={d.delta > 0 ? 'expense' : 'income'}
                           showSign={true}
+                          sign={d.delta > 0 ? '+' : '-'}
                         />
                       </div>
                     </div>

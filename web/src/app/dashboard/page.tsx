@@ -661,6 +661,7 @@ export default function DashboardPage() {
                                 currency={user?.currency}
                                 type={isExp ? 'expense' : 'income'}
                                 showSign={true}
+                                sign={isExp ? '-' : '+'}
                                 size="sm"
                               />
                             </div>
@@ -714,6 +715,7 @@ export default function DashboardPage() {
                                     currency={user?.currency}
                                     type={isExp ? 'expense' : 'income'}
                                     showSign={true}
+                                    sign={isExp ? '-' : '+'}
                                     size="sm"
                                   />
                                 </td>

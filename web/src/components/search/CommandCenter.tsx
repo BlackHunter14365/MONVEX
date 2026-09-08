@@ -471,7 +471,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                             ? 'text-white'
                             : tx.badge === 'INCOME'
                             ? 'text-[#059669]'
-                            : 'text-[#191522]'
+                            : 'text-[#E11D48]'
                         )}
                       >
                         {tx.badge === 'INCOME' ? '+' : '-'}₹{tx.amount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}

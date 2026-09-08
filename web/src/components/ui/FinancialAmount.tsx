@@ -9,6 +9,7 @@ export interface FinancialAmountProps {
   currency?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   showSign?: boolean;
+  sign?: '+' | '-' | 'auto';
   isLoading?: boolean;
   placeholder?: string;
   className?: string;
@@ -20,6 +21,7 @@ export const FinancialAmount: React.FC<FinancialAmountProps> = ({
   currency = 'INR',
   size = 'md',
   showSign = false,
+  sign,
   isLoading = false,
   placeholder = '—',
   className,
@@ -80,7 +82,19 @@ export const FinancialAmount: React.FC<FinancialAmountProps> = ({
       : type;
 
   const formatted = formatCurrency(Math.abs(num), currency);
-  const signPrefix = showSign ? (num > 0 ? '+' : num < 0 ? '-' : '') : '';
+
+  let signPrefix = '';
+  if (showSign && Math.abs(num) > 0) {
+    if (sign) {
+      signPrefix = sign;
+    } else if (resolvedType === 'expense') {
+      signPrefix = '-';
+    } else if (resolvedType === 'income') {
+      signPrefix = '+';
+    } else {
+      signPrefix = num > 0 ? '+' : num < 0 ? '-' : '';
+    }
+  }
 
   return (
     <span

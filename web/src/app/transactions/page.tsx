@@ -411,6 +411,7 @@ export default function TransactionsPage() {
                             currency={user?.currency}
                             type={isExp ? 'expense' : 'income'}
                             showSign={true}
+                            sign={isExp ? '-' : '+'}
                             size="sm"
                           />
                         </div>
@@ -502,6 +503,7 @@ export default function TransactionsPage() {
                                 currency={user?.currency}
                                 type={isExp ? 'expense' : 'income'}
                                 showSign={true}
+                                sign={isExp ? '-' : '+'}
                                 size="sm"
                               />
                             </td>
@@ -565,6 +567,7 @@ export default function TransactionsPage() {
                   currency={user?.currency}
                   type={selectedTx.type === 'EXPENSE' ? 'expense' : 'income'}
                   showSign={true}
+                  sign={selectedTx.type === 'EXPENSE' ? '-' : '+'}
                   size="2xl"
                 />
               </div>

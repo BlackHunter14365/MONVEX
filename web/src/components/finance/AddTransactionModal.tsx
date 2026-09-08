@@ -273,7 +273,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               type="button"
               onClick={() => setType('EXPENSE')}
               className={cn(
-                'flex items-center justify-center gap-2 py-2 px-3 rounded-md border text-xs font-semibold transition-all',
+                'flex items-center justify-center gap-2 py-2.5 px-3 rounded-md border text-xs font-semibold transition-all min-h-[44px]',
                 type === 'EXPENSE'
                   ? 'bg-danger-soft text-danger border-danger/40 shadow-subtle'
                   : 'bg-surface text-text-secondary border-border hover:text-text-primary'
@@ -287,7 +287,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               type="button"
               onClick={() => setType('INCOME')}
               className={cn(
-                'flex items-center justify-center gap-2 py-2 px-3 rounded-md border text-xs font-semibold transition-all',
+                'flex items-center justify-center gap-2 py-2.5 px-3 rounded-md border text-xs font-semibold transition-all min-h-[44px]',
                 type === 'INCOME'
                   ? 'bg-success-soft text-success border-success/40 shadow-subtle'
                   : 'bg-surface text-text-secondary border-border hover:text-text-primary'
@@ -298,7 +298,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-text-secondary mb-1 block">Amount</label>
               <input
@@ -308,7 +308,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-xs font-semibold text-text-primary focus:border-accent focus:outline-none"
+                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-base sm:text-xs font-semibold text-text-primary focus:border-accent focus:outline-none min-h-[44px] sm:min-h-0"
               />
             </div>
 
@@ -317,7 +317,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               <select
                 value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
+                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-base sm:text-xs text-text-primary focus:border-accent focus:outline-none min-h-[44px] sm:min-h-0"
               >
                 {(() => {
                   const renderedCategories = categories.length > 0 ? categories : [
@@ -349,7 +349,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-text-secondary mb-1 block">
                 Merchant <span className="text-text-muted font-normal">(Optional)</span>
@@ -359,7 +359,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 value={merchantName}
                 onChange={(e) => setMerchantName(e.target.value)}
                 placeholder="e.g. Starbucks, Amazon"
-                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
+                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-base sm:text-xs text-text-primary focus:border-accent focus:outline-none min-h-[44px] sm:min-h-0"
               />
             </div>
 
@@ -370,7 +370,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
+                className="w-full rounded-md bg-surface border border-border px-3 py-2 text-base sm:text-xs text-text-primary focus:border-accent focus:outline-none min-h-[44px] sm:min-h-0"
               />
             </div>
           </div>
@@ -384,7 +384,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Team lunch at cafe"
-              className="w-full rounded-md bg-surface border border-border px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
+              className="w-full rounded-md bg-surface border border-border px-3 py-2 text-base sm:text-xs text-text-primary focus:border-accent focus:outline-none min-h-[44px] sm:min-h-0"
             />
           </div>
 

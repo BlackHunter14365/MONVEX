@@ -2,6 +2,7 @@ export * from './AuthShell';
 export * from './AuthTopNav';
 export * from './AuthHeader';
 export * from './AuthInput';
+export * from './AuthSelect';
 export * from './PasswordField';
 export * from './GoogleSignInButton';
 export * from './AuthFeedback';

@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, Mail, AlertCircle, CheckCircle2, ArrowLeft, ShieldCheck, KeyRound } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
+import { AuthShell, AuthHeader, AuthInput, AuthFeedback } from '@/components/auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -42,104 +42,67 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
-      {/* Brand Header */}
-      <div className="text-center mb-6 sm:mb-8 space-y-2.5">
-        <Link href="/" className="inline-flex flex-col items-center gap-2 group">
-          <div className="h-12 sm:h-14 w-12 sm:w-14 rounded-2xl overflow-hidden shadow-lg p-1 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105 flex items-center justify-center">
-            <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
-          </div>
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
+    <AuthShell>
+      <div className="space-y-6 w-full">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-xs font-medium text-[#625D69] hover:text-[#191522] transition-colors py-1"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back to sign in</span>
         </Link>
-        <p className="text-xs text-[#625D69] font-medium">
-          Deterministic Security & Account Recovery
-        </p>
-      </div>
 
-      {/* Outer Double-Bezel Frame */}
-      <div className="w-full max-w-md p-1 sm:p-2 rounded-2xl sm:rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
-        <div className="p-5 sm:p-8 rounded-xl sm:rounded-[24px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-5 sm:space-y-6">
-          <div className="space-y-1 text-center">
-            <div className="h-10 w-10 mx-auto rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#2563EB] mb-2">
-              <KeyRound className="h-5 w-5" />
+        <AuthHeader
+          title="Reset your password."
+          subtitle="Enter your account email to receive security recovery instructions."
+        />
+
+        {errorMessage && <AuthFeedback type="error" message={errorMessage} />}
+
+        {isSubmitted ? (
+          <div className="space-y-5 py-2">
+            <div className="p-4 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] space-y-2">
+              <div className="flex items-center gap-2 font-medium text-xs">
+                <CheckCircle2 className="h-4 w-4 text-[#16A34A] shrink-0" />
+                <span>Recovery instructions dispatched</span>
+              </div>
+              <p className="text-xs text-[#166534]/90 leading-relaxed pl-6">
+                If an account exists for <strong className="font-semibold">{email}</strong>, a reset link has been dispatched to your inbox.
+              </p>
             </div>
-            <h2 className="text-xl font-black text-[#191522] tracking-tight">Reset Password</h2>
-            <p className="text-xs text-[#625D69] font-medium">
-              Enter your account email to receive cryptographic recovery instructions
-            </p>
+
+            <Link
+              href="/login"
+              className="w-full min-h-[46px] flex items-center justify-center gap-2 rounded-lg bg-[#191522] hover:bg-[#2A1F3D] active:bg-[#120E1A] text-white text-sm font-medium transition-colors duration-150 shadow-2xs"
+            >
+              Return to Sign In
+            </Link>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <AuthInput
+              label="Email address"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="alex@example.com"
+              disabled={isLoading}
+            />
 
-          {isSubmitted ? (
-            <div className="space-y-4 text-center py-2 animate-in fade-in">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-200">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-black text-[#191522]">Recovery Dispatch Sent</h3>
-                <p className="text-xs text-[#625D69] leading-relaxed">
-                  If an account is associated with <strong className="text-[#191522] font-bold">{email}</strong>, verification instructions have been dispatched.
-                </p>
-              </div>
-              <Link
-                href="/login"
-                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-[#2A1F3D] px-6 py-3.5 text-xs font-bold text-white hover:bg-[#3B2D54] transition-all w-full shadow-xs min-h-[48px]"
-              >
-                Return to Sign In
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {errorMessage && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs animate-in fade-in">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              <div className="space-y-1.5">
-                <label htmlFor="forgot-email" className="text-xs font-bold text-[#191522] block">
-                  Registered Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                  <input
-                    id="forgot-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-4 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                isLoading={isLoading}
-                variant="primary"
-                size="lg"
-                className="w-full font-bold min-h-[48px] text-sm shadow-sm"
-              >
-                Send Recovery Instructions
-              </Button>
-
-              <div className="pt-2 text-center">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#625D69] hover:text-[#191522] transition-colors p-2 min-h-[44px]"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Return to Sign In</span>
-                </Link>
-              </div>
-            </form>
-          )}
-        </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full mt-2 min-h-[46px] flex items-center justify-center gap-2 rounded-lg bg-[#191522] hover:bg-[#2A1F3D] active:bg-[#120E1A] text-white text-sm font-medium transition-colors duration-150 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#191522]/30 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              <span>{isLoading ? 'Dispatching instructions...' : 'Send Recovery Instructions'}</span>
+            </button>
+          </form>
+        )}
       </div>
-    </div>
+    </AuthShell>
   );
 }

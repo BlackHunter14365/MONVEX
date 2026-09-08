@@ -3,29 +3,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  ShieldCheck,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  KeyRound,
-  RefreshCw,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Clock,
-  ShieldAlert,
-  BrainCircuit,
-  TrendingUp,
-} from 'lucide-react';
+import { Loader2, Clock, RefreshCw, ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { Button } from '@/components/ui/Button';
-import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
-import { AccountLinkDialog } from '@/components/auth/AccountLinkDialog';
+import {
+  AuthShell,
+  AuthHeader,
+  AuthInput,
+  AuthSelect,
+  PasswordField,
+  GoogleSignInButton,
+  AuthFeedback,
+  AccountLinkDialog,
+} from '@/components/auth';
 
 type UIState =
   | 'IDLE'
@@ -40,6 +31,18 @@ type UIState =
   | 'SERVER_ERROR'
   | 'ALREADY_VERIFIED';
 
+const CURRENCY_OPTIONS = [
+  { value: 'INR', label: 'INR (₹) - Indian Rupee' },
+  { value: 'USD', label: 'USD ($) - US Dollar' },
+  { value: 'EUR', label: 'EUR (€) - Euro' },
+  { value: 'GBP', label: 'GBP (£) - British Pound' },
+  { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
+  { value: 'CAD', label: 'CAD ($) - Canadian Dollar' },
+  { value: 'AUD', label: 'AUD ($) - Australian Dollar' },
+  { value: 'JPY', label: 'JPY (¥) - Japanese Yen' },
+  { value: 'SGD', label: 'SGD ($) - Singapore Dollar' },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const { refreshUser, loginWithGoogle, isAuthenticated, user, isLoading: authLoading } = useAuth();
@@ -51,7 +54,7 @@ export default function RegisterPage() {
     }
   }, [authLoading, isAuthenticated, user, router]);
 
-  // Navigation Step: 'register' -> 'otp'
+  // Step state: 'register' -> 'otp'
   const [step, setStep] = useState<'register' | 'otp'>('register');
   const [uiState, setUiState] = useState<UIState>('IDLE');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -69,7 +72,6 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currency, setCurrency] = useState('INR');
   const [monthlyIncome, setMonthlyIncome] = useState('75000');
-  const [showPassword, setShowPassword] = useState(false);
 
   // Verification Session State
   const [verificationId, setVerificationId] = useState('');
@@ -79,7 +81,7 @@ export default function RegisterPage() {
 
   // Timers
   const [resendCooldown, setResendCooldown] = useState(60);
-  const [sessionExpiresIn, setSessionExpiresIn] = useState(600); // 10 minutes
+  const [sessionExpiresIn, setSessionExpiresIn] = useState(600);
   const [isResending, setIsResending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
@@ -304,394 +306,247 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10">
-      {/* Outer Double-Bezel Frame */}
-      <div className="w-full max-w-4xl p-1 sm:p-2 rounded-2xl sm:rounded-[32px] bg-white border border-[#E2DFD7] shadow-xl">
-        <div className="rounded-xl sm:rounded-[26px] border border-[#ECE9E0] bg-[#FBFBFA] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0 lg:min-h-[580px]">
-          
-          {/* LEFT COLUMN: INSTITUTIONAL BRANDING & TRUST ENGINE (DESKTOP ONLY 5 COLS) */}
-          <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-[#2A1F3D] to-[#1D152B] p-7 sm:p-9 text-white flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+    <AuthShell>
+      <div className="space-y-6 w-full">
+        {step === 'register' ? (
+          /* =========================================================================
+             STEP 1: ACCOUNT REGISTRATION
+             ========================================================================= */
+          <>
+            <AuthHeader
+              title="Create your account."
+              subtitle="Set up your workspace credentials and financial defaults."
+            />
 
-            {/* Brand Mark */}
-            <div className="space-y-6 relative z-10">
-              <Link href="/" className="inline-flex items-center gap-3 group">
-                <div className="h-11 w-11 rounded-2xl overflow-hidden shadow-lg p-1 bg-white ring-1 ring-white/20 transition-transform group-hover:scale-105 flex items-center justify-center">
-                  <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
-                </div>
-                <div>
-                  <span className="text-xl font-black tracking-tight text-white block leading-tight">
-                    MONVEX
-                  </span>
-                  <span className="text-[10.5px] font-mono tracking-wider text-slate-300 block uppercase">
-                    Financial Intelligence
-                  </span>
-                </div>
-              </Link>
+            {statusMessage && <AuthFeedback type="error" message={statusMessage} />}
 
-              <div className="space-y-2 pt-2">
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-                  {step === 'register' ? 'Establish Your Account' : 'Security Verification'}
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
-                  {step === 'register'
-                    ? 'Join the private wealth intelligence ecosystem. Unify your bank feeds, budgets, debts, and predictive runway.'
-                    : 'We ensure bank-grade account protection through deterministic single-use session verification codes.'}
-                </p>
+            <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <AuthInput
+                  label="Username"
+                  name="username"
+                  type="text"
+                  required
+                  autoComplete="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. alex"
+                  disabled={uiState === 'SENDING'}
+                />
+
+                <AuthInput
+                  label="Email address"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="alex@example.com"
+                  disabled={uiState === 'SENDING'}
+                />
               </div>
 
-              {/* Three Institutional Pillars */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3">
-                  <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-white block">Verified Tenant Isolation</span>
-                    <span className="text-[11px] text-slate-400">Strict database encryption prevents cross-account exposure.</span>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <PasswordField
+                  label="Password"
+                  name="password"
+                  required
+                  minLength={8}
+                  showForgotPassword={false}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimum 8 characters"
+                  disabled={uiState === 'SENDING'}
+                />
 
-                <div className="flex items-start gap-3">
-                  <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <BrainCircuit className="h-4 w-4 text-blue-400" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-white block">Zero-Hallucination Math</span>
-                    <span className="text-[11px] text-slate-400">Deterministic engines verify every rupee across your balance sheet.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <TrendingUp className="h-4 w-4 text-purple-400" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-white block">Autonomous Milestone Tracking</span>
-                    <span className="text-[11px] text-slate-400">Forecast and accelerate retirement, savings, and debt payoff dates.</span>
-                  </div>
-                </div>
+                <PasswordField
+                  label="Confirm password"
+                  name="confirmPassword"
+                  required
+                  minLength={8}
+                  showForgotPassword={false}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat password"
+                  disabled={uiState === 'SENDING'}
+                />
               </div>
-            </div>
 
-            {/* Bottom Security Footer */}
-            <div className="pt-6 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Zero-Trust Shield: Active
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <AuthSelect
+                  label="Base currency"
+                  name="currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  options={CURRENCY_OPTIONS}
+                  disabled={uiState === 'SENDING'}
+                />
+
+                <AuthInput
+                  label="Monthly inflow"
+                  name="monthlyIncome"
+                  type="number"
+                  step="1000"
+                  required
+                  value={monthlyIncome}
+                  onChange={(e) => setMonthlyIncome(e.target.value)}
+                  placeholder="75000"
+                  disabled={uiState === 'SENDING'}
+                />
+              </div>
+
+              <AuthInput
+                label="Phone number (optional)"
+                name="phoneNumber"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+91 98765 43210"
+                disabled={uiState === 'SENDING'}
+              />
+
+              <button
+                type="submit"
+                disabled={uiState === 'SENDING' || isGoogleLoading}
+                className="w-full mt-2 min-h-[46px] flex items-center justify-center gap-2 rounded-lg bg-[#191522] hover:bg-[#2A1F3D] active:bg-[#120E1A] text-white text-sm font-medium transition-colors duration-150 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#191522]/30 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {uiState === 'SENDING' && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                <span>{uiState === 'SENDING' ? 'Configuring workspace...' : 'Create Account'}</span>
+              </button>
+            </form>
+
+            <div className="relative flex items-center justify-center my-4" aria-hidden="true">
+              <div className="border-t border-[#E4E2DC] w-full" />
+              <span className="bg-[#F6F5F1] px-3 text-[11px] font-medium text-[#898390] uppercase tracking-wider relative select-none">
+                or
               </span>
-              <span className="font-mono">v2.4 Core</span>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: REGISTRATION / OTP FORM (FULL-WIDTH ON MOBILE, 7 COLS ON DESKTOP) */}
-          <div className="col-span-1 lg:col-span-7 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-white overflow-y-auto">
-            <div className="space-y-5 max-w-md mx-auto w-full">
-              {/* Mobile-Only Dedicated App Header */}
-              <div className="lg:hidden text-center space-y-2.5 pb-1">
-                <Link href="/" className="inline-flex flex-col items-center gap-2 group">
-                  <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-md p-1 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105 flex items-center justify-center">
-                    <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
-                  </div>
-                  <div>
-                    <span className="text-xl font-black tracking-tight text-[#191522] block leading-tight">
-                      MONVEX
-                    </span>
-                    <span className="text-[10px] font-mono tracking-wider text-[#898390] uppercase block">
-                      Financial Intelligence
-                    </span>
-                  </div>
-                </Link>
-              </div>
-
-              {/* Form Title Header */}
-              <div className="space-y-1 text-center lg:text-left">
-                <h2 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
-                  {step === 'register' ? 'Create Your Account' : 'Verify Email Address'}
-                </h2>
-                <p className="text-xs text-[#625D69] font-medium">
-                  {step === 'register'
-                    ? 'Fill out your profile details to configure your personal workspace'
-                    : `Enter the 6-digit confirmation code dispatched to ${maskedEmail || email}`}
-                </p>
-              </div>
-
-              {/* Status banner */}
-              {statusMessage && uiState !== 'VERIFIED' && (
-                <div
-                  className={cn(
-                    'p-3.5 rounded-xl text-xs border flex items-center gap-2.5',
-                    uiState === 'EXPIRED' || uiState === 'RATE_LIMITED'
-                      ? 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'
-                      : 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-                  )}
-                >
-                  {uiState === 'EXPIRED' || uiState === 'RATE_LIMITED' ? (
-                    <ShieldAlert className="h-4 w-4 text-[#D97706] shrink-0" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-[#E11D48] shrink-0" />
-                  )}
-                  <span className="leading-snug font-medium">{statusMessage}</span>
-                </div>
-              )}
-
-              {step === 'register' ? (
-                /* STEP 1: Registration Form */
-                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#191522] block">Username</label>
-                      <div className="relative">
-                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                        <input
-                          type="text"
-                          required
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          placeholder="alex"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#191522] block">Email Address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="alex@example.com"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#191522] block">
-                      Mobile Phone <span className="text-[#898390] font-normal">(Optional)</span>
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="+91 98765 43210"
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-3.5 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#191522] block">Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          minLength={8}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Min 8 chars"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-12 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-[#898390] hover:text-[#191522] rounded-lg transition-colors focus-visible:outline-none"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#191522] block">Confirm Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          minLength={8}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Repeat password"
-                          className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-10 pr-12 py-3 text-base sm:text-xs font-medium text-[#191522] placeholder:text-[#898390] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-[#898390] hover:text-[#191522] rounded-lg transition-colors focus-visible:outline-none"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#191522] block">Base Currency</label>
-                      <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-3 text-base sm:text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                      >
-                        <option value="INR">INR (₹)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="GBP">GBP (£)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#191522] block">Monthly Inflow</label>
-                      <input
-                        type="number"
-                        step="1000"
-                        required
-                        value={monthlyIncome}
-                        onChange={(e) => setMonthlyIncome(e.target.value)}
-                        className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-3 text-base sm:text-xs font-bold text-[#191522] focus:border-[#2563EB] focus:outline-none min-h-[48px]"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    isLoading={uiState === 'SENDING'}
-                    className="w-full mt-3 font-bold min-h-[48px] text-sm shadow-sm"
-                  >
-                    Create Account & Continue
-                  </Button>
-
-                  {/* OR DIVIDER */}
-                  <div className="relative flex items-center justify-center my-2">
-                    <div className="border-t border-[#E4E2DC] w-full" />
-                    <span className="bg-white px-3 text-[11px] font-bold text-[#898390] uppercase tracking-wider relative">
-                      Or Connect With
-                    </span>
-                  </div>
-
-                  {/* GOOGLE SIGN-IN BUTTON */}
-                  <div>
-                    <GoogleSignInButton
-                      onSuccess={handleGoogleSuccess}
-                      onError={handleGoogleError}
-                      isLoading={isGoogleLoading}
-                      disabled={uiState === 'SENDING'}
-                      text="signup_with"
-                    />
-                  </div>
-                </form>
-              ) : (
-                /* STEP 2: OTP Verification Screen */
-                <div className="space-y-6 py-2">
-                  <div className="text-center space-y-2">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-200 shadow-xs mb-1">
-                      <KeyRound className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-base font-black text-[#191522]">Enter 6-Digit Code</h3>
-                    <p className="text-xs text-[#625D69] leading-relaxed">
-                      We sent a one-time verification code to
-                      <br />
-                      <strong className="text-[#191522] font-mono font-bold">{maskedEmail || email}</strong>
-                    </p>
-                  </div>
-
-                  {/* 6 Digit Numeric Inputs */}
-                  <div className="space-y-2">
-                    <div className="flex justify-center gap-1.5 xs:gap-2 py-1">
-                      {otpDigits.map((digit, idx) => (
-                        <input
-                          key={idx}
-                          ref={(el) => {
-                            otpInputsRef.current[idx] = el;
-                          }}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleDigitChange(idx, e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(idx, e)}
-                          disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED'}
-                          className={cn(
-                            'h-12 xs:h-13 sm:h-14 w-9 xs:w-11 sm:w-12 text-center text-lg sm:text-xl font-mono font-black rounded-xl sm:rounded-2xl border bg-white focus:outline-none transition-all',
-                            digit ? 'border-[#2A1F3D] text-[#191522] shadow-xs' : 'border-[#E4E2DC] text-[#625D69]',
-                            uiState === 'INVALID_CODE' ? 'border-[#E11D48] text-[#E11D48] bg-rose-50/50' : ''
-                          )}
-                        />
-                      ))}
-                    </div>
-
-                    {attemptsRemaining !== null && (
-                      <div className="text-center text-[11px] text-[#E11D48] font-semibold">
-                        {attemptsRemaining} attempt{attemptsRemaining === 1 ? '' : 's'} remaining
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Expiration Timer */}
-                  <div className="flex items-center justify-center gap-1.5 text-xs text-[#898390] font-mono">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>Code expires in:</span>
-                    <span className="font-bold text-[#191522]">{formatExpiryTime(sessionExpiresIn)}</span>
-                  </div>
-
-                  {/* Action Button */}
-                  <Button
-                    type="button"
-                    onClick={() => submitOtpVerification(otpDigits.join(''))}
-                    disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED' || otpDigits.join('').length !== 6}
-                    isLoading={uiState === 'VERIFYING'}
-                    variant="primary"
-                    size="lg"
-                    className="w-full font-bold min-h-[48px] text-sm shadow-sm"
-                  >
-                    Verify Code & Access Dashboard
-                  </Button>
-
-                  {/* Resend Button */}
-                  <div className="pt-2 text-center">
-                    {resendCooldown > 0 ? (
-                      <span className="text-xs text-[#898390]">
-                        Resend code in <strong className="text-[#191522] font-mono">{resendCooldown}s</strong>
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleResend}
-                        disabled={isResending}
-                        className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1.5 min-h-[44px] px-3"
-                      >
-                        <RefreshCw className={cn('h-3.5 w-3.5', isResending && 'animate-spin')} />
-                        <span>Resend verification code</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Bottom Login Prompt */}
-            <div className="pt-6 border-t border-[#E4E2DC] text-center text-xs text-[#625D69] max-w-md mx-auto w-full">
+            <div>
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                isLoading={isGoogleLoading}
+                disabled={uiState === 'SENDING'}
+                text="signup_with"
+              />
+            </div>
+
+            <div className="pt-2 text-center text-xs text-[#625D69]">
               Already have an account?{' '}
-              <Link href="/login" className="font-bold text-[#2563EB] hover:underline p-1">
+              <Link
+                href="/login"
+                className="font-semibold text-[#191522] hover:text-[#2563EB] underline decoration-[#E4E2DC] hover:decoration-[#2563EB] underline-offset-4 transition-colors p-1"
+              >
                 Sign in
               </Link>
             </div>
+          </>
+        ) : (
+          /* =========================================================================
+             STEP 2: EMAIL / OTP VERIFICATION
+             ========================================================================= */
+          <div className="space-y-6">
+            <button
+              type="button"
+              onClick={() => setStep('register')}
+              className="inline-flex items-center gap-2 text-xs font-medium text-[#625D69] hover:text-[#191522] transition-colors py-1"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to registration</span>
+            </button>
+
+            <AuthHeader
+              title="Verify your email."
+              subtitle={`We dispatched a 6-digit confirmation code to ${maskedEmail || email}.`}
+            />
+
+            {statusMessage && (
+              <AuthFeedback
+                type={uiState === 'EXPIRED' ? 'info' : 'error'}
+                message={statusMessage}
+              />
+            )}
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <div className="flex justify-center gap-2 sm:gap-3 py-2">
+                  {otpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => {
+                        otpInputsRef.current[idx] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleDigitChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(idx, e)}
+                      disabled={uiState === 'VERIFYING' || uiState === 'VERIFIED'}
+                      className={`h-12 w-11 sm:h-13 sm:w-12 text-center text-xl font-mono font-medium rounded-lg border bg-white focus:outline-none transition-colors duration-150 ${
+                        uiState === 'INVALID_CODE'
+                          ? 'border-[#E11D48] text-[#E11D48] bg-[#FFF1F2]'
+                          : digit
+                          ? 'border-[#191522] text-[#191522] shadow-2xs'
+                          : 'border-[#E4E2DC] text-[#625D69] hover:border-[#D6D4CD] focus:border-[#191522] focus:ring-1 focus:ring-[#191522]'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                {attemptsRemaining !== null && (
+                  <div className="text-center text-[11px] text-[#E11D48] font-medium">
+                    {attemptsRemaining} attempt{attemptsRemaining === 1 ? '' : 's'} remaining
+                  </div>
+                )}
+              </div>
+
+              {/* Expiration Timer */}
+              <div className="flex items-center justify-center gap-2 text-xs text-[#898390]">
+                <Clock className="h-3.5 w-3.5 text-[#898390]" />
+                <span>Code expires in:</span>
+                <span className="font-mono font-medium text-[#191522]">
+                  {formatExpiryTime(sessionExpiresIn)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => submitOtpVerification(otpDigits.join(''))}
+                disabled={
+                  uiState === 'VERIFYING' ||
+                  uiState === 'VERIFIED' ||
+                  otpDigits.join('').length !== 6
+                }
+                className="w-full min-h-[46px] flex items-center justify-center gap-2 rounded-lg bg-[#191522] hover:bg-[#2A1F3D] active:bg-[#120E1A] text-white text-sm font-medium transition-colors duration-150 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#191522]/30 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {uiState === 'VERIFYING' && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                <span>{uiState === 'VERIFYING' ? 'Verifying...' : 'Verify Code & Access Workspace'}</span>
+              </button>
+
+              {/* Resend Action */}
+              <div className="pt-2 text-center">
+                {resendCooldown > 0 ? (
+                  <span className="text-xs text-[#898390]">
+                    Resend code in <strong className="font-mono text-[#191522]">{resendCooldown}s</strong>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={isResending}
+                    className="text-xs font-medium text-[#2563EB] hover:text-[#1D4ED8] hover:underline inline-flex items-center gap-1.5 py-1 focus-visible:outline-none"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isResending ? 'animate-spin' : ''}`} />
+                    <span>Resend verification code</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ACCOUNT LINKING MODAL */}
@@ -705,6 +560,6 @@ export default function RegisterPage() {
           router.push('/dashboard');
         }}
       />
-    </div>
+    </AuthShell>
   );
 }

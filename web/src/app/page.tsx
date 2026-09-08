@@ -57,7 +57,7 @@ import { MOTION_DURATIONS, MOTION_EASINGS } from '@/lib/motion';
 export default function LandingPage() {
   const windowsDownloadUrl =
     process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL ||
-    'https://github.com/BlackHunter14365/MONVEX/releases/download/v2.0.0/MONVEX-Setup.exe';
+    '/downloads/MONVEX-Setup.exe';
 
   // Platform & Native Desktop Detection (SSR safe)
   const [isNativeDesktop, setIsNativeDesktop] = useState(false);

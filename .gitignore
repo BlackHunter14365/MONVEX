@@ -56,8 +56,11 @@ desktop/src-tauri/target/*
 web/src-tauri/target/
 web/src-tauri/target/*
 desktop/*.exe
+!desktop/MONVEX.exe
+!desktop/MONVEX-Setup.exe
 desktop/*.msi
 web/public/downloads/*.exe
+!web/public/downloads/MONVEX-Setup.exe
 web/public/downloads/*.msi
 
 # Flutter & Android

@@ -20,7 +20,16 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  RotateCw,
 } from 'lucide-react';
+import {
+  BankingCardView,
+  detectCardNetwork,
+  formatCardNumber,
+  formatExpiryDate,
+  CardTheme,
+  CardNetwork,
+} from './BankingCardView';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -39,15 +48,19 @@ export interface AccountItem {
   type: 'SAVINGS' | 'CHECKING' | 'CREDIT' | 'WALLET' | 'CASH';
   accountNumber: string;
   fullCardNumber: string;
+  rawCardNumber?: string;
+  cardholderName?: string;
+  expiryDate?: string;
+  cvv?: string;
   balance: number;
   creditLimit?: number;
   availableCredit?: number;
   monthlyInflow: number;
   monthlyOutflow: number;
   apy?: string;
-  theme: 'obsidian' | 'emerald' | 'sapphire' | 'amber';
+  theme: CardTheme;
   isFrozen: boolean;
-  network: 'VISA' | 'MASTERCARD' | 'RUPAY' | 'AMEX';
+  network: CardNetwork;
 }
 
 interface WalletAccountsSectionProps {
@@ -73,6 +86,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   const [showAllNumbers, setShowAllNumbers] = useState(false);
   const [individualRevealedMap, setIndividualRevealedMap] = useState<Record<string, boolean>>({});
   const [copiedCardId, setCopiedCardId] = useState<string | null>(null);
+  const [inspectorShowCvv, setInspectorShowCvv] = useState(false);
+  const [inspectorShowCardNumber, setInspectorShowCardNumber] = useState(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
@@ -96,13 +111,18 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   const [transferAmount, setTransferAmount] = useState('');
   const [isTransferring, setIsTransferring] = useState(false);
 
-  // New Account Form state
+  // New Account / Banking Card Form state
   const [newBankName, setNewBankName] = useState('');
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountType, setNewAccountType] = useState<'CHECKING' | 'SAVINGS' | 'CREDIT' | 'WALLET' | 'CASH'>('CHECKING');
-  const [newLastFour, setNewLastFour] = useState('');
+  const [newCardNumber, setNewCardNumber] = useState('');
+  const [newCardholderName, setNewCardholderName] = useState('');
+  const [newExpiryDate, setNewExpiryDate] = useState('');
+  const [newCvv, setNewCvv] = useState('');
+  const [showModalCvv, setShowModalCvv] = useState(false);
+  const [previewFlipped, setPreviewFlipped] = useState(false);
   const [newBalance, setNewBalance] = useState('');
-  const [newTheme, setNewTheme] = useState<'obsidian' | 'emerald' | 'sapphire' | 'amber'>('obsidian');
+  const [newTheme, setNewTheme] = useState<CardTheme>('obsidian');
   const [isSubmittingNew, setIsSubmittingNew] = useState(false);
 
   const fetchUserAccounts = useCallback(async () => {
@@ -124,7 +144,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         return;
       }
 
-      const themes: Array<'obsidian' | 'emerald' | 'sapphire' | 'amber'> = ['obsidian', 'emerald', 'sapphire', 'amber'];
+      const themes: CardTheme[] = ['obsidian', 'sapphire', 'emerald', 'amber', 'gold', 'platinum'];
 
       const mapped: AccountItem[] = assets.map((ast: any, idx: number) => {
         let meta: any = {};
@@ -136,9 +156,15 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           }
         }
 
-        const chosenTheme = meta.theme || themes[idx % themes.length];
+        const chosenTheme: CardTheme = meta.theme || themes[idx % themes.length];
         const val = parseFloat(ast.value) || 0;
-        const last4 = meta.last4 || (ast.name ? String(ast.name.length * 111).slice(-4).padStart(4, '0') : '0000');
+        const rawNum: string = (meta.raw_card_number || meta.full_card_number || '').replace(/\D/g, '');
+        const last4 = meta.last4 || (rawNum ? rawNum.slice(-4) : (ast.name ? String(ast.name.length * 111).slice(-4).padStart(4, '0') : '8821'));
+        const fullCardNumber = rawNum ? formatCardNumber(rawNum) : `•••• •••• •••• ${last4}`;
+        const cardholderName = meta.cardholder_name || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
+        const expiryDate = meta.expiry_date || '12/28';
+        const cvv = meta.cvv || '882';
+        const detectedNet: CardNetwork = meta.network || (rawNum ? detectCardNetwork(rawNum) : (idx % 2 === 0 ? 'VISA' : 'MASTERCARD'));
         const accType: AccountItem['type'] = meta.account_type || (ast.asset_type === 'CASH' ? 'WALLET' : (ast.asset_type === 'OTHER' ? 'CREDIT' : 'CHECKING'));
         const isCredit = accType === 'CREDIT';
 
@@ -148,7 +174,11 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           bankName: ast.institution || 'Personal Account',
           type: accType,
           accountNumber: last4,
-          fullCardNumber: `•••• •••• •••• ${last4}`,
+          fullCardNumber,
+          rawCardNumber: rawNum || undefined,
+          cardholderName,
+          expiryDate,
+          cvv,
           balance: val,
           creditLimit: isCredit ? (meta.credit_limit || val * 2) : undefined,
           availableCredit: isCredit ? (meta.available_credit || val) : undefined,
@@ -156,7 +186,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           monthlyOutflow: 0,
           theme: chosenTheme,
           isFrozen: !!meta.is_frozen,
-          network: idx % 2 === 0 ? 'VISA' : 'RUPAY',
+          network: detectedNet,
         };
       });
 
@@ -248,6 +278,12 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     const newFreeze = !target.isFrozen;
     const meta = {
       last4: target.accountNumber,
+      raw_card_number: target.rawCardNumber,
+      full_card_number: target.fullCardNumber,
+      cardholder_name: target.cardholderName,
+      expiry_date: target.expiryDate,
+      cvv: target.cvv,
+      network: target.network,
       theme: target.theme,
       is_frozen: newFreeze,
       account_type: target.type,
@@ -298,36 +334,31 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
     const fromAcc = accounts.find((a) => a.id === transferFrom);
     const toAcc = accounts.find((a) => a.id === transferTo);
+    if (!fromAcc || !toAcc) return;
 
-    if (!fromAcc || !toAcc) {
-      toast.error('Invalid transfer accounts selected.');
-      return;
-    }
-
-    if (fromAcc.balance < amt) {
-      toast.error('Insufficient funds in source account.');
+    if (fromAcc.balance < amt && fromAcc.type !== 'CREDIT') {
+      toast.error(`Insufficient balance in ${fromAcc.name}. Available: ${formatCurrency(fromAcc.balance, userCurrency)}`);
       return;
     }
 
     setIsTransferring(true);
     try {
-      // 1. Deduct from Source Asset
-      await api.updateAsset(fromAcc.id, { value: fromAcc.balance - amt });
-      // 2. Add to Destination Asset
-      await api.updateAsset(toAcc.id, { value: toAcc.balance + amt });
+      // 1. Deduct from source
+      const newFromBal = fromAcc.balance - amt;
+      await api.updateAsset(fromAcc.id, {
+        value: newFromBal,
+      });
 
-      // 3. Record audit trail transfer transaction
-      await api.createTransaction({
-        amount: amt,
-        type: 'TRANSFER',
-        description: `Internal Transfer: ${fromAcc.name} → ${toAcc.name}`,
-        date: new Date().toISOString().split('T')[0],
-      }).catch(() => null);
+      // 2. Add to destination
+      const newToBal = toAcc.balance + amt;
+      await api.updateAsset(toAcc.id, {
+        value: newToBal,
+      });
 
       setAccounts((prev) =>
         prev.map((a) => {
-          if (a.id === fromAcc.id) return { ...a, balance: a.balance - amt };
-          if (a.id === toAcc.id) return { ...a, balance: a.balance + amt };
+          if (a.id === fromAcc.id) return { ...a, balance: newFromBal };
+          if (a.id === toAcc.id) return { ...a, balance: newToBal };
           return a;
         })
       );
@@ -336,7 +367,6 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       setTransferAmount('');
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
       toast.success(`✓ Transferred ${formatCurrency(amt, userCurrency)} successfully!`);
     } catch (err: any) {
       toast.error(err?.message || 'Transfer failed.');
@@ -389,7 +419,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     toast.info(`Simulated affordability for "${item}"`);
   };
 
-  // Add Account Submission
+  // Add Account / Banking Card Submission
   const handleAddAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBankName.trim() || !newAccountName.trim() || !newBalance) {
@@ -398,13 +428,27 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     }
 
     const val = parseFloat(newBalance) || 0;
-    const last4 = newLastFour.trim() ? newLastFour.trim().slice(-4) : String(Math.floor(1000 + Math.random() * 9000));
+    const cleanDigits = newCardNumber.replace(/\D/g, '');
+    const last4 = cleanDigits.length >= 4 
+      ? cleanDigits.slice(-4) 
+      : String(Math.floor(1000 + Math.random() * 9000));
+    const fullNum = cleanDigits.length > 0 ? formatCardNumber(cleanDigits) : `•••• •••• •••• ${last4}`;
+    const cardholder = newCardholderName.trim() || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
+    const expiry = newExpiryDate.trim() || '12/28';
+    const cvv = newCvv.trim() || '882';
+    const detectedNet: CardNetwork = cleanDigits.length > 0 ? detectCardNetwork(cleanDigits) : 'VISA';
 
     setIsSubmittingNew(true);
     try {
-      const assetType = newAccountType === 'CREDIT' ? 'OTHER' : newAccountType === 'WALLET' || newAccountType === 'CASH' ? 'CASH' : 'BANK';
+      const assetType = newAccountType === 'CREDIT' ? 'OTHER' : (newAccountType === 'WALLET' || newAccountType === 'CASH') ? 'CASH' : 'BANK';
       const meta = {
         last4,
+        raw_card_number: cleanDigits,
+        full_card_number: fullNum,
+        cardholder_name: cardholder,
+        expiry_date: expiry,
+        cvv,
+        network: detectedNet,
         theme: newTheme,
         is_frozen: false,
         account_type: newAccountType,
@@ -424,7 +468,11 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         bankName: newBankName.trim(),
         type: newAccountType,
         accountNumber: last4,
-        fullCardNumber: `•••• •••• •••• ${last4}`,
+        fullCardNumber: fullNum,
+        rawCardNumber: cleanDigits || undefined,
+        cardholderName: cardholder,
+        expiryDate: expiry,
+        cvv,
         balance: val,
         creditLimit: newAccountType === 'CREDIT' ? val * 2 : undefined,
         availableCredit: newAccountType === 'CREDIT' ? val : undefined,
@@ -432,7 +480,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         monthlyOutflow: 0,
         theme: newTheme,
         isFrozen: false,
-        network: 'VISA',
+        network: detectedNet,
       };
 
       setAccounts((prev) => [...prev, newAcc]);
@@ -440,40 +488,21 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       setIsAddModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
-      toast.success(`✓ "${newAcc.name}" linked and saved to ledger!`);
+      toast.success(`✓ Card "${newAcc.name}" linked and saved to ledger!`);
 
       setNewBankName('');
       setNewAccountName('');
-      setNewLastFour('');
+      setNewCardNumber('');
+      setNewCardholderName('');
+      setNewExpiryDate('');
+      setNewCvv('');
       setNewBalance('');
+      setPreviewFlipped(false);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to add account.');
+      toast.error(err?.message || 'Failed to add banking card.');
     } finally {
       setIsSubmittingNew(false);
     }
-  };
-
-  const getCardThemeClasses = (theme: string, isSelected: boolean) => {
-    let bg = '';
-    const ringClass = isSelected ? 'ring-2 ring-[#4056A1] scale-[1.02] shadow-xl' : 'opacity-95 hover:opacity-100 hover:scale-[1.01]';
-
-    switch (theme) {
-      case 'emerald':
-        bg = 'bg-gradient-to-br from-[#064E3B] via-[#065F46] to-[#022C22]';
-        break;
-      case 'sapphire':
-        bg = 'bg-gradient-to-br from-[#1E3A8A] via-[#1D4ED8] to-[#172554]';
-        break;
-      case 'amber':
-        bg = 'bg-gradient-to-br from-[#78350F] via-[#92400E] to-[#451A03]';
-        break;
-      case 'obsidian':
-      default:
-        bg = 'bg-gradient-to-br from-[#2A1F3D] via-[#3B2D54] to-[#21182F]';
-        break;
-    }
-
-    return cn(bg, ringClass, 'text-white transition-all duration-200');
   };
 
   return (
@@ -589,102 +618,34 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               <div className="flex items-center justify-between">
                 <span className="swiss-eyebrow block">Select Account / Card to Inspect:</span>
                 <span className="text-[10.5px] text-[#898390] font-semibold">
-                  {showAllNumbers ? '🔓 Numbers Revealed' : '🔒 Protected Mode (Click 👁️ to reveal)'}
+                  Click card to inspect • Click Flip for CVV & magnetic stripe
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {accounts.map((acc) => {
                   const isSelected = acc.id === selectedAccountId;
-                  const isCredit = acc.type === 'CREDIT';
-                  const isRevealed = showAllNumbers || !!individualRevealedMap[acc.id];
-                  const isCopied = copiedCardId === acc.id;
 
                   return (
-                    <div
+                    <BankingCardView
                       key={acc.id}
-                      onClick={() => setSelectedAccountId(acc.id)}
-                      className={cn(
-                        'cursor-pointer relative w-full rounded-2xl p-4 sm:p-5 shadow-md flex flex-col justify-between h-44 select-none group',
-                        getCardThemeClasses(acc.theme, isSelected)
-                      )}
-                    >
-                      {/* Specular Reflection */}
-                      <div className="absolute top-0 right-0 left-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent rounded-t-2xl pointer-events-none" />
-
-                      {/* Top Row */}
-                      <div className="flex items-start justify-between relative z-10">
-                        <div className="min-w-0 flex-1 pr-2">
-                          <span className="text-[10px] font-mono tracking-widest text-white/70 uppercase block truncate">
-                            {acc.bankName}
-                          </span>
-                          <span className="text-xs font-black text-white block tracking-tight truncate mt-0.5">
-                            {acc.name}
-                          </span>
-                        </div>
-
-                        {/* Right Controls */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => handleToggleIndividualCard(e, acc.id)}
-                            className="p-1 rounded-md bg-white/10 hover:bg-white/25 text-white transition-all shadow-xs"
-                            title={isRevealed ? 'Mask card digits' : 'Reveal card digits'}
-                          >
-                            {isRevealed ? <EyeOff className="h-3 w-3 text-amber-300" /> : <Eye className="h-3 w-3 text-white/80" />}
-                          </button>
-
-                          <div className="h-5 w-7 rounded bg-amber-400/90 border border-amber-300 shadow-xs flex items-center justify-center shrink-0">
-                            <div className="w-3.5 h-2.5 border border-amber-800/40 rounded-xs grid grid-cols-2 gap-0.5" />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Middle Row: Card Number */}
-                      <div className="relative z-10 font-mono tracking-widest text-xs sm:text-sm text-white font-bold flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 truncate">
-                          <span className="text-white tracking-widest text-xs sm:text-[13px] font-mono">
-                            {isRevealed ? `•••• •••• •••• ${acc.accountNumber}` : `•••• •••• •••• ${acc.accountNumber}`}
-                          </span>
-
-                          {acc.isFrozen && (
-                            <span className="px-1.5 py-0.5 rounded bg-rose-950/80 border border-rose-500/60 text-[8px] font-bold text-rose-300 flex items-center gap-0.5">
-                              <Lock className="h-2 w-2" /> Frozen
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Click to Copy */}
-                        {isRevealed && (
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopyCardNumber(e, acc)}
-                            className="p-1 rounded bg-white/15 hover:bg-white/30 text-white transition-all ml-1 shrink-0"
-                            title="Copy Card Digits"
-                          >
-                            {isCopied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Bottom Row */}
-                      <div className="flex items-end justify-between relative z-10 border-t border-white/10 pt-2">
-                        <div>
-                          <span className="text-[9px] font-mono uppercase tracking-wider text-white/60 block">
-                            {isCredit ? 'Current Bill' : 'Balance'}
-                          </span>
-                          <span className="text-sm sm:text-base font-black tracking-tight text-white tabular-nums">
-                            {formatCurrency(acc.balance, userCurrency)}
-                          </span>
-                        </div>
-
-                        <div className="text-right">
-                          <span className="text-[10px] font-black tracking-widest text-white/90 font-mono">
-                            {acc.network}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                      bankName={acc.bankName}
+                      accountName={acc.name}
+                      cardholderName={acc.cardholderName}
+                      cardNumber={acc.fullCardNumber}
+                      rawCardNumber={acc.rawCardNumber}
+                      expiryDate={acc.expiryDate}
+                      cvv={acc.cvv}
+                      balance={acc.balance}
+                      currency={userCurrency}
+                      theme={acc.theme}
+                      network={acc.network}
+                      isFrozen={acc.isFrozen}
+                      isCredit={acc.type === 'CREDIT'}
+                      isSelected={isSelected}
+                      showNumber={showAllNumbers || !!individualRevealedMap[acc.id]}
+                      onSelect={() => setSelectedAccountId(acc.id)}
+                    />
                   );
                 })}
               </div>
@@ -776,6 +737,76 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                     <span className="text-xs font-black text-[#191522] block truncate">
                       {selectedAccount.type}
                     </span>
+                  </div>
+                </div>
+
+                {/* Banking Card Credentials & Security Panel */}
+                <div className="p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="swiss-eyebrow block text-[9px]">Banking Card Credentials</span>
+                    <span className="text-[10px] font-mono font-bold text-[#191522] bg-white px-2 py-0.5 rounded border border-[#E4E2DC]">
+                      {selectedAccount.network}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div className="bg-white p-2.5 rounded-lg border border-[#E4E2DC]">
+                      <span className="text-[9px] font-mono uppercase text-[#898390] block">Cardholder</span>
+                      <span className="font-bold text-[#191522] truncate block mt-0.5 uppercase">
+                        {selectedAccount.cardholderName || 'CARDHOLDER'}
+                      </span>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-lg border border-[#E4E2DC]">
+                      <span className="text-[9px] font-mono uppercase text-[#898390] block">Expiry (Valid Thru)</span>
+                      <span className="font-mono font-bold text-[#191522] block mt-0.5">
+                        {selectedAccount.expiryDate || '12/28'}
+                      </span>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-lg border border-[#E4E2DC] flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] font-mono uppercase text-[#898390] block">Security Code (CVV)</span>
+                        <span className="font-mono font-bold text-[#191522] block mt-0.5">
+                          {inspectorShowCvv ? (selectedAccount.cvv || '882') : '•••'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setInspectorShowCvv(!inspectorShowCvv)}
+                        className="p-1.5 rounded-md hover:bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] transition-colors"
+                        title={inspectorShowCvv ? 'Mask CVV' : 'Reveal CVV'}
+                      >
+                        {inspectorShowCvv ? <EyeOff className="h-3.5 w-3.5 text-amber-600" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white px-3 py-2 rounded-lg border border-[#E4E2DC] flex items-center justify-between font-mono text-xs">
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="text-[9px] uppercase text-[#898390] shrink-0">Card No:</span>
+                      <span className="font-bold text-[#191522] tracking-wider truncate">
+                        {inspectorShowCardNumber ? selectedAccount.fullCardNumber : `•••• •••• •••• ${selectedAccount.accountNumber}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setInspectorShowCardNumber(!inspectorShowCardNumber)}
+                        className="p-1 rounded hover:bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] transition-colors"
+                        title={inspectorShowCardNumber ? 'Mask Card Number' : 'Reveal Card Number'}
+                      >
+                        {inspectorShowCardNumber ? <EyeOff className="h-3 w-3 text-amber-600" /> : <Eye className="h-3 w-3" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyCardNumber(e, selectedAccount)}
+                        className="p-1 rounded hover:bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] transition-colors"
+                        title="Copy Card Number"
+                      >
+                        {copiedCardId === selectedAccount.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1003,59 +1034,126 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         </div>
       )}
 
-      {/* 3. Link New Account Modal */}
+      {/* 3. Link New Banking Card / Account Modal */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title="Link New Bank Account or Card"
-        subtitle="Add any checking, savings, credit card, or digital wallet."
-        maxWidth="md"
+        subtitle="Full banking card system with 16-digit embossing, EMV chip, and CVV security protection."
+        maxWidth="lg"
       >
         <form onSubmit={handleAddAccountSubmit} className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-[#191522] mb-1 block">Account / Card Label</label>
-            <input
-              type="text"
-              required
-              value={newAccountName}
-              onChange={(e) => setNewAccountName(e.target.value)}
-              placeholder="e.g. Salary Checking or Primary Credit"
-              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-            />
+          {/* Live Interactive 3D Card Preview */}
+          <div className="space-y-1.5 pb-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#625D69] font-bold">
+                Live Interactive Card Preview
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewFlipped(!previewFlipped)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4056A1] hover:text-[#26335F] bg-[#4056A1]/10 px-2.5 py-1 rounded-lg transition-colors"
+              >
+                <RotateCw className="h-3 w-3" />
+                <span>{previewFlipped ? 'Show Front' : 'Flip to Back (CVV)'}</span>
+              </button>
+            </div>
+
+            <div className="max-w-md mx-auto pt-1">
+              <BankingCardView
+                bankName={newBankName || 'BANK INSTITUTION'}
+                accountName={newAccountName || 'Primary Account'}
+                cardholderName={newCardholderName || (user?.username ? user.username.toUpperCase() : 'CARDHOLDER')}
+                cardNumber={newCardNumber || '•••• •••• •••• 8821'}
+                rawCardNumber={newCardNumber.replace(/\D/g, '')}
+                expiryDate={newExpiryDate || '12/28'}
+                cvv={newCvv || '882'}
+                balance={parseFloat(newBalance) || 0}
+                currency={userCurrency}
+                theme={newTheme}
+                network={newCardNumber.replace(/\D/g, '').length > 0 ? detectCardNetwork(newCardNumber) : 'VISA'}
+                isCredit={newAccountType === 'CREDIT'}
+                isFlipped={previewFlipped}
+                onFlipChange={setPreviewFlipped}
+                showControls={true}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Cardholder Name & Full Card Number */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">Institution / Bank</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">
+                Cardholder Name
+              </label>
               <input
                 type="text"
-                required
-                value={newBankName}
-                onChange={(e) => setNewBankName(e.target.value)}
-                placeholder="e.g. Chase Bank, HDFC, PayPal"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                value={newCardholderName}
+                onChange={(e) => setNewCardholderName(e.target.value.toUpperCase())}
+                placeholder="e.g. ALEX M. VANCE"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">Account Type</label>
-              <select
-                value={newAccountType}
-                onChange={(e) => setNewAccountType(e.target.value as any)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-              >
-                <option value="CHECKING">Checking / Salary</option>
-                <option value="SAVINGS">Savings / High-Yield</option>
-                <option value="CREDIT">Credit Card</option>
-                <option value="WALLET">Digital Wallet / UPI</option>
-                <option value="CASH">Physical Cash</option>
-              </select>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">
+                16-Digit Card Number
+              </label>
+              <input
+                type="text"
+                maxLength={19}
+                value={newCardNumber}
+                onChange={(e) => setNewCardNumber(formatCardNumber(e.target.value))}
+                placeholder="4532 8921 4455 8821"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-mono font-bold tracking-widest text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Expiry Date, CVV, and Current Balance */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">Current Balance ({userCurrency})</label>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">
+                Expiry Date (MM/YY)
+              </label>
+              <input
+                type="text"
+                maxLength={5}
+                value={newExpiryDate}
+                onChange={(e) => setNewExpiryDate(formatExpiryDate(e.target.value))}
+                placeholder="12/28"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-mono font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-[#191522] block">
+                  CVV / Security Code
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowModalCvv(!showModalCvv)}
+                  className="text-[10px] font-bold text-[#625D69] hover:text-[#191522] inline-flex items-center gap-1"
+                >
+                  {showModalCvv ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  <span>{showModalCvv ? 'Hide' : 'Show'}</span>
+                </button>
+              </div>
+              <input
+                type={showModalCvv ? 'text' : 'password'}
+                maxLength={4}
+                value={newCvv}
+                onChange={(e) => setNewCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="882"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-mono font-bold tracking-widest text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">
+                Starting Balance ({userCurrency})
+              </label>
               <input
                 type="number"
                 step="any"
@@ -1063,45 +1161,78 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                 value={newBalance}
                 onChange={(e) => setNewBalance(e.target.value)}
                 placeholder="e.g. 50000"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">Last 4 Digits (Optional)</label>
-              <input
-                type="text"
-                maxLength={4}
-                value={newLastFour}
-                onChange={(e) => setNewLastFour(e.target.value.replace(/\D/g, ''))}
-                placeholder="e.g. 8821"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
               />
             </div>
           </div>
 
+          {/* Account Label & Institution */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Institution / Bank</label>
+              <input
+                type="text"
+                required
+                value={newBankName}
+                onChange={(e) => setNewBankName(e.target.value)}
+                placeholder="e.g. Chase Bank, HDFC, Barclays"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#191522] mb-1 block">Account / Card Type</label>
+              <select
+                value={newAccountType}
+                onChange={(e) => setNewAccountType(e.target.value as any)}
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+              >
+                <option value="CHECKING">Debit / Checking Card</option>
+                <option value="SAVINGS">Savings Account Card</option>
+                <option value="CREDIT">Credit Line Card</option>
+                <option value="WALLET">Digital Wallet / UPI</option>
+                <option value="CASH">Physical Cash Reserve</option>
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label className="text-xs font-bold text-[#191522] mb-1 block">Card Visual Theme</label>
-            <div className="grid grid-cols-4 gap-2">
+            <label className="text-xs font-bold text-[#191522] mb-1 block">Account Nickname</label>
+            <input
+              type="text"
+              required
+              value={newAccountName}
+              onChange={(e) => setNewAccountName(e.target.value)}
+              placeholder="e.g. Primary Daily Checking or Travel Rewards"
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+            />
+          </div>
+
+          {/* 6 Luxury Card Themes */}
+          <div>
+            <label className="text-xs font-bold text-[#191522] mb-1.5 block">Card Finish & Palette</label>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {[
-                { id: 'obsidian', label: 'Deep Plum', color: 'bg-[#2A1F3D]' },
+                { id: 'obsidian', label: 'Obsidian', color: 'bg-[#2A1F3D]' },
                 { id: 'sapphire', label: 'Sapphire', color: 'bg-blue-600' },
                 { id: 'emerald', label: 'Emerald', color: 'bg-emerald-600' },
                 { id: 'amber', label: 'Amber', color: 'bg-amber-600' },
+                { id: 'gold', label: 'Gold', color: 'bg-yellow-500' },
+                { id: 'platinum', label: 'Platinum', color: 'bg-slate-400' },
               ].map((th) => (
                 <button
                   key={th.id}
                   type="button"
                   onClick={() => setNewTheme(th.id as any)}
                   className={cn(
-                    'p-2 rounded-xl border text-center text-xs font-bold transition-all flex items-center justify-center gap-1.5',
+                    'p-2 rounded-xl border text-center text-[11px] font-bold transition-all flex flex-col items-center justify-center gap-1.5',
                     newTheme === th.id
                       ? 'border-[#2A1F3D] bg-[#2A1F3D] text-white shadow-sm'
-                      : 'border-[#E4E2DC] bg-white text-[#625D69]'
+                      : 'border-[#E4E2DC] bg-white text-[#625D69] hover:text-[#191522]'
                   )}
                 >
-                  <span className={cn('h-2.5 w-2.5 rounded-full', th.color)} />
-                  <span>{th.label}</span>
+                  <span className={cn('h-3.5 w-3.5 rounded-full border border-white/20 shadow-xs', th.color)} />
+                  <span className="truncate">{th.label}</span>
                 </button>
               ))}
             </div>
@@ -1111,8 +1242,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
             <Button type="button" variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingNew} className="bg-[#2A1F3D] text-white font-bold">
-              Link Account
+            <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingNew} className="bg-[#2A1F3D] text-white font-bold px-5">
+              Link Banking Card
             </Button>
           </div>
         </form>

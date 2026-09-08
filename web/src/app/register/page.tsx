@@ -416,21 +416,27 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <div className="relative flex items-center justify-center my-4" aria-hidden="true">
+            {/* SSO Divider */}
+            <div className="relative flex items-center justify-center my-5 select-none" aria-hidden="true">
               <div className="border-t border-[#E4E2DC] w-full" />
-              <span className="bg-[#F6F5F1] px-3 text-[11px] font-medium text-[#898390] uppercase tracking-wider relative select-none">
-                or
+              <span className="bg-[#F6F5F1] px-3.5 text-[10px] font-mono tracking-widest text-[#898390] uppercase relative">
+                SSO ACCESS
               </span>
             </div>
 
-            <div>
+            {/* Unique Floating Capsule Google Authentication */}
+            <div className="flex flex-col items-center justify-center w-full">
               <GoogleSignInButton
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 isLoading={isGoogleLoading}
                 disabled={uiState === 'SENDING'}
                 text="signup_with"
+                shape="pill"
               />
+              <span className="text-[10px] font-mono text-[#A09CA8] tracking-wider uppercase mt-2.5 select-none">
+                One-Click Workspace Registration
+              </span>
             </div>
 
             <div className="pt-2 text-center text-xs text-[#625D69]">

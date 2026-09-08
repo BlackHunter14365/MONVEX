@@ -2,45 +2,30 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Send,
-  Sparkles,
-  Mic,
-  MicOff,
-  Copy,
-  Check,
+  History,
   Plus,
-  SquarePen,
-  Volume2,
-  VolumeX,
-  ThumbsUp,
-  ThumbsDown,
-  RotateCcw,
-  Search,
-  X,
-  Clock,
-  Trash2,
-  Pin,
-  ExternalLink,
-  BrainCircuit,
-  ChevronDown,
-  ChevronUp,
+  Zap,
   Activity,
-  ArrowRight,
+  ChevronDown,
+  X,
+  Database,
   ShieldCheck,
+  Search,
+  Trash2,
+  Sliders,
 } from 'lucide-react';
-import { cn, formatCurrency } from '@/lib/utils';
-import { useToast } from '@/context/ToastContext';
 import {
   DesktopChatMessage as MobileChatMessage,
   DesktopChatSessionHistory as MobileChatSessionHistory,
 } from '@/types/ai';
-import { DynamicAIChart } from './charts/DynamicAIChart';
-import {
-  AIMetricCardBlock,
-  AIInsightBlock,
-  AIRecommendationBlock,
-  AIActionChipsBlock,
-} from './blocks';
+import { AIIdentityIcon } from './AIIdentityIcon';
+import { AIMessageRenderer } from './AIMessageRenderer';
+import { AIActivityIndicator } from './AIActivityIndicator';
+import { FinancialCommandBar } from './FinancialCommandBar';
+import { AIContextPanel } from './AIContextPanel';
+import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
+import { PRESET_AVATARS } from '@/components/profile/UserProfileModal';
 
 export type { MobileChatMessage, MobileChatSessionHistory };
 
@@ -93,443 +78,312 @@ export const MobileAIWorkspace: React.FC<MobileAIWorkspaceProps> = ({
   toggleVoiceRecording,
   renderFormattedContent,
 }) => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [isTelemetrySheetOpen, setIsTelemetrySheetOpen] = useState(false);
   const [isModelSheetOpen, setIsModelSheetOpen] = useState(false);
-  const [openReasoningMap, setOpenReasoningMap] = useState<Record<string, boolean>>({});
-  const [searchFilter, setSearchFilter] = useState('');
+  const [searchHistory, setSearchHistory] = useState('');
+  const [summary, setSummary] = useState<any>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const toggleReasoning = (id: string) => {
-    setOpenReasoningMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  const userAvatar = user?.avatar_url || null;
+  const userPreset = user?.avatar_preset ? PRESET_AVATARS.find((p) => p.id === user.avatar_preset) : null;
+  const displayName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'You';
+
+  useEffect(() => {
+    api.getAnalyticsSummary().then(setSummary).catch(() => null);
+  }, [messages.length]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
   }, [messages, isLoading]);
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
-    }
-  }, [inputQuery]);
-
   const filteredHistory = chatHistory.filter((c) =>
-    c.title.toLowerCase().includes(searchFilter.toLowerCase())
+    c.title.toLowerCase().includes(searchHistory.toLowerCase())
   );
 
-  const mobileStarterPrompts = [
-    {
-      title: 'Analyze spending spikes',
-      prompt: 'Did I have any unusual expense or outlier spending spike this month?',
-    },
-    {
-      title: 'Affordability check',
-      prompt: 'Can I afford to buy an iPhone for ₹79,900 next month without hurting my runway?',
-    },
-    {
-      title: '30-Day cashflow forecast',
-      prompt: 'Forecast my cashflow trajectory for the next 30 days based on run-rate',
-    },
-    {
-      title: 'Simulate 20% dining cut',
-      prompt: 'What happens if I cut Food & Dining spending by 20% for the next 6 months?',
-    },
-  ];
-
   return (
-    <div className="flex flex-col h-[calc(100vh-4.5rem)] bg-[#FBFBFA] relative overflow-hidden select-none">
-      {/* =========================================================================
-          1. COMPACT MOBILE HEADER
-          ========================================================================= */}
-      <header className="h-13 border-b border-[#E4E2DC] px-3.5 flex items-center justify-between bg-white shrink-0 z-10">
+    <div className="flex flex-col h-[calc(100dvh-5.5rem)] bg-[#FAF9FD] overflow-hidden relative">
+      {/* 1. COMPACT MOBILE INTELLIGENCE HEADER */}
+      <header className="px-3 py-2.5 bg-white border-b border-[#E4E2DC] flex items-center justify-between gap-2 shrink-0 z-10 shadow-2xs">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsDrawerOpen(true)}
-            className="p-1.5 rounded-xl bg-[#F6F5F1] text-[#191522] border border-[#E4E2DC] active:scale-95"
-            title="History"
-          >
-            <Clock className="h-4 w-4" />
-          </button>
-
-          <div className="flex items-center gap-1.5">
-            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-0.5 shadow-2xs">
-              <Sparkles className="h-3 w-3 text-white" />
+          <div className="h-7 w-7 rounded-lg bg-[#2A1F3D] p-1 flex items-center justify-center">
+            <AIIdentityIcon size={16} glow />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 leading-none">
+              <span className="font-black text-xs text-[#191522]">MONVEX Copilot</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <span className="text-xs font-black text-[#191522] tracking-tight">
-              MONVEX AI
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsModelSheetOpen(true)}
+              className="text-[9.5px] font-mono text-[#2563EB] flex items-center gap-0.5 pt-0.5"
+            >
+              <span>{activeModel.split(' ')[0]} v2.4</span>
+              <ChevronDown className="h-2.5 w-2.5" />
+            </button>
           </div>
         </div>
 
+        {/* Action Controls */}
         <div className="flex items-center gap-1.5">
+          {/* Live Telemetry Sheet Trigger */}
           <button
             type="button"
-            onClick={() => setIsModelSheetOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F6F5F1] border border-[#E4E2DC] text-[11px] font-bold text-[#191522] active:scale-95"
+            onClick={() => setIsTelemetrySheetOpen(true)}
+            className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-white hover:bg-[#F3F1F8] border border-[#E2DFD7] text-[#0EA5E9]"
+            title="Open Balance Telemetry"
+            aria-label="Balance Telemetry"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span className="truncate max-w-[85px]">{activeModel.replace('Gemini ', '')}</span>
-            <ChevronDown className="h-3 w-3 text-[#898390]" />
+            <Activity className="h-4 w-4" />
           </button>
 
+          {/* Fresh Session */}
           <button
             type="button"
             onClick={onNewChat}
-            className="p-1.5 rounded-xl bg-[#2A1F3D] text-white shadow-2xs active:scale-95"
-            title="New Chat"
+            className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-white hover:bg-[#F3F1F8] border border-[#E2DFD7] text-[#2563EB]"
+            title="Fresh Session"
+            aria-label="Fresh Session"
           >
             <Plus className="h-4 w-4" />
+          </button>
+
+          {/* History Drawer Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsHistoryDrawerOpen(true)}
+            className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-white hover:bg-[#F3F1F8] border border-[#E2DFD7] text-[#625D69]"
+            title="Session Archive"
+            aria-label="Session Archive"
+          >
+            <History className="h-4 w-4" />
           </button>
         </div>
       </header>
 
-      {/* =========================================================================
-          2. SLIDE-OVER HISTORY DRAWER
-          ========================================================================= */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsDrawerOpen(false)}
-          />
-
-          <div className="relative w-4/5 max-w-xs bg-[#F7F6F3] h-full shadow-2xl flex flex-col justify-between p-3.5 z-10 border-r border-[#E4E2DC] animate-in slide-in-from-left duration-200">
-            <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#191522] uppercase tracking-wider">
-                  Conversation History
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="p-1 rounded-lg text-[#898390] hover:text-[#191522]"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="relative">
-                <Search className="h-3.5 w-3.5 text-[#898390] absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  placeholder="Search history..."
-                  className="w-full pl-7 pr-3 py-1.5 rounded-xl bg-white border border-[#E4E2DC] text-[11px] font-semibold text-[#191522] focus:outline-none"
-                />
-              </div>
-
-              <div className="flex-1 overflow-y-auto space-y-1 pr-1 scrollbar-thin">
-                {filteredHistory.map((s) => (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      onSelectConversation(s.id);
-                      setIsDrawerOpen(false);
-                    }}
-                    className={cn(
-                      'group flex items-center justify-between p-2 rounded-xl text-xs font-semibold cursor-pointer',
-                      currentConversationId === s.id
-                        ? 'bg-white text-[#191522] shadow-2xs border border-[#E4E2DC]'
-                        : 'text-[#625D69] hover:bg-white/60'
-                    )}
-                  >
-                    <span className="truncate flex-1 pr-2">{s.title}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => onDeleteConversation(e, s.id)}
-                      className="p-1 text-[#898390] hover:text-[#E11D48]"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-[#E4E2DC] flex items-center justify-between">
-              <span className="text-[10px] text-[#898390] font-semibold">Deterministic Math Active</span>
-              <span className="text-[10px] text-emerald-600 font-bold">Online</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          3. SCROLLABLE CONVERSATION CANVAS
-          ========================================================================= */}
-      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-4 scrollbar-thin">
+      {/* 2. MAIN MOBILE CONVERSATION FEED */}
+      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         {messages.length === 0 ? (
-          /* MOBILE WELCOME STATE */
-          <div className="h-full flex flex-col justify-center items-center text-center space-y-6 py-6 animate-in fade-in duration-300">
-            <div className="space-y-2">
-              <div className="h-12 w-12 mx-auto rounded-2xl overflow-hidden shadow-lg p-0.5 bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-                <img src="/ai-logo.png" alt="MONVEX AI" className="h-full w-full object-cover rounded-xl" />
-              </div>
-              <h2 className="text-xl font-black text-[#191522] tracking-tight">
-                MONVEX AI
-              </h2>
-              <p className="text-xs text-[#625D69] font-medium max-w-xs mx-auto leading-relaxed">
-                Your personal financial intelligence assistant. Ask about your spending, budgets, savings, or cash flow.
+          <div className="py-6 space-y-4 text-center">
+            <div className="h-12 w-12 mx-auto rounded-2xl bg-[#2A1F3D] p-2.5 flex items-center justify-center shadow-md">
+              <AIIdentityIcon size={26} glow animated />
+            </div>
+            <div className="space-y-1">
+              <span className="font-mono text-[10px] font-bold text-[#2563EB] uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                Financial OS Online
+              </span>
+              <h2 className="text-base font-black text-[#191522]">MONVEX Copilot</h2>
+              <p className="text-xs text-[#625D69] max-w-xs mx-auto leading-relaxed">
+                Deterministic ledger intelligence, runway forecasting, and cashflow modeling.
               </p>
             </div>
 
-            {/* Suggestion Buttons Grid */}
-            <div className="w-full space-y-2 pt-2">
-              <span className="text-[10px] font-bold text-[#898390] uppercase tracking-wider block">
-                Suggested Inquiries
+            {/* Quick Action Matrix for Mobile */}
+            <div className="space-y-2 pt-2 text-left">
+              <span className="text-[10px] font-mono font-bold text-[#898390] uppercase tracking-wider block px-1">
+                Quick Telemetry Commands
               </span>
-              <div className="grid grid-cols-1 gap-2">
-                {mobileStarterPrompts.map((st) => (
+              <div className="space-y-1.5">
+                {[
+                  { label: 'Analyze Outlier Spikes', prompt: 'Did I have any unusual expense or outlier spending spike this month?' },
+                  { label: 'Check Budget Runway', prompt: 'Analyze my budget utilization across all categories and flag over-budget risks.' },
+                  { label: '30-Day Cashflow Forecast', prompt: 'Forecast my cashflow trajectory for the next 30 days based on run-rate.' },
+                  { label: 'Simulate 20% Dining Cut', prompt: 'What happens if I cut Food & Dining spending by 20% for the next 6 months?' },
+                ].map((item, idx) => (
                   <button
-                    key={st.title}
-                    onClick={() => onSend(st.prompt)}
-                    className="w-full p-3 rounded-2xl bg-white hover:bg-[#F6F5F1] border border-[#E4E2DC] shadow-2xs hover:shadow-xs transition-all text-left flex items-center justify-between active:scale-98"
+                    key={idx}
+                    type="button"
+                    onClick={() => onSend(item.prompt)}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#E2DFD7] text-left text-xs font-semibold text-[#191522] shadow-2xs hover:bg-[#FAF9FD] active:scale-[0.99] transition-all"
                   >
-                    <div className="min-w-0 flex-1 pr-2">
-                      <span className="text-xs font-bold text-[#191522] block">{st.title}</span>
-                      <span className="text-[11px] text-[#625D69] block truncate">{st.prompt}</span>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-[#2563EB] shrink-0" />
+                    {item.label}
                   </button>
                 ))}
               </div>
             </div>
           </div>
         ) : (
-          /* ACTIVE MESSAGES STREAM */
-          <div className="space-y-4 pb-2">
-            {messages.map((msg) => {
-              const isUser = msg.sender === 'user';
-              const isSpeaking = speakingId === msg.id;
+          <div className="space-y-3">
+            {messages.map((message) => (
+              <AIMessageRenderer
+                key={message.id}
+                message={message}
+                userAvatar={userAvatar}
+                userPreset={userPreset}
+                displayName={displayName}
+                copiedId={copiedId}
+                onCopy={onCopy}
+                speakingId={speakingId}
+                onReadAloud={onReadAloud}
+                likedMap={likedMap}
+                onFeedback={onFeedback}
+                onExecutePrompt={onSend}
+                renderFormattedContent={renderFormattedContent}
+              />
+            ))}
 
-              return (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    'flex flex-col animate-in fade-in duration-200',
-                    isUser ? 'items-end' : 'items-start'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'flex items-start gap-2 max-w-[96%]',
-                      isUser ? 'flex-row-reverse' : 'flex-row'
-                    )}
-                  >
-                    {!isUser && (
-                      <div className="h-6 w-6 rounded-lg overflow-hidden shrink-0 mt-0.5 shadow-2xs border border-[#E4E2DC] bg-white">
-                        <img src="/ai-logo.png" alt="AI" className="h-full w-full object-cover" />
-                      </div>
-                    )}
-
-                    <div
-                      className={cn(
-                        'p-3.5 rounded-2xl text-xs leading-relaxed transition-all break-words space-y-2',
-                        isUser
-                          ? 'bg-[#2A1F3D] text-white rounded-tr-xs shadow-xs font-medium'
-                          : 'bg-white border border-[#E4E2DC] text-[#191522] rounded-tl-xs shadow-2xs'
-                      )}
-                    >
-                      {/* Tool execution badge */}
-                      {!isUser && msg.toolsUsed && msg.toolsUsed.length > 0 && (
-                        <div className="flex items-center gap-1 text-[10px] text-[#2563EB] font-bold pb-1 border-b border-[#F1EFEA]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          <span>{msg.toolsUsed.length} verified domain tools executed</span>
-                        </div>
-                      )}
-
-                      {/* Verified Financial KPI Cards */}
-                      {!isUser && msg.metrics && msg.metrics.length > 0 && (
-                        <AIMetricCardBlock metrics={msg.metrics} />
-                      )}
-
-                      {/* Dynamic Visual Financial Charts */}
-                      {!isUser && msg.charts && msg.charts.length > 0 && (
-                        <div className="space-y-2 my-2">
-                          {msg.charts.map((chart, cIdx) => (
-                            <DynamicAIChart key={`${chart.title}-${cIdx}`} chart={chart} />
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Markdown Text Response */}
-                      <div>{renderFormattedContent(msg.content)}</div>
-
-                      {/* Variance Drivers & Telemetry Insights */}
-                      {!isUser && msg.insights && msg.insights.length > 0 && (
-                        <AIInsightBlock insights={msg.insights} />
-                      )}
-
-                      {/* Actionable Recommendations */}
-                      {!isUser && msg.recommendations && msg.recommendations.length > 0 && (
-                        <AIRecommendationBlock
-                          recommendations={msg.recommendations}
-                          onActionClick={(prompt) => onSend(prompt)}
-                        />
-                      )}
-
-                      {/* Context-Aware Follow-Up Actions */}
-                      {!isUser && msg.actions && msg.actions.length > 0 && !msg.isStreaming && (
-                        <AIActionChipsBlock
-                          actions={msg.actions}
-                          onActionClick={(prompt) => onSend(prompt)}
-                          disabled={isLoading}
-                        />
-                      )}
-
-                      {/* Footer Actions */}
-                      {!isUser && !msg.isStreaming && (
-                        <div className="flex items-center justify-between pt-1 border-t border-[#F1EFEA] text-[10px] text-[#898390]">
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => onCopy(msg.id, msg.content)}
-                              className="hover:text-[#191522]"
-                            >
-                              {copiedId === msg.id ? 'Copied' : 'Copy'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onReadAloud(msg.id, msg.content)}
-                              className={cn('hover:text-[#191522]', isSpeaking && 'text-[#2563EB] font-bold')}
-                            >
-                              {isSpeaking ? 'Stop' : 'Read'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {isLoading && (
-              <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-white border border-[#E4E2DC] text-[11px] text-[#625D69] animate-pulse">
-                <Sparkles className="h-3.5 w-3.5 text-[#2563EB] animate-spin" />
-                <span>Synthesizing live verified financial telemetry...</span>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+            {isLoading && <AIActivityIndicator isLoading={isLoading} />}
           </div>
         )}
+
+        <div ref={messagesEndRef} className="h-2" />
+      </main>
+
+      {/* 3. STICKY MOBILE COMMAND BAR */}
+      <div className="p-2.5 bg-white border-t border-[#E4E2DC] shrink-0 shadow-lg">
+        <FinancialCommandBar
+          inputQuery={inputQuery}
+          setInputQuery={setInputQuery}
+          onSend={onSend}
+          isLoading={isLoading}
+          isRecording={isRecording}
+          toggleVoiceRecording={toggleVoiceRecording}
+          textareaRef={textareaRef}
+          compact
+        />
       </div>
 
-      {/* =========================================================================
-          4. COMPACT MOBILE COMPOSER
-          ========================================================================= */}
-      <footer className="p-2.5 bg-white border-t border-[#E4E2DC] shrink-0">
-        <div className="flex items-end gap-2 bg-[#F6F5F1] p-1.5 rounded-2xl border border-[#E4E2DC]">
-          <button
-            type="button"
-            onClick={toggleVoiceRecording}
-            className={cn(
-              'p-2 rounded-xl transition-all',
-              isRecording ? 'bg-[#E11D48] text-white animate-pulse' : 'text-[#898390]'
-            )}
-          >
-            {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </button>
-
-          <textarea
-            ref={textareaRef}
-            value={inputQuery}
-            onChange={(e) => setInputQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                onSend();
-              }
-            }}
-            placeholder={isRecording ? '🎙️ Listening...' : 'Ask MONVEX AI...'}
-            rows={1}
-            className="flex-1 bg-transparent text-xs font-semibold text-[#191522] placeholder:text-[#94A3B8] focus:outline-none py-1.5 resize-none max-h-24"
-          />
-
-          <button
-            type="button"
-            onClick={() => onSend()}
-            disabled={!inputQuery.trim() || isLoading}
-            className={cn(
-              'p-2 rounded-xl transition-all',
-              inputQuery.trim() ? 'bg-[#2A1F3D] text-white' : 'bg-[#E4E2DC] text-[#898390]'
-            )}
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-      </footer>
-
-      {/* Mobile Model Selector Bottom Sheet */}
-      {isModelSheetOpen && (
-        <div className="fixed inset-0 z-50 flex items-end">
+      {/* 4. MOBILE HISTORY DRAWER */}
+      {isHistoryDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsModelSheetOpen(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+            onClick={() => setIsHistoryDrawerOpen(false)}
           />
-          <div className="relative w-full bg-white rounded-t-3xl shadow-2xl p-5 z-10 border-t border-[#E4E2DC] space-y-4 animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-black text-[#191522] uppercase tracking-wider block">
-                  Select Execution Engine
-                </span>
-                <span className="text-[11px] text-[#625D69]">Choose how queries are processed</span>
+          <div className="relative w-[85vw] max-w-sm bg-[#FBFBFA] h-full shadow-2xl z-10 flex flex-col justify-between p-4 overflow-y-auto animate-in slide-in-from-right duration-200">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-[#ECE9E0] pb-3">
+                <div className="flex items-center gap-2">
+                  <AIIdentityIcon size={18} />
+                  <span className="font-bold text-sm text-[#191522]">Session History</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsHistoryDrawerOpen(false)}
+                  className="p-1 rounded-lg text-[#898390] hover:text-[#191522]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
+
               <button
                 type="button"
-                onClick={() => setIsModelSheetOpen(false)}
-                className="p-1 rounded-lg text-[#898390] hover:text-[#191522]"
+                onClick={() => {
+                  onNewChat();
+                  setIsHistoryDrawerOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#2A1F3D] text-white font-bold text-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Start Fresh Session</span>
+              </button>
+
+              <div className="space-y-1.5 pt-2">
+                {chatHistory.map((s) => (
+                  <div
+                    key={s.id}
+                    onClick={() => {
+                      onSelectConversation(s.id);
+                      setIsHistoryDrawerOpen(false);
+                    }}
+                    className={cn(
+                      'flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold',
+                      s.id === currentConversationId
+                        ? 'bg-[#EEEAF7] text-[#191522] border-[#625477]/30'
+                        : 'bg-white text-[#625D69] border-[#E4E2DC]'
+                    )}
+                  >
+                    <span className="truncate flex-1">{s.title}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => onDeleteConversation(e, s.id)}
+                      className="p-1 text-slate-400 hover:text-rose-600 ml-2"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. MOBILE TELEMETRY CONTEXT SHEET */}
+      {isTelemetrySheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+            onClick={() => setIsTelemetrySheetOpen(false)}
+          />
+          <div className="relative w-full max-h-[80vh] bg-white rounded-t-3xl shadow-2xl z-10 flex flex-col p-4 overflow-y-auto animate-in slide-in-from-bottom duration-200 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#ECE9E0] pb-2">
+              <span className="font-bold text-sm text-[#191522]">Live Balance Telemetry</span>
+              <button
+                type="button"
+                onClick={() => setIsTelemetrySheetOpen(false)}
+                className="p-1 text-[#898390]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveModel('Autonomous Reasoner v2.4');
-                  setIsModelSheetOpen(false);
-                }}
-                className={cn(
-                  'w-full text-left p-3.5 rounded-2xl text-xs transition-all space-y-1 border min-h-[48px]',
-                  activeModel.includes('Autonomous')
-                    ? 'bg-blue-50/70 border-blue-200 text-[#191522]'
-                    : 'bg-[#FBFBFA] border-[#E4E2DC] text-[#191522]'
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm">Deterministic Reasoner v2.4</span>
-                  <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Verified Zero-Slop</span>
-                </div>
-                <p className="text-[11px] text-[#625D69]">Direct Django database telemetry, anomaly Z-scores, and deterministic calculation math.</p>
-              </button>
+            <AIContextPanel
+              summary={summary}
+              onSelectPrompt={(p) => {
+                onSend(p);
+                setIsTelemetrySheetOpen(false);
+              }}
+              className="w-full border-l-0 p-0 bg-transparent"
+            />
+          </div>
+        </div>
+      )}
 
+      {/* 6. MODEL SELECTOR SHEET */}
+      {isModelSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+            onClick={() => setIsModelSheetOpen(false)}
+          />
+          <div className="relative w-full bg-white rounded-t-3xl shadow-2xl z-10 p-4 space-y-3 animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between border-b border-[#ECE9E0] pb-2">
+              <span className="font-bold text-sm text-[#191522]">Select Reasoner Engine</span>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveModel('Gemini 2.0 Flash');
-                  setIsModelSheetOpen(false);
-                }}
-                className={cn(
-                  'w-full text-left p-3.5 rounded-2xl text-xs transition-all space-y-1 border min-h-[48px]',
-                  activeModel === 'Gemini 2.0 Flash'
-                    ? 'bg-blue-50/70 border-blue-200 text-[#191522]'
-                    : 'bg-[#FBFBFA] border-[#E4E2DC] text-[#191522]'
-                )}
+                onClick={() => setIsModelSheetOpen(false)}
+                className="p-1 text-[#898390]"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm">Gemini 2.0 Flash</span>
-                  <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">Cloud Hybrid</span>
-                </div>
-                <p className="text-[11px] text-[#625D69]">Natural language synthesis with multimodal receipt OCR & context parsing.</p>
+                <X className="h-5 w-5" />
               </button>
             </div>
+
+            {['Autonomous Reasoner v2.4', 'Precision Financial Math'].map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  setActiveModel(m);
+                  setIsModelSheetOpen(false);
+                }}
+                className={cn(
+                  'w-full text-left p-3 rounded-xl border text-xs font-bold transition-all',
+                  activeModel === m
+                    ? 'bg-[#EEEAF7] text-[#191522] border-[#625477]/30'
+                    : 'bg-white text-[#625D69] border-[#E4E2DC]'
+                )}
+              >
+                {m}
+              </button>
+            ))}
           </div>
         </div>
       )}

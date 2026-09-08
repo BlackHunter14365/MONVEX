@@ -33,14 +33,14 @@ class FinancialAIAgentTests(TestCase):
         )
 
         # Categories
-        self.cat_food = Category.objects.create(name="Food & Dining", type="EXPENSE")
-        self.cat_shop = Category.objects.create(name="Shopping", type="EXPENSE")
-        self.cat_salary = Category.objects.create(name="Salary", type="INCOME")
+        self.cat_food, _ = Category.objects.get_or_create(name="Food & Dining", defaults={"type": "EXPENSE"})
+        self.cat_shop, _ = Category.objects.get_or_create(name="Shopping", defaults={"type": "EXPENSE"})
+        self.cat_salary, _ = Category.objects.get_or_create(name="Salary", defaults={"type": "INCOME"})
 
         # Merchants
-        self.merch_swiggy = Merchant.objects.create(name="Swiggy", normalized_name="swiggy", default_category=self.cat_food)
-        self.merch_amazon = Merchant.objects.create(name="Amazon", normalized_name="amazon", default_category=self.cat_shop)
-        self.merch_employer = Merchant.objects.create(name="Tech Corp", normalized_name="tech corp", default_category=self.cat_salary)
+        self.merch_swiggy, _ = Merchant.objects.get_or_create(name="Swiggy", defaults={"normalized_name": "swiggy", "default_category": self.cat_food})
+        self.merch_amazon, _ = Merchant.objects.get_or_create(name="Amazon", defaults={"normalized_name": "amazon", "default_category": self.cat_shop})
+        self.merch_employer, _ = Merchant.objects.get_or_create(name="Tech Corp", defaults={"normalized_name": "tech corp", "default_category": self.cat_salary})
 
         # Liquid Bank Assets for User A
         self.acc_a = Asset.objects.create(

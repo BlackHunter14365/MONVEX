@@ -5,6 +5,7 @@ import {
   CreditCard,
   Building2,
   Wallet,
+  Coins,
   ArrowUpRight,
   ArrowDownRight,
   Plus,
@@ -12,15 +13,21 @@ import {
   Unlock,
   Eye,
   EyeOff,
-  Sparkles,
-  Gauge,
-  ArrowRightLeft,
   Copy,
   Check,
   Trash2,
+  Edit2,
   Loader2,
   AlertCircle,
   RotateCw,
+  Search,
+  ArrowRightLeft,
+  ShieldCheck,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  SlidersHorizontal,
+  Info,
 } from 'lucide-react';
 import {
   BankingCardView,
@@ -55,9 +62,6 @@ export interface AccountItem {
   balance: number;
   creditLimit?: number;
   availableCredit?: number;
-  monthlyInflow: number;
-  monthlyOutflow: number;
-  apy?: string;
   theme: CardTheme;
   isFrozen: boolean;
   network: CardNetwork;
@@ -78,53 +82,78 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   const toast = useToast();
   const queryClient = useQueryClient();
 
+  // Accounts State
   const [accounts, setAccounts] = useState<AccountItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Inspector & Selection State
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [showAllNumbers, setShowAllNumbers] = useState(false);
-  const [individualRevealedMap, setIndividualRevealedMap] = useState<Record<string, boolean>>({});
-  const [copiedCardId, setCopiedCardId] = useState<string | null>(null);
-  const [inspectorShowCvv, setInspectorShowCvv] = useState(false);
   const [inspectorShowCardNumber, setInspectorShowCardNumber] = useState(false);
+  const [inspectorShowCvv, setInspectorShowCvv] = useState(false);
+  const [copiedAccountField, setCopiedAccountField] = useState<string | null>(null);
+  const [inspectorFlipped, setInspectorFlipped] = useState(false);
 
+  // Directory Filter & Search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTab, setSelectedTab] = useState<'ALL' | 'BANK' | 'CREDIT' | 'WALLET'>('ALL');
+  const [sortBy, setSortBy] = useState<'BALANCE_DESC' | 'BALANCE_ASC' | 'NAME' | 'NEWEST'>('BALANCE_DESC');
+
+  // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  // Impulse Buy Simulator State
-  const [impulseItem, setImpulseItem] = useState('');
-  const [impulseAmount, setImpulseAmount] = useState('');
-  const [impulseVerdict, setImpulseVerdict] = useState<{
+  // Active item being operated on
+  const [targetAccountForAction, setTargetAccountForAction] = useState<AccountItem | null>(null);
+  const [isActionPending, setIsActionPending] = useState(false);
+
+  // Add Account Form State
+  const [addBankName, setAddBankName] = useState('');
+  const [addAccountName, setAddAccountName] = useState('');
+  const [addAccountType, setAddAccountType] = useState<'CHECKING' | 'SAVINGS' | 'CREDIT' | 'WALLET' | 'CASH'>('CHECKING');
+  const [addBalance, setAddBalance] = useState('');
+  const [addCardNumber, setAddCardNumber] = useState('');
+  const [addCardholderName, setAddCardholderName] = useState('');
+  const [addExpiryDate, setAddExpiryDate] = useState('');
+  const [addCvv, setAddCvv] = useState('');
+  const [addTheme, setAddTheme] = useState<CardTheme>('obsidian');
+  const [addCardPreviewFlipped, setAddCardPreviewFlipped] = useState(false);
+  const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
+
+  // Edit Account Form State
+  const [editAccountName, setEditAccountName] = useState('');
+  const [editBankName, setEditBankName] = useState('');
+  const [editBalance, setEditBalance] = useState('');
+  const [editCardholderName, setEditCardholderName] = useState('');
+  const [editExpiryDate, setEditExpiryDate] = useState('');
+  const [editTheme, setEditTheme] = useState<CardTheme>('obsidian');
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
+  // Transfer Funds Form State
+  const [transferFromId, setTransferFromId] = useState('');
+  const [transferToId, setTransferToId] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
+
+  // Affordability Calculator State
+  const [affordItemName, setAffordItemName] = useState('');
+  const [affordCost, setAffordCost] = useState('');
+  const [affordabilityAnalysis, setAffordabilityAnalysis] = useState<{
     item: string;
     cost: number;
-    status: 'SAFE' | 'CAUTION' | 'DANGER';
-    impactPct: number;
-    monthsDelayed: number;
-    message: string;
+    impactRatio: number;
+    remainingBalance: number;
+    burnCoverageDays: number;
+    rating: 'SAFE' | 'MODERATE' | 'RISK';
+    recommendation: string;
   } | null>(null);
 
-  // Transfer Funds State
-  const [transferFrom, setTransferFrom] = useState('');
-  const [transferTo, setTransferTo] = useState('');
-  const [transferAmount, setTransferAmount] = useState('');
-  const [isTransferring, setIsTransferring] = useState(false);
-
-  // New Account / Banking Card Form state
-  const [newBankName, setNewBankName] = useState('');
-  const [newAccountName, setNewAccountName] = useState('');
-  const [newAccountType, setNewAccountType] = useState<'CHECKING' | 'SAVINGS' | 'CREDIT' | 'WALLET' | 'CASH'>('CHECKING');
-  const [newCardNumber, setNewCardNumber] = useState('');
-  const [newCardholderName, setNewCardholderName] = useState('');
-  const [newExpiryDate, setNewExpiryDate] = useState('');
-  const [newCvv, setNewCvv] = useState('');
-  const [showModalCvv, setShowModalCvv] = useState(false);
-  const [previewFlipped, setPreviewFlipped] = useState(false);
-  const [newBalance, setNewBalance] = useState('');
-  const [newTheme, setNewTheme] = useState<CardTheme>('obsidian');
-  const [isSubmittingNew, setIsSubmittingNew] = useState(false);
-
+  // ---------------------------------------------------------------------------
+  // 1. Fetch & Transform Accounts
+  // ---------------------------------------------------------------------------
   const fetchUserAccounts = useCallback(async () => {
     if (!user) {
       setAccounts([]);
@@ -182,8 +211,6 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           balance: val,
           creditLimit: isCredit ? (meta.credit_limit || val * 2) : undefined,
           availableCredit: isCredit ? (meta.available_credit || val) : undefined,
-          monthlyInflow: 0,
-          monthlyOutflow: 0,
           theme: chosenTheme,
           isFrozen: !!meta.is_frozen,
           network: detectedNet,
@@ -205,121 +232,391 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     fetchUserAccounts();
   }, [fetchUserAccounts]);
 
+  // Selected Account in Master-Detail
   const selectedAccount = useMemo(() => {
     return accounts.find((a) => a.id === selectedAccountId) || accounts[0] || null;
   }, [accounts, selectedAccountId]);
 
+  // ---------------------------------------------------------------------------
+  // 2. Overview Calculations (100% derived from real DB data)
+  // ---------------------------------------------------------------------------
   const totalPortfolioLiquidity = useMemo(() => {
     return accounts.reduce((sum, a) => (a.type === 'CREDIT' ? sum : sum + a.balance), 0);
   }, [accounts]);
 
-  // Compute live metrics from real user data
-  const velocityMetrics = useMemo(() => {
-    if (accounts.length === 0) return null;
+  const cashflowMetrics = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
 
-    const totalOutflow = realTransactions
-      .filter((t) => t.type === 'EXPENSE')
-      .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const monthlyTx = realTransactions.filter((tx) => {
+      const d = new Date(tx.date || tx.created_at);
+      return !isNaN(d.getTime()) && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
 
-    const totalInflow = realTransactions
+    const targetTx = monthlyTx.length > 0 ? monthlyTx : realTransactions;
+
+    const inflows = targetTx
       .filter((t) => t.type === 'INCOME')
       .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
 
-    const dailyPace = Math.round(totalOutflow / 30);
-    const monthlyBurn = totalOutflow > 0 ? totalOutflow : 1;
-    const runwayDays = totalPortfolioLiquidity > 0 ? Math.round((totalPortfolioLiquidity / monthlyBurn) * 30) : 0;
-    const savingsRatio = totalInflow > 0 ? Math.max(0, Math.round(((totalInflow - totalOutflow) / totalInflow) * 100)) : 0;
+    const outflows = targetTx
+      .filter((t) => t.type === 'EXPENSE')
+      .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+    const inflowCount = targetTx.filter((t) => t.type === 'INCOME').length;
+    const outflowCount = targetTx.filter((t) => t.type === 'EXPENSE').length;
 
     return {
-      dailyPace,
+      inflows,
+      outflows,
+      net: inflows - outflows,
+      inflowCount,
+      outflowCount,
+      totalCount: targetTx.length,
+    };
+  }, [realTransactions]);
+
+  const creditMetrics = useMemo(() => {
+    const creditAccounts = accounts.filter((a) => a.type === 'CREDIT');
+    const outstandingBalance = creditAccounts.reduce((sum, a) => sum + a.balance, 0);
+    const totalLimit = creditAccounts.reduce((sum, a) => sum + (a.creditLimit || a.balance * 2), 0);
+    const availableCredit = Math.max(0, totalLimit - outstandingBalance);
+
+    return {
+      cardCount: creditAccounts.length,
+      outstandingBalance,
+      totalLimit,
+      availableCredit,
+    };
+  }, [accounts]);
+
+  const burnRateMetrics = useMemo(() => {
+    const totalExpenses = realTransactions
+      .filter((t) => t.type === 'EXPENSE')
+      .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+    const monthlyBurn = totalExpenses > 0 ? totalExpenses : 0;
+    const dailyBurn = monthlyBurn > 0 ? monthlyBurn / 30 : 0;
+    const runwayDays = dailyBurn > 0 && totalPortfolioLiquidity > 0
+      ? Math.round(totalPortfolioLiquidity / dailyBurn)
+      : totalPortfolioLiquidity > 0 ? 365 : 0;
+
+    return {
+      monthlyBurn,
+      dailyBurn,
       runwayDays,
-      savingsRatio,
-      hasTransactionData: realTransactions.length > 0,
+      hasExpenseData: totalExpenses > 0,
     };
-  }, [accounts, realTransactions, totalPortfolioLiquidity]);
+  }, [realTransactions, totalPortfolioLiquidity]);
 
-  // Toggle Global Show/Hide
-  const handleToggleGlobalShow = () => {
-    const nextState = !showAllNumbers;
-    setShowAllNumbers(nextState);
-    if (nextState) {
-      toast.success('✓ Card numbers revealed.');
-    } else {
-      setIndividualRevealedMap({});
-      toast.info('🔒 Card numbers securely masked.');
+  // ---------------------------------------------------------------------------
+  // 3. Filtered & Sorted Directory List
+  // ---------------------------------------------------------------------------
+  const filteredAccounts = useMemo(() => {
+    let result = [...accounts];
+
+    // Filter by Tab
+    if (selectedTab === 'BANK') {
+      result = result.filter((a) => a.type === 'CHECKING' || a.type === 'SAVINGS');
+    } else if (selectedTab === 'CREDIT') {
+      result = result.filter((a) => a.type === 'CREDIT');
+    } else if (selectedTab === 'WALLET') {
+      result = result.filter((a) => a.type === 'WALLET' || a.type === 'CASH');
     }
-  };
 
-  // Toggle Per-Card Show/Hide
-  const handleToggleIndividualCard = (e: React.MouseEvent, cardId: string) => {
-    e.stopPropagation();
-    setIndividualRevealedMap((prev) => {
-      const isCurrentlyShown = showAllNumbers || !!prev[cardId];
-      const next = { ...prev, [cardId]: !isCurrentlyShown };
-      toast.info(!isCurrentlyShown ? 'Card digits revealed' : 'Card digits masked');
-      return next;
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (a) =>
+          a.name.toLowerCase().includes(q) ||
+          a.bankName.toLowerCase().includes(q) ||
+          a.accountNumber.includes(q) ||
+          a.fullCardNumber.includes(q)
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      if (sortBy === 'BALANCE_DESC') return b.balance - a.balance;
+      if (sortBy === 'BALANCE_ASC') return a.balance - b.balance;
+      if (sortBy === 'NAME') return a.name.localeCompare(b.name);
+      return Number(b.id) - Number(a.id);
     });
-  };
 
-  // Copy Card Number
-  const handleCopyCardNumber = (e: React.MouseEvent, acc: AccountItem) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(acc.fullCardNumber);
-    setCopiedCardId(acc.id);
-    toast.success(`✓ Copied: ${acc.fullCardNumber}`);
-    setTimeout(() => setCopiedCardId(null), 2000);
-  };
+    return result;
+  }, [accounts, selectedTab, searchQuery, sortBy]);
 
-  // Freeze/Unfreeze Card
-  const handleToggleFreeze = async (id: string) => {
-    const target = accounts.find((a) => a.id === id);
-    if (!target) return;
-
-    const newFreeze = !target.isFrozen;
-    const meta = {
-      last4: target.accountNumber,
-      raw_card_number: target.rawCardNumber,
-      full_card_number: target.fullCardNumber,
-      cardholder_name: target.cardholderName,
-      expiry_date: target.expiryDate,
-      cvv: target.cvv,
-      network: target.network,
-      theme: target.theme,
-      is_frozen: newFreeze,
-      account_type: target.type,
+  const counts = useMemo(() => {
+    return {
+      all: accounts.length,
+      bank: accounts.filter((a) => a.type === 'CHECKING' || a.type === 'SAVINGS').length,
+      credit: accounts.filter((a) => a.type === 'CREDIT').length,
+      wallet: accounts.filter((a) => a.type === 'WALLET' || a.type === 'CASH').length,
     };
+  }, [accounts]);
 
-    try {
-      await api.updateAsset(id, { notes: JSON.stringify(meta) });
-      setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, isFrozen: newFreeze } : a)));
-      toast.info(newFreeze ? `${target.name} is now Frozen.` : `${target.name} is Unlocked & Active.`);
-    } catch {
-      toast.error('Unable to update card status.');
-    }
+  // Account-Specific Activity Feed
+  const selectedAccountTransactions = useMemo(() => {
+    if (!selectedAccount) return [];
+    const bName = selectedAccount.bankName.toLowerCase();
+    const aName = selectedAccount.name.toLowerCase();
+
+    // Match by account/institution if present, else fallback to latest transactions with indication
+    const directMatches = realTransactions.filter((t) => {
+      const notes = (t.notes || '').toLowerCase();
+      const desc = (t.description || '').toLowerCase();
+      const inst = (t.institution || '').toLowerCase();
+      return inst.includes(bName) || desc.includes(bName) || notes.includes(aName);
+    });
+
+    return directMatches.length > 0 ? directMatches.slice(0, 5) : realTransactions.slice(0, 5);
+  }, [selectedAccount, realTransactions]);
+
+  // ---------------------------------------------------------------------------
+  // 4. Action Handlers: Create, Edit, Freeze, Delete, Transfer
+  // ---------------------------------------------------------------------------
+
+  // Copy to clipboard
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedAccountField(label);
+    toast.success(`✓ Copied ${label} to clipboard`);
+    setTimeout(() => setCopiedAccountField(null), 2000);
   };
 
-  // Delete Account
-  const handleDeleteAccount = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to remove "${name}"?`)) return;
+  // Open Edit Modal
+  const handleOpenEditModal = (acc: AccountItem) => {
+    setTargetAccountForAction(acc);
+    setEditAccountName(acc.name);
+    setEditBankName(acc.bankName);
+    setEditBalance(String(acc.balance));
+    setEditCardholderName(acc.cardholderName || '');
+    setEditExpiryDate(acc.expiryDate || '');
+    setEditTheme(acc.theme);
+    setIsEditModalOpen(true);
+  };
 
-    setIsDeletingId(id);
+  // Submit Edit Account
+  const handleEditAccountSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetAccountForAction) return;
+
+    if (!editAccountName.trim() || !editBankName.trim() || !editBalance) {
+      toast.error('Please enter account name, institution, and balance.');
+      return;
+    }
+
+    const val = parseFloat(editBalance) || 0;
+    setIsSubmittingEdit(true);
+
     try {
-      await api.deleteAsset(id);
+      const meta = {
+        last4: targetAccountForAction.accountNumber,
+        raw_card_number: targetAccountForAction.rawCardNumber,
+        full_card_number: targetAccountForAction.fullCardNumber,
+        cardholder_name: editCardholderName.trim() || targetAccountForAction.cardholderName,
+        expiry_date: editExpiryDate.trim() || targetAccountForAction.expiryDate,
+        cvv: targetAccountForAction.cvv,
+        network: targetAccountForAction.network,
+        theme: editTheme,
+        is_frozen: targetAccountForAction.isFrozen,
+        account_type: targetAccountForAction.type,
+      };
+
+      await api.updateAsset(targetAccountForAction.id, {
+        name: editAccountName.trim(),
+        institution: editBankName.trim(),
+        value: val,
+        notes: JSON.stringify(meta),
+      });
+
+      setAccounts((prev) =>
+        prev.map((a) =>
+          a.id === targetAccountForAction.id
+            ? {
+                ...a,
+                name: editAccountName.trim(),
+                bankName: editBankName.trim(),
+                balance: val,
+                cardholderName: meta.cardholder_name,
+                expiryDate: meta.expiry_date,
+                theme: editTheme,
+              }
+            : a
+        )
+      );
+
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
-      setAccounts((prev) => prev.filter((a) => a.id !== id));
-      if (selectedAccountId === id) {
-        setSelectedAccountId(null);
-      }
-      toast.success(`✓ "${name}" removed from your ledger.`);
+      setIsEditModalOpen(false);
+      toast.success(`✓ Account "${editAccountName}" updated successfully.`);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete account.');
+      toast.error(err?.message || 'Failed to update account.');
     } finally {
-      setIsDeletingId(null);
+      setIsSubmittingEdit(false);
     }
   };
 
-  // Transfer Funds Handler
+  // Open Freeze Modal
+  const handleOpenFreezeModal = (acc: AccountItem) => {
+    setTargetAccountForAction(acc);
+    setIsFreezeModalOpen(true);
+  };
+
+  // Confirm Freeze / Unfreeze
+  const handleConfirmToggleFreeze = async () => {
+    if (!targetAccountForAction) return;
+
+    setIsActionPending(true);
+    const newFreeze = !targetAccountForAction.isFrozen;
+    const meta = {
+      last4: targetAccountForAction.accountNumber,
+      raw_card_number: targetAccountForAction.rawCardNumber,
+      full_card_number: targetAccountForAction.fullCardNumber,
+      cardholder_name: targetAccountForAction.cardholderName,
+      expiry_date: targetAccountForAction.expiryDate,
+      cvv: targetAccountForAction.cvv,
+      network: targetAccountForAction.network,
+      theme: targetAccountForAction.theme,
+      is_frozen: newFreeze,
+      account_type: targetAccountForAction.type,
+    };
+
+    try {
+      await api.updateAsset(targetAccountForAction.id, { notes: JSON.stringify(meta) });
+      setAccounts((prev) =>
+        prev.map((a) => (a.id === targetAccountForAction.id ? { ...a, isFrozen: newFreeze } : a))
+      );
+      setIsFreezeModalOpen(false);
+      toast.info(
+        newFreeze
+          ? `🔒 ${targetAccountForAction.name} is now Frozen. Outgoing card payments are suspended.`
+          : `✓ ${targetAccountForAction.name} is Unfrozen and ready for transactions.`
+      );
+    } catch {
+      toast.error('Unable to update card status.');
+    } finally {
+      setIsActionPending(false);
+    }
+  };
+
+  // Open Delete Modal
+  const handleOpenDeleteModal = (acc: AccountItem) => {
+    setTargetAccountForAction(acc);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Confirm Delete Account
+  const handleConfirmDelete = async () => {
+    if (!targetAccountForAction) return;
+
+    setIsActionPending(true);
+    try {
+      await api.deleteAsset(targetAccountForAction.id);
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+
+      setAccounts((prev) => prev.filter((a) => a.id !== targetAccountForAction.id));
+      if (selectedAccountId === targetAccountForAction.id) {
+        const remaining = accounts.filter((a) => a.id !== targetAccountForAction.id);
+        setSelectedAccountId(remaining[0]?.id || null);
+      }
+      setIsDeleteModalOpen(false);
+      toast.success(`✓ "${targetAccountForAction.name}" removed from your accounts.`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove account.');
+    } finally {
+      setIsActionPending(false);
+    }
+  };
+
+  // Create New Account Submission
+  const handleAddAccountSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addBankName.trim() || !addAccountName.trim() || !addBalance) {
+      toast.error('Please fill in Bank Name, Account Name, and Balance.');
+      return;
+    }
+
+    const val = parseFloat(addBalance) || 0;
+    const cleanDigits = addCardNumber.replace(/\D/g, '');
+    const last4 = cleanDigits.length >= 4
+      ? cleanDigits.slice(-4)
+      : String(Math.floor(1000 + Math.random() * 9000));
+    const fullNum = cleanDigits.length > 0 ? formatCardNumber(cleanDigits) : `•••• •••• •••• ${last4}`;
+    const cardholder = addCardholderName.trim() || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
+    const expiry = addExpiryDate.trim() || '12/28';
+    const cvv = addCvv.trim() || '882';
+    const detectedNet: CardNetwork = cleanDigits.length > 0 ? detectCardNetwork(cleanDigits) : 'VISA';
+
+    setIsSubmittingAdd(true);
+    try {
+      const assetType = addAccountType === 'CREDIT' ? 'OTHER' : (addAccountType === 'WALLET' || addAccountType === 'CASH') ? 'CASH' : 'BANK';
+      const meta = {
+        last4,
+        raw_card_number: cleanDigits,
+        full_card_number: fullNum,
+        cardholder_name: cardholder,
+        expiry_date: expiry,
+        cvv,
+        network: detectedNet,
+        theme: addTheme,
+        is_frozen: false,
+        account_type: addAccountType,
+      };
+
+      const assetRes = await api.createAsset({
+        name: addAccountName.trim(),
+        asset_type: assetType,
+        value: val,
+        institution: addBankName.trim(),
+        notes: JSON.stringify(meta),
+      });
+
+      const newAcc: AccountItem = {
+        id: String(assetRes.id),
+        name: addAccountName.trim(),
+        bankName: addBankName.trim(),
+        type: addAccountType,
+        accountNumber: last4,
+        fullCardNumber: fullNum,
+        rawCardNumber: cleanDigits || undefined,
+        cardholderName: cardholder,
+        expiryDate: expiry,
+        cvv,
+        balance: val,
+        creditLimit: addAccountType === 'CREDIT' ? val * 2 : undefined,
+        availableCredit: addAccountType === 'CREDIT' ? val : undefined,
+        theme: addTheme,
+        isFrozen: false,
+        network: detectedNet,
+      };
+
+      setAccounts((prev) => [newAcc, ...prev]);
+      setSelectedAccountId(newAcc.id);
+      setIsAddModalOpen(false);
+
+      // Reset form
+      setAddBankName('');
+      setAddAccountName('');
+      setAddBalance('');
+      setAddCardNumber('');
+      setAddCardholderName('');
+      setAddExpiryDate('');
+      setAddCvv('');
+
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+      toast.success(`✓ "${newAcc.name}" successfully linked.`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to link account.');
+    } finally {
+      setIsSubmittingAdd(false);
+    }
+  };
+
+  // Intra-Account Transfer
   const handleExecuteTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(transferAmount) || 0;
@@ -327,13 +624,13 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       toast.error('Please enter a valid transfer amount.');
       return;
     }
-    if (!transferFrom || !transferTo || transferFrom === transferTo) {
+    if (!transferFromId || !transferToId || transferFromId === transferToId) {
       toast.error('Source and destination accounts must be different.');
       return;
     }
 
-    const fromAcc = accounts.find((a) => a.id === transferFrom);
-    const toAcc = accounts.find((a) => a.id === transferTo);
+    const fromAcc = accounts.find((a) => a.id === transferFromId);
+    const toAcc = accounts.find((a) => a.id === transferToId);
     if (!fromAcc || !toAcc) return;
 
     if (fromAcc.balance < amt && fromAcc.type !== 'CREDIT') {
@@ -341,19 +638,13 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       return;
     }
 
-    setIsTransferring(true);
+    setIsSubmittingTransfer(true);
     try {
-      // 1. Deduct from source
       const newFromBal = fromAcc.balance - amt;
-      await api.updateAsset(fromAcc.id, {
-        value: newFromBal,
-      });
+      await api.updateAsset(fromAcc.id, { value: newFromBal });
 
-      // 2. Add to destination
       const newToBal = toAcc.balance + amt;
-      await api.updateAsset(toAcc.id, {
-        value: newToBal,
-      });
+      await api.updateAsset(toAcc.id, { value: newToBal });
 
       setAccounts((prev) =>
         prev.map((a) => {
@@ -367,495 +658,659 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       setTransferAmount('');
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
-      toast.success(`✓ Transferred ${formatCurrency(amt, userCurrency)} successfully!`);
+      toast.success(`✓ Transferred ${formatCurrency(amt, userCurrency)} from ${fromAcc.name} to ${toAcc.name}.`);
     } catch (err: any) {
       toast.error(err?.message || 'Transfer failed.');
     } finally {
-      setIsTransferring(false);
+      setIsSubmittingTransfer(false);
     }
   };
 
-  // Impulse Buy Test Calculator
-  const handleRunImpulseTest = (customItem?: string, customCost?: number) => {
-    const item = customItem || impulseItem || 'Planned Purchase';
-    const cost = customCost !== undefined ? customCost : parseFloat(impulseAmount) || 0;
+  // ---------------------------------------------------------------------------
+  // 5. Affordability Analysis Calculator
+  // ---------------------------------------------------------------------------
+  const handleAnalyzeAffordability = (customName?: string, customCost?: number) => {
+    const itemName = customName || affordItemName.trim() || 'Planned Purchase';
+    const cost = customCost !== undefined ? customCost : parseFloat(affordCost) || 0;
 
     if (cost <= 0) {
-      toast.error('Please enter a purchase price.');
+      toast.error('Please enter a valid purchase price.');
       return;
     }
 
     if (totalPortfolioLiquidity <= 0) {
-      setImpulseVerdict({
-        item,
+      setAffordabilityAnalysis({
+        item: itemName,
         cost,
-        status: 'DANGER',
-        impactPct: 100,
-        monthsDelayed: 1,
-        message: 'No available liquid balance detected. Link an account to evaluate affordability.',
+        impactRatio: 100,
+        remainingBalance: 0,
+        burnCoverageDays: 0,
+        rating: 'RISK',
+        recommendation: 'Zero available liquid capital detected. Add funding sources before committing to capital expenditures.',
       });
       return;
     }
 
-    const availableSurplus = Math.max(0, totalPortfolioLiquidity);
-    const impactPct = Math.min(100, Math.round((cost / totalPortfolioLiquidity) * 100));
-    const monthsDelayed = Math.max(0, Math.round(cost / (totalPortfolioLiquidity * 0.2 || 10000)));
+    const remaining = totalPortfolioLiquidity - cost;
+    const ratio = Math.min(100, Math.round((cost / totalPortfolioLiquidity) * 100));
+    const dailyBurn = burnRateMetrics.dailyBurn > 0 ? burnRateMetrics.dailyBurn : totalPortfolioLiquidity / 90;
+    const remainingCoverageDays = remaining > 0 ? Math.round(remaining / dailyBurn) : 0;
 
-    let status: 'SAFE' | 'CAUTION' | 'DANGER' = 'SAFE';
-    let message = '';
+    let rating: 'SAFE' | 'MODERATE' | 'RISK' = 'SAFE';
+    let recommendation = '';
 
-    if (cost < availableSurplus * 0.1) {
-      status = 'SAFE';
-      message = `Affordable. Represents ${impactPct}% of your liquid wealth with zero stress on capital.`;
-    } else if (cost < availableSurplus * 0.35) {
-      status = 'CAUTION';
-      message = `Moderate impact (${impactPct}% of total liquid capital). Consider spacing over upcoming cashflow cycles.`;
+    if (ratio <= 10) {
+      rating = 'SAFE';
+      recommendation = `Safe acquisition. Consumes only ${ratio}% of your liquid reserves, leaving ${formatCurrency(remaining, userCurrency)} buffer with negligible impact on your monthly runway.`;
+    } else if (ratio <= 30) {
+      rating = 'MODERATE';
+      recommendation = `Discretionary consideration. Represents ${ratio}% of total liquid capital. Ensure pending monthly obligations are covered before executing.`;
     } else {
-      status = 'DANGER';
-      message = `High cashflow risk. This represents ${impactPct}% of your total liquid balance.`;
+      rating = 'RISK';
+      recommendation = `High capital risk. Committing ${ratio}% of your total liquid reserves may strain upcoming cashflow cycles and reduce your reserve runway to ${remainingCoverageDays} days.`;
     }
 
-    setImpulseVerdict({ item, cost, status, impactPct, monthsDelayed, message });
-    toast.info(`Simulated affordability for "${item}"`);
+    setAffordabilityAnalysis({
+      item: itemName,
+      cost,
+      impactRatio: ratio,
+      remainingBalance: remaining,
+      burnCoverageDays: remainingCoverageDays,
+      rating,
+      recommendation,
+    });
   };
 
-  // Add Account / Banking Card Submission
-  const handleAddAccountSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newBankName.trim() || !newAccountName.trim() || !newBalance) {
-      toast.error('Please fill in Bank Name, Account Name, and Balance.');
-      return;
-    }
-
-    const val = parseFloat(newBalance) || 0;
-    const cleanDigits = newCardNumber.replace(/\D/g, '');
-    const last4 = cleanDigits.length >= 4 
-      ? cleanDigits.slice(-4) 
-      : String(Math.floor(1000 + Math.random() * 9000));
-    const fullNum = cleanDigits.length > 0 ? formatCardNumber(cleanDigits) : `•••• •••• •••• ${last4}`;
-    const cardholder = newCardholderName.trim() || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
-    const expiry = newExpiryDate.trim() || '12/28';
-    const cvv = newCvv.trim() || '882';
-    const detectedNet: CardNetwork = cleanDigits.length > 0 ? detectCardNetwork(cleanDigits) : 'VISA';
-
-    setIsSubmittingNew(true);
-    try {
-      const assetType = newAccountType === 'CREDIT' ? 'OTHER' : (newAccountType === 'WALLET' || newAccountType === 'CASH') ? 'CASH' : 'BANK';
-      const meta = {
-        last4,
-        raw_card_number: cleanDigits,
-        full_card_number: fullNum,
-        cardholder_name: cardholder,
-        expiry_date: expiry,
-        cvv,
-        network: detectedNet,
-        theme: newTheme,
-        is_frozen: false,
-        account_type: newAccountType,
-      };
-
-      const assetRes = await api.createAsset({
-        name: newAccountName.trim(),
-        asset_type: assetType,
-        value: val,
-        institution: newBankName.trim(),
-        notes: JSON.stringify(meta),
-      });
-
-      const newAcc: AccountItem = {
-        id: String(assetRes.id),
-        name: newAccountName.trim(),
-        bankName: newBankName.trim(),
-        type: newAccountType,
-        accountNumber: last4,
-        fullCardNumber: fullNum,
-        rawCardNumber: cleanDigits || undefined,
-        cardholderName: cardholder,
-        expiryDate: expiry,
-        cvv,
-        balance: val,
-        creditLimit: newAccountType === 'CREDIT' ? val * 2 : undefined,
-        availableCredit: newAccountType === 'CREDIT' ? val : undefined,
-        monthlyInflow: 0,
-        monthlyOutflow: 0,
-        theme: newTheme,
-        isFrozen: false,
-        network: detectedNet,
-      };
-
-      setAccounts((prev) => [...prev, newAcc]);
-      setSelectedAccountId(newAcc.id);
-      setIsAddModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
-      toast.success(`✓ Card "${newAcc.name}" linked and saved to ledger!`);
-
-      setNewBankName('');
-      setNewAccountName('');
-      setNewCardNumber('');
-      setNewCardholderName('');
-      setNewExpiryDate('');
-      setNewCvv('');
-      setNewBalance('');
-      setPreviewFlipped(false);
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to add banking card.');
-    } finally {
-      setIsSubmittingNew(false);
-    }
-  };
-
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
   return (
-    <div className="dash-reveal editorial-card p-6 sm:p-8 space-y-6 rounded-2xl">
-      {/* 1. Header with Aggregate Liquidity & Global Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4E2DC]/80 pb-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#2A1F3D] text-white shadow-md">
-              <Wallet className="h-4 w-4 text-white" />
-            </div>
-            <h2 className="text-base sm:text-lg font-black text-[#191522] tracking-tight">
-              Wallets, Bank Accounts & Cards Hub
-            </h2>
-            <span className="brutalist-tag-emerald text-xs py-0.5 px-2.5">
-              {accounts.length} {accounts.length === 1 ? 'Active Account' : 'Active Accounts'}
-            </span>
-          </div>
-          <p className="text-xs text-[#625D69] font-medium">
-            Multi-institution liquidity, instant fund transfer bridge, and AI impulse affordability simulator.
+    <div className="space-y-6">
+      {/* =====================================================================
+          1. HUB HEADER
+          ===================================================================== */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight flex items-center gap-2.5">
+            <span>Accounts & Cards</span>
+            <Badge variant="neutral" size="sm" className="font-mono text-xs">
+              {accounts.length} {accounts.length === 1 ? 'Linked' : 'Linked'}
+            </Badge>
+          </h2>
+          <p className="text-xs sm:text-sm text-[#625477] mt-0.5">
+            Centralized hub for your liquid bank balances, credit facilities, and cards.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {accounts.length > 1 && (
+        <div className="flex items-center gap-2.5">
+          {accounts.length >= 2 && (
             <Button
               variant="outline"
               size="sm"
+              leftIcon={<ArrowRightLeft className="w-3.5 h-3.5" />}
               onClick={() => {
-                setTransferFrom(accounts[0]?.id || '');
-                setTransferTo(accounts[1]?.id || '');
+                setTransferFromId(accounts[0]?.id || '');
+                setTransferToId(accounts[1]?.id || '');
                 setIsTransferModalOpen(true);
               }}
-              leftIcon={<ArrowRightLeft className="h-3.5 w-3.5" />}
-              className="text-xs font-bold"
+              className="text-xs font-bold border-[#E4E2DC] text-[#191522] hover:bg-[#F6F5F2]"
             >
-              Transfer Funds
+              Transfer
             </Button>
-          )}
-
-          {accounts.length > 0 && (
-            <button
-              onClick={handleToggleGlobalShow}
-              className={cn(
-                'flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold shadow-xs transition-all',
-                showAllNumbers
-                  ? 'bg-[#2A1F3D] text-white border-[#2A1F3D]'
-                  : 'bg-white border-[#E4E2DC] text-[#625D69] hover:text-[#191522]'
-              )}
-              title={showAllNumbers ? 'Hide all card numbers' : 'Show all card numbers'}
-            >
-              {showAllNumbers ? <EyeOff className="h-3.5 w-3.5 text-amber-400" /> : <Eye className="h-3.5 w-3.5" />}
-              <span>{showAllNumbers ? 'Hide digits' : 'Show digits'}</span>
-            </button>
           )}
 
           <Button
             variant="primary"
             size="sm"
+            leftIcon={<Plus className="w-4 h-4" />}
             onClick={() => setIsAddModalOpen(true)}
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
+            className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white font-bold text-xs shadow-sm"
           >
-            Link Account
+            + Add Account
           </Button>
         </div>
       </div>
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="py-16 flex flex-col items-center justify-center gap-3">
-          <Loader2 className="h-7 w-7 animate-spin text-[#2563EB]" />
-          <span className="text-xs font-bold text-[#625D69]">Loading verified financial accounts...</span>
+      {/* =====================================================================
+          2. FINANCIAL OVERVIEW STRIP (100% Real DB Data)
+          ===================================================================== */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Strip Card 1: Total Liquid Capital */}
+        <div className="rounded-2xl bg-white border border-[#E4E2DC] p-5 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#625477]">Total Liquid Balance</span>
+            <div className="w-8 h-8 rounded-xl bg-[#F6F5F2] flex items-center justify-center text-[#2A1F3D]">
+              <Wallet className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-[#191522] tracking-tight">
+              {formatCurrency(totalPortfolioLiquidity, userCurrency)}
+            </div>
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-[#625477]">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3B7A57]" />
+              <span>{accounts.length} linked {accounts.length === 1 ? 'account' : 'accounts'}</span>
+              <span>·</span>
+              <span className="text-[#3B7A57] font-semibold">Active Ledger</span>
+            </div>
+          </div>
         </div>
-      ) : loadError ? (
-        <div className="p-6 rounded-2xl bg-[#FFF1F2] border border-[#FECDD3] text-center space-y-3">
-          <AlertCircle className="h-6 w-6 text-[#E11D48] mx-auto" />
-          <div className="text-xs font-bold text-[#E11D48]">{loadError}</div>
-          <Button variant="outline" size="sm" onClick={fetchUserAccounts} className="text-xs font-bold">
-            Retry Loading
-          </Button>
+
+        {/* Strip Card 2: Monthly Cashflow */}
+        <div className="rounded-2xl bg-white border border-[#E4E2DC] p-5 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#625477]">Monthly Net Cashflow</span>
+            <div className={cn(
+              "w-8 h-8 rounded-xl flex items-center justify-center",
+              cashflowMetrics.net >= 0 ? "bg-[#3B7A57]/10 text-[#3B7A57]" : "bg-[#B84233]/10 text-[#B84233]"
+            )}>
+              {cashflowMetrics.net >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className={cn(
+              "text-2xl sm:text-3xl font-black tracking-tight",
+              cashflowMetrics.net >= 0 ? "text-[#191522]" : "text-[#B84233]"
+            )}>
+              {cashflowMetrics.net >= 0 ? '+' : ''}{formatCurrency(cashflowMetrics.net, userCurrency)}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[#625477]">
+              {cashflowMetrics.totalCount > 0 ? (
+                <>
+                  <span className="font-semibold text-[#3B7A57]">{cashflowMetrics.inflowCount} in</span>
+                  <span>·</span>
+                  <span className="font-semibold text-[#625477]">{cashflowMetrics.outflowCount} out</span>
+                  <span>·</span>
+                  <span>This calendar month</span>
+                </>
+              ) : (
+                <span>No transactions logged yet this month</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Strip Card 3: Credit Facilities */}
+        <div className="rounded-2xl bg-white border border-[#E4E2DC] p-5 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#625477]">Credit Outstanding</span>
+            <div className="w-8 h-8 rounded-xl bg-[#F6F5F2] flex items-center justify-center text-[#2A1F3D]">
+              <CreditCard className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-[#191522] tracking-tight">
+              {formatCurrency(creditMetrics.outstandingBalance, userCurrency)}
+            </div>
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-[#625477]">
+              <span>{creditMetrics.cardCount} active credit {creditMetrics.cardCount === 1 ? 'line' : 'lines'}</span>
+              {creditMetrics.totalLimit > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="text-[#3B7A57] font-semibold">{formatCurrency(creditMetrics.availableCredit, userCurrency)} available</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* =====================================================================
+          3. DIRECTORY CONTROLS (Search, Filter Tabs, Sort)
+          ===================================================================== */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1 p-1 bg-[#F6F5F2] rounded-xl border border-[#E4E2DC] overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setSelectedTab('ALL')}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap",
+              selectedTab === 'ALL'
+                ? "bg-white text-[#191522] shadow-xs"
+                : "text-[#625477] hover:text-[#191522]"
+            )}
+          >
+            All ({counts.all})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedTab('BANK')}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap",
+              selectedTab === 'BANK'
+                ? "bg-white text-[#191522] shadow-xs"
+                : "text-[#625477] hover:text-[#191522]"
+            )}
+          >
+            Bank Accounts ({counts.bank})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedTab('CREDIT')}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap",
+              selectedTab === 'CREDIT'
+                ? "bg-white text-[#191522] shadow-xs"
+                : "text-[#625477] hover:text-[#191522]"
+            )}
+          >
+            Credit Cards ({counts.credit})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedTab('WALLET')}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap",
+              selectedTab === 'WALLET'
+                ? "bg-white text-[#191522] shadow-xs"
+                : "text-[#625477] hover:text-[#191522]"
+            )}
+          >
+            Wallets & Cash ({counts.wallet})
+          </button>
+        </div>
+
+        {/* Search & Sort */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#625477]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search bank, account, or last 4..."
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] pl-9 pr-3 py-1.5 text-xs text-[#191522] placeholder:text-[#625477] focus:outline-none focus:border-[#4056A1] shadow-xs"
+            />
+          </div>
+
+          <select
+            value={sortBy}
+            onChange={(e: any) => setSortBy(e.target.value)}
+            className="rounded-xl bg-white border border-[#E4E2DC] px-2.5 py-1.5 text-xs font-semibold text-[#191522] focus:outline-none focus:border-[#4056A1] shadow-xs"
+          >
+            <option value="BALANCE_DESC">Highest Balance</option>
+            <option value="BALANCE_ASC">Lowest Balance</option>
+            <option value="NAME">Name (A–Z)</option>
+            <option value="NEWEST">Recently Added</option>
+          </select>
+        </div>
+      </div>
+
+      {/* =====================================================================
+          4. MASTER-DETAIL WORKSPACE (7 Cols Directory / 5 Cols Inspector)
+          ===================================================================== */}
+      {isLoading ? (
+        <div className="rounded-2xl bg-white border border-[#E4E2DC] p-12 flex flex-col items-center justify-center text-center">
+          <Loader2 className="w-8 h-8 text-[#2A1F3D] animate-spin mb-3" />
+          <p className="text-sm font-bold text-[#191522]">Loading your banking records...</p>
+          <p className="text-xs text-[#625477] mt-1">Retrieving verified ledger assets</p>
         </div>
       ) : accounts.length === 0 ? (
-        /* Empty State */
-        <div className="p-8 sm:p-12 rounded-2xl border-2 border-dashed border-[#E4E2DC] bg-[#FAFAF7] text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-white border border-[#E4E2DC] flex items-center justify-center text-[#191522] shadow-xs">
-            <Wallet className="h-6 w-6 text-[#191522]" />
+        /* Zero State */
+        <div className="rounded-2xl bg-white border border-dashed border-[#E4E2DC] p-12 flex flex-col items-center justify-center text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#F6F5F2] flex items-center justify-center text-[#2A1F3D] mb-4">
+            <Building2 className="w-7 h-7" />
           </div>
-          <div className="max-w-md mx-auto space-y-1.5">
-            <h3 className="text-sm font-black text-[#191522]">No accounts linked yet</h3>
-            <p className="text-xs text-[#625D69] leading-relaxed">
-              Connect your first bank account, wallet, or card to start tracking your capital and unlock AI velocity insights.
-            </p>
-          </div>
+          <h3 className="text-lg font-black text-[#191522]">No accounts or cards linked yet</h3>
+          <p className="text-sm text-[#625477] max-w-md mt-1 mb-6">
+            Connect your checking accounts, savings, credit cards, or digital wallets to track unified liquidity, cashflow, and card credentials.
+          </p>
           <Button
             variant="primary"
-            size="sm"
+            size="md"
+            leftIcon={<Plus className="w-4 h-4" />}
             onClick={() => setIsAddModalOpen(true)}
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm"
+            className="bg-[#2A1F3D] text-white font-bold"
           >
-            Link Your First Account
+            + Link Your First Account
           </Button>
         </div>
       ) : (
-        /* 2. MAIN 2-COLUMN COMMAND HUB */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* =========================================================================
-              LEFT COLUMN (7 COLS): 3D Cards Grid & Selected Account Inspector
-              ========================================================================= */}
-          <div className="lg:col-span-7 space-y-5">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="swiss-eyebrow block">Select Account / Card to Inspect:</span>
-                <span className="text-[10.5px] text-[#898390] font-semibold">
-                  Click card to inspect • Click Flip for CVV & magnetic stripe
-                </span>
+          {/* -----------------------------------------------------------------
+              LEFT COLUMN: Accounts Directory (7 cols)
+              ----------------------------------------------------------------- */}
+          <div className="lg:col-span-7 space-y-3">
+            {filteredAccounts.length === 0 ? (
+              <div className="rounded-2xl bg-white border border-[#E4E2DC] p-8 text-center">
+                <AlertCircle className="w-6 h-6 text-[#625477] mx-auto mb-2" />
+                <p className="text-sm font-bold text-[#191522]">No matching accounts</p>
+                <p className="text-xs text-[#625477] mt-0.5">Try adjusting your search query or category filter.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedTab('ALL');
+                  }}
+                  className="mt-3 text-xs"
+                >
+                  Clear Filters
+                </Button>
               </div>
+            ) : (
+              filteredAccounts.map((acc) => {
+                const isSelected = selectedAccountId === acc.id;
+                const isCredit = acc.type === 'CREDIT';
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {accounts.map((acc) => {
-                  const isSelected = acc.id === selectedAccountId;
-
-                  return (
-                    <BankingCardView
-                      key={acc.id}
-                      bankName={acc.bankName}
-                      accountName={acc.name}
-                      cardholderName={acc.cardholderName}
-                      cardNumber={acc.fullCardNumber}
-                      rawCardNumber={acc.rawCardNumber}
-                      expiryDate={acc.expiryDate}
-                      cvv={acc.cvv}
-                      balance={acc.balance}
-                      currency={userCurrency}
-                      theme={acc.theme}
-                      network={acc.network}
-                      isFrozen={acc.isFrozen}
-                      isCredit={acc.type === 'CREDIT'}
-                      isSelected={isSelected}
-                      showNumber={showAllNumbers || !!individualRevealedMap[acc.id]}
-                      onSelect={() => setSelectedAccountId(acc.id)}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Deep-Dive Account Inspector */}
-            {selectedAccount && (
-              <div className="p-5 rounded-2xl bg-white/95 border border-[#E4E2DC] shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-[#E4E2DC]/80 pb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'flex h-9 w-9 items-center justify-center rounded-xl text-white font-black shadow-md shrink-0',
-                        selectedAccount.theme === 'emerald'
-                          ? 'bg-[#059669]'
-                          : selectedAccount.theme === 'sapphire'
-                          ? 'bg-[#2563EB]'
-                          : selectedAccount.theme === 'amber'
-                          ? 'bg-[#D97706]'
-                          : 'bg-[#2A1F3D]'
-                      )}
-                    >
-                      {selectedAccount.type === 'CREDIT' ? (
-                        <CreditCard className="h-4 w-4" />
-                      ) : selectedAccount.type === 'WALLET' || selectedAccount.type === 'CASH' ? (
-                        <Wallet className="h-4 w-4" />
-                      ) : (
-                        <Building2 className="h-4 w-4" />
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-black text-[#191522]">
-                          {selectedAccount.name}
-                        </h3>
-                        <Badge variant={selectedAccount.isFrozen ? 'danger' : 'success'} size="sm">
-                          {selectedAccount.isFrozen ? 'Frozen' : 'Active'}
-                        </Badge>
+                return (
+                  <div
+                    key={acc.id}
+                    onClick={() => setSelectedAccountId(acc.id)}
+                    className={cn(
+                      "group relative rounded-2xl p-4 transition-all cursor-pointer border text-left flex items-center justify-between gap-4",
+                      isSelected
+                        ? "bg-white border-[#2A1F3D] ring-2 ring-[#2A1F3D]/10 shadow-sm"
+                        : "bg-white border-[#E4E2DC] hover:border-[#625477]/40 hover:bg-[#FAF9F7]"
+                    )}
+                  >
+                    {/* Left side: Avatar & Info */}
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={cn(
+                        "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 font-black text-xs transition-colors",
+                        acc.theme === 'obsidian' && "bg-[#191522] text-white",
+                        acc.theme === 'sapphire' && "bg-[#1E3A8A] text-white",
+                        acc.theme === 'emerald' && "bg-[#064E3B] text-white",
+                        acc.theme === 'amber' && "bg-[#78350F] text-white",
+                        acc.theme === 'gold' && "bg-[#854D0E] text-white",
+                        acc.theme === 'platinum' && "bg-[#334155] text-white"
+                      )}>
+                        {acc.bankName.slice(0, 3).toUpperCase()}
                       </div>
-                      <span className="text-[10px] text-[#625D69] font-mono block">
-                        {selectedAccount.bankName} • Account: •••• {selectedAccount.accountNumber}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleFreeze(selectedAccount.id)}
-                      className={cn(
-                        'px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 border shadow-xs',
-                        selectedAccount.isFrozen
-                          ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-                          : 'bg-white border-[#E4E2DC] text-[#625D69] hover:text-[#191522]'
-                      )}
-                    >
-                      {selectedAccount.isFrozen ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                      <span>{selectedAccount.isFrozen ? 'Unfreeze' : 'Freeze'}</span>
-                    </button>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-[#191522] truncate group-hover:text-[#4056A1] transition-colors">
+                            {acc.name}
+                          </span>
+                          {acc.isFrozen && (
+                            <Badge variant="rose" size="sm" className="text-[10px] gap-1">
+                              <Lock className="w-2.5 h-2.5" /> Frozen
+                            </Badge>
+                          )}
+                        </div>
 
-                    <button
-                      type="button"
-                      disabled={isDeletingId === selectedAccount.id}
-                      onClick={() => handleDeleteAccount(selectedAccount.id, selectedAccount.name)}
-                      className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all"
-                      title="Remove Account"
-                    >
-                      {isDeletingId === selectedAccount.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-0.5">
-                    <span className="swiss-eyebrow block text-[9px]">Verified Balance</span>
-                    <span className="text-sm font-black text-[#191522] tabular-nums block truncate">
-                      {formatCurrency(selectedAccount.balance, userCurrency)}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-0.5">
-                    <span className="swiss-eyebrow block text-[9px]">Account Type</span>
-                    <span className="text-xs font-black text-[#191522] block truncate">
-                      {selectedAccount.type}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Banking Card Credentials & Security Panel */}
-                <div className="p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="swiss-eyebrow block text-[9px]">Banking Card Credentials</span>
-                    <span className="text-[10px] font-mono font-bold text-[#191522] bg-white px-2 py-0.5 rounded border border-[#E4E2DC]">
-                      {selectedAccount.network}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                    <div className="bg-white p-2.5 rounded-lg border border-[#E4E2DC]">
-                      <span className="text-[9px] font-mono uppercase text-[#898390] block">Cardholder</span>
-                      <span className="font-bold text-[#191522] truncate block mt-0.5 uppercase">
-                        {selectedAccount.cardholderName || 'CARDHOLDER'}
-                      </span>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-[#625477]">
+                          <span>{acc.bankName}</span>
+                          <span>·</span>
+                          <span className="font-mono">•••• {acc.accountNumber}</span>
+                          <span>·</span>
+                          <Badge variant="neutral" size="sm" className="text-[10px] uppercase font-semibold">
+                            {acc.type}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="bg-white p-2.5 rounded-lg border border-[#E4E2DC]">
-                      <span className="text-[9px] font-mono uppercase text-[#898390] block">Expiry (Valid Thru)</span>
-                      <span className="font-mono font-bold text-[#191522] block mt-0.5">
-                        {selectedAccount.expiryDate || '12/28'}
-                      </span>
-                    </div>
-
-                    <div className="bg-white p-2.5 rounded-lg border border-[#E4E2DC] flex items-center justify-between">
+                    {/* Right side: Balance & Indicator */}
+                    <div className="flex items-center gap-3 shrink-0 text-right">
                       <div>
-                        <span className="text-[9px] font-mono uppercase text-[#898390] block">Security Code (CVV)</span>
-                        <span className="font-mono font-bold text-[#191522] block mt-0.5">
-                          {inspectorShowCvv ? (selectedAccount.cvv || '882') : '•••'}
-                        </span>
+                        <div className="text-base font-black text-[#191522] tabular-nums">
+                          {formatCurrency(acc.balance, userCurrency)}
+                        </div>
+                        <div className="text-[11px] text-[#625477] font-medium">
+                          {isCredit ? 'Current Balance' : 'Verified Balance'}
+                        </div>
                       </div>
+
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center transition-all",
+                        isSelected
+                          ? "bg-[#2A1F3D] text-white"
+                          : "text-[#625477] group-hover:translate-x-0.5"
+                      )}>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            {/* Link another account trigger */}
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-full rounded-2xl border-2 border-dashed border-[#E4E2DC] hover:border-[#625477] p-4 text-center text-xs font-bold text-[#625477] hover:text-[#191522] transition-colors flex items-center justify-center gap-2 bg-[#FAF9F7]/50"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Link another bank account or card</span>
+            </button>
+          </div>
+
+          {/* -----------------------------------------------------------------
+              RIGHT COLUMN: Focused Account Inspector (5 cols)
+              ----------------------------------------------------------------- */}
+          <div className="lg:col-span-5">
+            {selectedAccount ? (
+              <div className="rounded-2xl bg-white border border-[#E4E2DC] p-5 shadow-xs space-y-5 sticky top-6">
+                {/* Inspector Header */}
+                <div className="flex items-start justify-between gap-3 border-b border-[#E4E2DC] pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#625477]">
+                        {selectedAccount.bankName}
+                      </span>
+                      <Badge
+                        variant={selectedAccount.isFrozen ? 'rose' : 'emerald'}
+                        size="sm"
+                        className="text-[10px]"
+                      >
+                        {selectedAccount.isFrozen ? 'Card Frozen' : 'Active & Verified'}
+                      </Badge>
+                    </div>
+                    <h3 className="text-lg font-black text-[#191522] tracking-tight mt-0.5">
+                      {selectedAccount.name}
+                    </h3>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-xl font-black text-[#191522] tabular-nums">
+                      {formatCurrency(selectedAccount.balance, userCurrency)}
+                    </div>
+                    <span className="text-[11px] text-[#625477]">
+                      {selectedAccount.type === 'CREDIT' ? 'Outstanding Balance' : 'Liquid Funds'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Action Toolbar */}
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransferFromId(selectedAccount.id);
+                      const other = accounts.find((a) => a.id !== selectedAccount.id);
+                      setTransferToId(other ? other.id : '');
+                      setIsTransferModalOpen(true);
+                    }}
+                    disabled={accounts.length < 2}
+                    className="flex flex-col items-center justify-center p-2 rounded-xl border border-[#E4E2DC] hover:bg-[#F6F5F2] disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-center group"
+                  >
+                    <ArrowRightLeft className="w-4 h-4 text-[#2A1F3D] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold text-[#191522]">Transfer</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(selectedAccount)}
+                    className="flex flex-col items-center justify-center p-2 rounded-xl border border-[#E4E2DC] hover:bg-[#F6F5F2] transition-colors text-center group"
+                  >
+                    <Edit2 className="w-4 h-4 text-[#2A1F3D] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold text-[#191522]">Edit</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenFreezeModal(selectedAccount)}
+                    className="flex flex-col items-center justify-center p-2 rounded-xl border border-[#E4E2DC] hover:bg-[#F6F5F2] transition-colors text-center group"
+                  >
+                    {selectedAccount.isFrozen ? (
+                      <>
+                        <Unlock className="w-4 h-4 text-[#3B7A57] mb-1 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold text-[#3B7A57]">Unfreeze</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4 text-[#B84233] mb-1 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold text-[#B84233]">Freeze</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDeleteModal(selectedAccount)}
+                    className="flex flex-col items-center justify-center p-2 rounded-xl border border-[#E4E2DC] hover:bg-[#FEE2E2]/40 transition-colors text-center group"
+                  >
+                    <Trash2 className="w-4 h-4 text-[#B84233] mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold text-[#B84233]">Remove</span>
+                  </button>
+                </div>
+
+                {/* Compact Realistic Banking Card */}
+                <div className="pt-1 flex flex-col items-center">
+                  <div className="w-full max-w-[340px]">
+                    <BankingCardView
+                      bankName={selectedAccount.bankName}
+                      accountName={selectedAccount.name}
+                      cardholderName={selectedAccount.cardholderName}
+                      cardNumber={selectedAccount.fullCardNumber}
+                      rawCardNumber={selectedAccount.rawCardNumber}
+                      expiryDate={selectedAccount.expiryDate}
+                      cvv={selectedAccount.cvv}
+                      balance={selectedAccount.balance}
+                      currency={userCurrency}
+                      theme={selectedAccount.theme}
+                      network={selectedAccount.network}
+                      isFrozen={selectedAccount.isFrozen}
+                      isCredit={selectedAccount.type === 'CREDIT'}
+                      showControls={false}
+                      isFlipped={inspectorFlipped}
+                      showNumber={inspectorShowCardNumber}
+                      onFlipChange={setInspectorFlipped}
+                    />
+                  </div>
+
+                  {/* Card Credentials Bar */}
+                  <div className="w-full rounded-xl bg-[#F6F5F2] border border-[#E4E2DC] p-3 mt-3 flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[#625477] font-semibold shrink-0">Number:</span>
+                      <span className="font-mono font-bold text-[#191522] truncate">
+                        {inspectorShowCardNumber
+                          ? (selectedAccount.rawCardNumber ? formatCardNumber(selectedAccount.rawCardNumber) : selectedAccount.fullCardNumber)
+                          : `•••• •••• •••• ${selectedAccount.accountNumber}`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
-                        onClick={() => setInspectorShowCvv(!inspectorShowCvv)}
-                        className="p-1.5 rounded-md hover:bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] transition-colors"
-                        title={inspectorShowCvv ? 'Mask CVV' : 'Reveal CVV'}
+                        onClick={() => setInspectorShowCardNumber((prev) => !prev)}
+                        title={inspectorShowCardNumber ? "Mask digits" : "Reveal 16 digits"}
+                        className="p-1 rounded hover:bg-white text-[#625477] hover:text-[#191522] transition-colors"
                       >
-                        {inspectorShowCvv ? <EyeOff className="h-3.5 w-3.5 text-amber-600" /> : <Eye className="h-3.5 w-3.5" />}
+                        {inspectorShowCardNumber ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(selectedAccount.rawCardNumber || selectedAccount.fullCardNumber, 'Card Number')}
+                        title="Copy card number"
+                        className="p-1 rounded hover:bg-white text-[#625477] hover:text-[#191522] transition-colors"
+                      >
+                        {copiedAccountField === 'Card Number' ? (
+                          <Check className="w-3.5 h-3.5 text-[#3B7A57]" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setInspectorFlipped((prev) => !prev)}
+                        title="Flip card to CVV"
+                        className="p-1 rounded hover:bg-white text-[#625477] hover:text-[#191522] transition-colors ml-1"
+                      >
+                        <RotateCw className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="bg-white px-3 py-2 rounded-lg border border-[#E4E2DC] flex items-center justify-between font-mono text-xs">
-                    <div className="flex items-center gap-2 truncate pr-2">
-                      <span className="text-[9px] uppercase text-[#898390] shrink-0">Card No:</span>
-                      <span className="font-bold text-[#191522] tracking-wider truncate">
-                        {inspectorShowCardNumber ? selectedAccount.fullCardNumber : `•••• •••• •••• ${selectedAccount.accountNumber}`}
-                      </span>
+                  {/* CVV & Expiry Quick Strip */}
+                  <div className="w-full grid grid-cols-2 gap-2 mt-2">
+                    <div className="rounded-xl bg-[#F6F5F2] border border-[#E4E2DC] px-3 py-2 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="text-[10px] text-[#625477] font-semibold uppercase">Security CVV</div>
+                        <div className="font-mono font-bold text-[#191522]">
+                          {inspectorShowCvv ? (selectedAccount.cvv || '882') : '•••'}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setInspectorShowCvv((prev) => !prev)}
+                        className="p-1 rounded hover:bg-white text-[#625477] hover:text-[#191522]"
+                      >
+                        {inspectorShowCvv ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      </button>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setInspectorShowCardNumber(!inspectorShowCardNumber)}
-                        className="p-1 rounded hover:bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] transition-colors"
-                        title={inspectorShowCardNumber ? 'Mask Card Number' : 'Reveal Card Number'}
-                      >
-                        {inspectorShowCardNumber ? <EyeOff className="h-3 w-3 text-amber-600" /> : <Eye className="h-3 w-3" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => handleCopyCardNumber(e, selectedAccount)}
-                        className="p-1 rounded hover:bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] transition-colors"
-                        title="Copy Card Number"
-                      >
-                        {copiedCardId === selectedAccount.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                      </button>
+
+                    <div className="rounded-xl bg-[#F6F5F2] border border-[#E4E2DC] px-3 py-2 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="text-[10px] text-[#625477] font-semibold uppercase">Valid Thru</div>
+                        <div className="font-mono font-bold text-[#191522]">
+                          {selectedAccount.expiryDate || '12/28'}
+                        </div>
+                      </div>
+                      <ShieldCheck className="w-4 h-4 text-[#3B7A57]" />
                     </div>
                   </div>
                 </div>
 
-                {/* Account Transaction Stream */}
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between">
-                    <span className="swiss-eyebrow block text-[9px]">Recent Ledger Activity:</span>
-                    <span className="text-[10px] font-bold text-[#2563EB]">Live Synced</span>
+                {/* Account-Specific Activity */}
+                <div className="border-t border-[#E4E2DC] pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#625477]">
+                      Recent Ledger Activity
+                    </span>
+                    <span className="text-[11px] text-[#625477]">
+                      {selectedAccountTransactions.length} entries
+                    </span>
                   </div>
 
-                  {realTransactions.length === 0 ? (
-                    <div className="p-4 rounded-xl border border-dashed border-[#E4E2DC] text-center text-xs text-[#625D69]">
-                      No transactions recorded yet in your financial ledger.
+                  {selectedAccountTransactions.length === 0 ? (
+                    <div className="text-center py-4 bg-[#F6F5F2] rounded-xl border border-[#E4E2DC] text-xs text-[#625477]">
+                      No transactions recorded for this account yet.
                     </div>
                   ) : (
-                    <div className="divide-y divide-[#E4E2DC]/80 rounded-xl border border-[#E4E2DC] bg-white overflow-hidden">
-                      {realTransactions.slice(0, 3).map((tx: any, idx: number) => {
-                        const isInc = tx.type === 'INCOME';
-                        const amountNum = parseFloat(tx.amount) || 0;
+                    <div className="space-y-2">
+                      {selectedAccountTransactions.map((tx: any, idx: number) => {
+                        const isIncome = tx.type === 'INCOME';
+                        const amt = parseFloat(tx.amount) || 0;
+                        const dateStr = tx.date
+                          ? new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                          : 'Recent';
 
                         return (
-                          <div key={tx.id || idx} className="p-2.5 flex items-center justify-between hover:bg-[#FAFAF7] transition-colors">
-                            <div className="flex items-center gap-2 min-w-0 pr-2">
-                              <div
-                                className={cn(
-                                  'flex h-6 w-6 items-center justify-center rounded text-[10px] font-black shrink-0',
-                                  isInc ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-[#FEE2E2] text-[#B91C1C]'
-                                )}
-                              >
-                                {isInc ? <ArrowDownRight className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
+                          <div
+                            key={tx.id || idx}
+                            className="flex items-center justify-between p-2.5 rounded-xl bg-[#F6F5F2] text-xs"
+                          >
+                            <div className="min-w-0">
+                              <div className="font-bold text-[#191522] truncate">
+                                {tx.description || tx.merchant || 'Transaction'}
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <span className="text-xs font-bold text-[#191522] block truncate">
-                                  {tx.merchant_name || tx.description || 'Transaction'}
-                                </span>
-                                <span className="text-[9px] text-[#898390] block truncate">
-                                  {tx.date || 'Today'} • {tx.category_name || tx.category || 'General'}
-                                </span>
+                              <div className="text-[10px] text-[#625477]">
+                                {dateStr} · {tx.category || 'General'}
                               </div>
                             </div>
-
-                            <span
-                              className={cn(
-                                'text-xs font-black tabular-nums shrink-0',
-                                isInc ? 'text-[#059669]' : 'text-[#E11D48]'
-                              )}
-                            >
-                              {isInc ? '+' : '-'}{formatCurrency(amountNum, userCurrency)}
-                            </span>
+                            <div className={cn(
+                              "font-bold tabular-nums shrink-0",
+                              isIncome ? "text-[#3B7A57]" : "text-[#191522]"
+                            )}>
+                              {isIncome ? '+' : '-'}{formatCurrency(amt, userCurrency)}
+                            </div>
                           </div>
                         );
                       })}
@@ -863,456 +1318,665 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                   )}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* =========================================================================
-              RIGHT COLUMN (5 COLS): Interactive Cash Velocity & AI Impulse Buy Lab
-              ========================================================================= */}
-          <div className="lg:col-span-5 space-y-5">
-            {/* 1. Real-Time Cash Velocity & Runway Gauge */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#2A1F3D] to-[#21182F] text-white shadow-xl space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-emerald-400" />
-                  <span className="text-xs font-black uppercase tracking-wider text-white">Live Capital Velocity</span>
-                </div>
-                <span className="brutalist-tag-emerald text-[9px] py-0 px-2">
-                  {velocityMetrics ? 'Dynamic Telemetry' : 'Awaiting Data'}
-                </span>
-              </div>
-
-              {velocityMetrics ? (
-                <>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-400">
-                        {velocityMetrics.hasTransactionData
-                          ? `Daily Pace: ${formatCurrency(velocityMetrics.dailyPace, userCurrency)} / Day`
-                          : 'Daily Pace: Baseline (No Outflows)'}
-                      </span>
-                      <span className="text-emerald-400 font-mono">
-                        {velocityMetrics.hasTransactionData
-                          ? `${velocityMetrics.savingsRatio}% Net Savings Rate`
-                          : '100% Capital Preserved'}
-                      </span>
-                    </div>
-
-                    <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 flex gap-1">
-                      <div className="h-full w-1/3 rounded-full bg-emerald-500 shadow-sm" />
-                      <div className="h-full w-1/3 rounded-full bg-emerald-400 shadow-sm" />
-                      <div className="h-full w-1/3 rounded-full bg-blue-500 animate-pulse shadow-sm" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5 pt-1">
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-0.5">
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 block">Emergency Runway</span>
-                      <span className="text-base font-black text-white block">
-                        {velocityMetrics.runwayDays > 0 ? `${velocityMetrics.runwayDays} Days` : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-0.5">
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 block">Total Liquidity</span>
-                      <span className="text-base font-black text-emerald-400 block truncate">
-                        <AnimatedValue value={totalPortfolioLiquidity} currency={userCurrency} />
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="py-6 text-center text-xs text-slate-400">
-                  Capital velocity unavailable. Add accounts and transactions to generate financial telemetry.
-                </div>
-              )}
-            </div>
-
-            {/* 2. AI Impulse Purchase & Affordability Simulator */}
-            <div className="p-5 rounded-2xl bg-white/95 border border-[#E4E2DC] shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E4E2DC]/80 pb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#2563EB]" />
-                  <h3 className="text-xs font-black text-[#191522] tracking-tight">AI Impulse Buy Simulator</h3>
-                </div>
-                <span className="text-[10px] font-bold text-[#898390]">Test Before You Buy</span>
-              </div>
-
-              {accounts.length === 0 ? (
-                <div className="py-6 text-center text-xs text-[#625D69]">
-                  Add an account to enable personalized affordability analysis.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#191522] block">What do you want to buy?</label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        value={impulseItem}
-                        onChange={(e) => setImpulseItem(e.target.value)}
-                        placeholder="e.g. Sony WH-1000XM5"
-                        className="flex-1 min-w-0 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-                      />
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          value={impulseAmount}
-                          onChange={(e) => setImpulseAmount(e.target.value)}
-                          placeholder="Price"
-                          className="w-24 sm:w-28 min-w-0 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-                        />
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleRunImpulseTest()}
-                          className="bg-[#4056A1] hover:bg-[#26335F] text-white px-3 font-bold text-xs shrink-0 whitespace-nowrap"
-                        >
-                          Check Affordability
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Preset Buttons */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-bold text-[#898390]">Quick:</span>
-                    {[
-                      { label: 'AirPods (2,500)', item: 'AirPods Pro', cost: 2500 },
-                      { label: 'Laptop (65,000)', item: 'Work Laptop', cost: 65000 },
-                      { label: 'Weekend Trip (15,000)', item: 'Weekend Trip', cost: 15000 },
-                    ].map((pre) => (
-                      <button
-                        key={pre.label}
-                        type="button"
-                        onClick={() => {
-                          setImpulseItem(pre.item);
-                          setImpulseAmount(String(pre.cost));
-                          handleRunImpulseTest(pre.item, pre.cost);
-                        }}
-                        className="px-2 py-1 rounded-lg bg-[#F6F5F1] hover:bg-[#EAE8E0] text-[10px] font-bold text-[#191522] transition-colors border border-[#E4E2DC]"
-                      >
-                        {pre.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Simulation Result Card */}
-                  {impulseVerdict && (
-                    <div
-                      className={cn(
-                        'p-3.5 rounded-xl border space-y-1.5 animate-in fade-in zoom-in-95',
-                        impulseVerdict.status === 'SAFE'
-                          ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
-                          : impulseVerdict.status === 'CAUTION'
-                          ? 'bg-amber-50/80 border-amber-200 text-amber-900'
-                          : 'bg-rose-50/80 border-rose-200 text-rose-900'
-                      )}
-                    >
-                      <div className="flex items-center justify-between font-black text-xs">
-                        <span>
-                          Verdict:{' '}
-                          {impulseVerdict.status === 'SAFE'
-                            ? '🟢 Safe to Purchase'
-                            : impulseVerdict.status === 'CAUTION'
-                            ? '🟡 Proceed with Caution'
-                            : '🔴 High Cashflow Risk'}
-                        </span>
-                        <span className="font-mono">{formatCurrency(impulseVerdict.cost, userCurrency)}</span>
-                      </div>
-                      <p className="text-[11px] font-medium leading-relaxed">
-                        {impulseVerdict.message}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            ) : null}
           </div>
         </div>
       )}
 
-      {/* 3. Link New Banking Card / Account Modal */}
+      {/* =====================================================================
+          5. REAL AFFORDABILITY & CAPITAL IMPACT ANALYSIS
+          (Replaces sci-fi velocity & toy impulse simulator with real math)
+          ===================================================================== */}
+      <div className="rounded-2xl bg-white border border-[#E4E2DC] p-6 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E4E2DC] pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[#2A1F3D]" />
+              <h3 className="text-base sm:text-lg font-black text-[#191522] tracking-tight">
+                Liquidity & Affordability Analysis
+              </h3>
+            </div>
+            <p className="text-xs sm:text-sm text-[#625477] mt-0.5">
+              Simulate discretionary capital expenditures against your verified liquid reserves and 30-day burn rate.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Badge variant="neutral" size="sm" className="font-mono text-xs">
+              Available Reserves: {formatCurrency(totalPortfolioLiquidity, userCurrency)}
+            </Badge>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-5">
+          {/* Form & Presets (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1.5">
+                Expense Description
+              </label>
+              <input
+                type="text"
+                value={affordItemName}
+                onChange={(e) => setAffordItemName(e.target.value)}
+                placeholder="e.g. Workstation Upgrade, Insurance Premium"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1.5">
+                Planned Amount ({userCurrency})
+              </label>
+              <input
+                type="number"
+                value={affordCost}
+                onChange={(e) => setAffordCost(e.target.value)}
+                placeholder="e.g. 25000"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+
+            {/* Quick Benchmark Presets */}
+            <div>
+              <span className="text-[11px] font-semibold text-[#625477] block mb-1.5">Benchmark Presets:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: 'Minor (₹2,500)', cost: 2500, name: 'Minor Expense' },
+                  { label: 'Equipment (₹15,000)', cost: 15000, name: 'Hardware Equipment' },
+                  { label: 'Major (₹50,000)', cost: 50000, name: 'Major Capital Outlay' },
+                ].map((preset) => (
+                  <button
+                    key={preset.cost}
+                    type="button"
+                    onClick={() => {
+                      setAffordItemName(preset.name);
+                      setAffordCost(String(preset.cost));
+                      handleAnalyzeAffordability(preset.name, preset.cost);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-[#F6F5F2] hover:bg-[#E4E2DC] text-[11px] font-bold text-[#191522] transition-colors border border-[#E4E2DC]"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => handleAnalyzeAffordability()}
+              className="w-full bg-[#2A1F3D] text-white font-bold text-xs py-2.5"
+            >
+              Run Capital Impact Analysis
+            </Button>
+          </div>
+
+          {/* Analysis Results Display (7 cols) */}
+          <div className="lg:col-span-7">
+            {affordabilityAnalysis ? (
+              <div className="rounded-xl border border-[#E4E2DC] p-4 bg-[#FAF9F7] space-y-4">
+                {/* Verdict Banner */}
+                <div className={cn(
+                  "rounded-xl p-3.5 flex items-start gap-3 border",
+                  affordabilityAnalysis.rating === 'SAFE' && "bg-[#3B7A57]/10 border-[#3B7A57]/20 text-[#3B7A57]",
+                  affordabilityAnalysis.rating === 'MODERATE' && "bg-[#D97706]/10 border-[#D97706]/20 text-[#D97706]",
+                  affordabilityAnalysis.rating === 'RISK' && "bg-[#B84233]/10 border-[#B84233]/20 text-[#B84233]"
+                )}>
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-xs uppercase tracking-wider">
+                      {affordabilityAnalysis.rating === 'SAFE' && 'Safe Expenditure · Low Capital Impact'}
+                      {affordabilityAnalysis.rating === 'MODERATE' && 'Discretionary Caution · Moderate Capital Impact'}
+                      {affordabilityAnalysis.rating === 'RISK' && 'High Capital Stress · Reserves Depletion Warning'}
+                    </div>
+                    <div className="text-xs text-[#191522] mt-1 font-medium leading-relaxed">
+                      {affordabilityAnalysis.recommendation}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mathematical Breakdown Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="rounded-xl bg-white border border-[#E4E2DC] p-3 text-center">
+                    <div className="text-[10px] font-bold text-[#625477] uppercase tracking-wider">Impact Ratio</div>
+                    <div className="text-lg font-black text-[#191522] mt-0.5">
+                      {affordabilityAnalysis.impactRatio}%
+                    </div>
+                    <div className="text-[10px] text-[#625477]">of liquid balance</div>
+                  </div>
+
+                  <div className="rounded-xl bg-white border border-[#E4E2DC] p-3 text-center">
+                    <div className="text-[10px] font-bold text-[#625477] uppercase tracking-wider">Post-Purchase Liquidity</div>
+                    <div className="text-lg font-black text-[#191522] mt-0.5">
+                      {formatCurrency(affordabilityAnalysis.remainingBalance, userCurrency)}
+                    </div>
+                    <div className="text-[10px] text-[#625477]">remaining buffer</div>
+                  </div>
+
+                  <div className="rounded-xl bg-white border border-[#E4E2DC] p-3 text-center">
+                    <div className="text-[10px] font-bold text-[#625477] uppercase tracking-wider">Estimated Runway</div>
+                    <div className="text-lg font-black text-[#191522] mt-0.5">
+                      {affordabilityAnalysis.burnCoverageDays} Days
+                    </div>
+                    <div className="text-[10px] text-[#625477]">at current burn rate</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-full min-h-[180px] rounded-xl border border-dashed border-[#E4E2DC] bg-[#FAF9F7] flex flex-col items-center justify-center p-6 text-center">
+                <Info className="w-6 h-6 text-[#625477] mb-2" />
+                <p className="text-xs font-bold text-[#191522]">No analysis evaluated yet</p>
+                <p className="text-[11px] text-[#625477] max-w-sm mt-0.5">
+                  Enter a purchase estimate or select a benchmark above to inspect capital impact and reserve preservation.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* =====================================================================
+          6. MODALS
+          ===================================================================== */}
+
+      {/* 6.1 Add Account / Card Modal */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Link New Bank Account or Card"
-        subtitle="Full banking card system with 16-digit embossing, EMV chip, and CVV security protection."
-        maxWidth="lg"
+        title="Link Bank Account or Card"
+        description="Add a savings account, checking facility, credit line, or wallet to your financial hub."
+        maxWidth="2xl"
       >
-        <form onSubmit={handleAddAccountSubmit} className="space-y-4">
-          {/* Live Interactive 3D Card Preview */}
-          <div className="space-y-1.5 pb-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#625D69] font-bold">
-                Live Interactive Card Preview
-              </span>
-              <button
-                type="button"
-                onClick={() => setPreviewFlipped(!previewFlipped)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4056A1] hover:text-[#26335F] bg-[#4056A1]/10 px-2.5 py-1 rounded-lg transition-colors"
-              >
-                <RotateCw className="h-3 w-3" />
-                <span>{previewFlipped ? 'Show Front' : 'Flip to Back (CVV)'}</span>
-              </button>
-            </div>
-
-            <div className="max-w-md mx-auto pt-1">
+        <form onSubmit={handleAddAccountSubmit} className="space-y-4 pt-2">
+          {/* Interactive Card Preview */}
+          <div className="flex justify-center pb-2">
+            <div className="w-full max-w-[320px]">
               <BankingCardView
-                bankName={newBankName || 'BANK INSTITUTION'}
-                accountName={newAccountName || 'Primary Account'}
-                cardholderName={newCardholderName || (user?.username ? user.username.toUpperCase() : 'CARDHOLDER')}
-                cardNumber={newCardNumber || '•••• •••• •••• 8821'}
-                rawCardNumber={newCardNumber.replace(/\D/g, '')}
-                expiryDate={newExpiryDate || '12/28'}
-                cvv={newCvv || '882'}
-                balance={parseFloat(newBalance) || 0}
+                bankName={addBankName || 'BANK INSTITUTION'}
+                accountName={addAccountName || 'PRIMARY ACCOUNT'}
+                cardholderName={addCardholderName || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER')}
+                cardNumber={addCardNumber ? formatCardNumber(addCardNumber) : '•••• •••• •••• 8821'}
+                rawCardNumber={addCardNumber.replace(/\D/g, '') || undefined}
+                expiryDate={addExpiryDate || '12/28'}
+                cvv={addCvv || '882'}
+                balance={parseFloat(addBalance) || 0}
                 currency={userCurrency}
-                theme={newTheme}
-                network={newCardNumber.replace(/\D/g, '').length > 0 ? detectCardNetwork(newCardNumber) : 'VISA'}
-                isCredit={newAccountType === 'CREDIT'}
-                isFlipped={previewFlipped}
-                onFlipChange={setPreviewFlipped}
-                showControls={true}
+                theme={addTheme}
+                network={addCardNumber ? detectCardNetwork(addCardNumber) : 'VISA'}
+                isCredit={addAccountType === 'CREDIT'}
+                showControls={false}
+                isFlipped={addCardPreviewFlipped}
+                onFlipChange={setAddCardPreviewFlipped}
               />
             </div>
           </div>
 
-          {/* Cardholder Name & Full Card Number */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">
-                Cardholder Name
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Institution / Bank Name <span className="text-[#B84233]">*</span>
               </label>
               <input
                 type="text"
-                value={newCardholderName}
-                onChange={(e) => setNewCardholderName(e.target.value.toUpperCase())}
-                placeholder="e.g. ALEX M. VANCE"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+                required
+                value={addBankName}
+                onChange={(e) => setAddBankName(e.target.value)}
+                placeholder="e.g. State Bank of India, HDFC"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">
-                16-Digit Card Number
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Account Nickname <span className="text-[#B84233]">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={addAccountName}
+                onChange={(e) => setAddAccountName(e.target.value)}
+                placeholder="e.g. Salary Account, Emergency Fund"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Account Type
+              </label>
+              <select
+                value={addAccountType}
+                onChange={(e: any) => setAddAccountType(e.target.value)}
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-semibold text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              >
+                <option value="CHECKING">Checking Account</option>
+                <option value="SAVINGS">Savings Account</option>
+                <option value="CREDIT">Credit Card Facility</option>
+                <option value="WALLET">Digital Wallet (UPI/PayTM)</option>
+                <option value="CASH">Physical Cash Reserve</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Current Balance ({userCurrency}) <span className="text-[#B84233]">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={addBalance}
+                onChange={(e) => setAddBalance(e.target.value)}
+                placeholder="0.00"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Card Number (Optional)
               </label>
               <input
                 type="text"
                 maxLength={19}
-                value={newCardNumber}
-                onChange={(e) => setNewCardNumber(formatCardNumber(e.target.value))}
-                placeholder="4532 8921 4455 8821"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-mono font-bold tracking-widest text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+                value={addCardNumber}
+                onChange={(e) => setAddCardNumber(formatCardNumber(e.target.value))}
+                placeholder="•••• •••• •••• ••••"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
-          </div>
 
-          {/* Expiry Date, CVV, and Current Balance */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Cardholder Name
+              </label>
+              <input
+                type="text"
+                value={addCardholderName}
+                onChange={(e) => setAddCardholderName(e.target.value.toUpperCase())}
+                placeholder="FULL NAME"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs uppercase font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
                 Expiry Date (MM/YY)
               </label>
               <input
                 type="text"
                 maxLength={5}
-                value={newExpiryDate}
-                onChange={(e) => setNewExpiryDate(formatExpiryDate(e.target.value))}
+                value={addExpiryDate}
+                onChange={(e) => setAddExpiryDate(formatExpiryDate(e.target.value))}
                 placeholder="12/28"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-mono font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-[#191522] block">
-                  CVV / Security Code
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowModalCvv(!showModalCvv)}
-                  className="text-[10px] font-bold text-[#625D69] hover:text-[#191522] inline-flex items-center gap-1"
-                >
-                  {showModalCvv ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  <span>{showModalCvv ? 'Hide' : 'Show'}</span>
-                </button>
-              </div>
-              <input
-                type={showModalCvv ? 'text' : 'password'}
-                maxLength={4}
-                value={newCvv}
-                onChange={(e) => setNewCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                placeholder="882"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-mono font-bold tracking-widest text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">
-                Starting Balance ({userCurrency})
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Security CVV
               </label>
               <input
-                type="number"
-                step="any"
-                required
-                value={newBalance}
-                onChange={(e) => setNewBalance(e.target.value)}
-                placeholder="e.g. 50000"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
+                type="password"
+                maxLength={4}
+                value={addCvv}
+                onChange={(e) => setAddCvv(e.target.value.replace(/\D/g, ''))}
+                placeholder="•••"
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
           </div>
 
-          {/* Account Label & Institution */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">Institution / Bank</label>
-              <input
-                type="text"
-                required
-                value={newBankName}
-                onChange={(e) => setNewBankName(e.target.value)}
-                placeholder="e.g. Chase Bank, HDFC, Barclays"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">Account / Card Type</label>
-              <select
-                value={newAccountType}
-                onChange={(e) => setNewAccountType(e.target.value as any)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
-              >
-                <option value="CHECKING">Debit / Checking Card</option>
-                <option value="SAVINGS">Savings Account Card</option>
-                <option value="CREDIT">Credit Line Card</option>
-                <option value="WALLET">Digital Wallet / UPI</option>
-                <option value="CASH">Physical Cash Reserve</option>
-              </select>
-            </div>
-          </div>
-
+          {/* Theme Selector */}
           <div>
-            <label className="text-xs font-bold text-[#191522] mb-1 block">Account Nickname</label>
-            <input
-              type="text"
-              required
-              value={newAccountName}
-              onChange={(e) => setNewAccountName(e.target.value)}
-              placeholder="e.g. Primary Daily Checking or Travel Rewards"
-              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-xs"
-            />
-          </div>
-
-          {/* 6 Luxury Card Themes */}
-          <div>
-            <label className="text-xs font-bold text-[#191522] mb-1.5 block">Card Finish & Palette</label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {[
-                { id: 'obsidian', label: 'Obsidian', color: 'bg-[#2A1F3D]' },
-                { id: 'sapphire', label: 'Sapphire', color: 'bg-blue-600' },
-                { id: 'emerald', label: 'Emerald', color: 'bg-emerald-600' },
-                { id: 'amber', label: 'Amber', color: 'bg-amber-600' },
-                { id: 'gold', label: 'Gold', color: 'bg-yellow-500' },
-                { id: 'platinum', label: 'Platinum', color: 'bg-slate-400' },
-              ].map((th) => (
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1.5">
+              Card Finish Theme
+            </label>
+            <div className="grid grid-cols-6 gap-2">
+              {(['obsidian', 'sapphire', 'emerald', 'amber', 'gold', 'platinum'] as CardTheme[]).map((themeName) => (
                 <button
-                  key={th.id}
+                  key={themeName}
                   type="button"
-                  onClick={() => setNewTheme(th.id as any)}
+                  onClick={() => setAddTheme(themeName)}
                   className={cn(
-                    'p-2 rounded-xl border text-center text-[11px] font-bold transition-all flex flex-col items-center justify-center gap-1.5',
-                    newTheme === th.id
-                      ? 'border-[#2A1F3D] bg-[#2A1F3D] text-white shadow-sm'
-                      : 'border-[#E4E2DC] bg-white text-[#625D69] hover:text-[#191522]'
+                    "h-8 rounded-lg border-2 transition-all capitalize text-[10px] font-bold",
+                    themeName === 'obsidian' && "bg-[#191522] text-white",
+                    themeName === 'sapphire' && "bg-[#1E3A8A] text-white",
+                    themeName === 'emerald' && "bg-[#064E3B] text-white",
+                    themeName === 'amber' && "bg-[#78350F] text-white",
+                    themeName === 'gold' && "bg-[#854D0E] text-white",
+                    themeName === 'platinum' && "bg-[#334155] text-white",
+                    addTheme === themeName ? "border-[#4056A1] ring-2 ring-[#4056A1]/30 scale-105" : "border-transparent opacity-80 hover:opacity-100"
                   )}
                 >
-                  <span className={cn('h-3.5 w-3.5 rounded-full border border-white/20 shadow-xs', th.color)} />
-                  <span className="truncate">{th.label}</span>
+                  {themeName}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E2DC]">
-            <Button type="button" variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingNew} className="bg-[#2A1F3D] text-white font-bold px-5">
-              Link Banking Card
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* 4. Instant Transfer Funds Modal */}
-      <Modal
-        isOpen={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
-        title="Instant Intra-Account Fund Transfer"
-        subtitle="Transfer capital between your verified bank accounts and cards."
-        maxWidth="md"
-      >
-        <form onSubmit={handleExecuteTransfer} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">From Account</label>
-              <select
-                value={transferFrom}
-                onChange={(e) => setTransferFrom(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              >
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} ({formatCurrency(a.balance, userCurrency)})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[#191522] mb-1 block">To Account</label>
-              <select
-                value={transferTo}
-                onChange={(e) => setTransferTo(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              >
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} ({formatCurrency(a.balance, userCurrency)})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-[#191522] mb-1 block">Transfer Amount ({userCurrency})</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={transferAmount}
-              onChange={(e) => setTransferAmount(e.target.value)}
-              placeholder="e.g. 15000"
-              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2.5 text-sm font-black text-[#191522] focus:outline-none focus:border-[#4056A1] shadow-sm"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E2DC]">
-            <Button type="button" variant="outline" size="sm" onClick={() => setIsTransferModalOpen(false)}>
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#E4E2DC]">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddModalOpen(false)}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="sm"
-              isLoading={isTransferring}
-              className="bg-[#2A1F3D] text-white font-bold px-5"
+              isLoading={isSubmittingAdd}
+              className="bg-[#2A1F3D] text-white font-bold"
+            >
+              Confirm & Link Account
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* 6.2 Edit Account Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Account Details"
+        description="Update account nickname, banking institution, or verified balance."
+        maxWidth="md"
+      >
+        <form onSubmit={handleEditAccountSubmit} className="space-y-3.5 pt-2">
+          <div>
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+              Account Nickname
+            </label>
+            <input
+              type="text"
+              required
+              value={editAccountName}
+              onChange={(e) => setEditAccountName(e.target.value)}
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+              Institution / Bank
+            </label>
+            <input
+              type="text"
+              required
+              value={editBankName}
+              onChange={(e) => setEditBankName(e.target.value)}
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+              Verified Balance ({userCurrency})
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              required
+              value={editBalance}
+              onChange={(e) => setEditBalance(e.target.value)}
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Cardholder Name
+              </label>
+              <input
+                type="text"
+                value={editCardholderName}
+                onChange={(e) => setEditCardholderName(e.target.value.toUpperCase())}
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs uppercase text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                Expiry Date
+              </label>
+              <input
+                type="text"
+                maxLength={5}
+                value={editExpiryDate}
+                onChange={(e) => setEditExpiryDate(formatExpiryDate(e.target.value))}
+                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1.5">
+              Card Finish
+            </label>
+            <div className="grid grid-cols-6 gap-2">
+              {(['obsidian', 'sapphire', 'emerald', 'amber', 'gold', 'platinum'] as CardTheme[]).map((themeName) => (
+                <button
+                  key={themeName}
+                  type="button"
+                  onClick={() => setEditTheme(themeName)}
+                  className={cn(
+                    "h-8 rounded-lg border-2 transition-all capitalize text-[10px] font-bold",
+                    themeName === 'obsidian' && "bg-[#191522] text-white",
+                    themeName === 'sapphire' && "bg-[#1E3A8A] text-white",
+                    themeName === 'emerald' && "bg-[#064E3B] text-white",
+                    themeName === 'amber' && "bg-[#78350F] text-white",
+                    themeName === 'gold' && "bg-[#854D0E] text-white",
+                    themeName === 'platinum' && "bg-[#334155] text-white",
+                    editTheme === themeName ? "border-[#4056A1] ring-2 ring-[#4056A1]/30 scale-105" : "border-transparent opacity-80 hover:opacity-100"
+                  )}
+                >
+                  {themeName}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#E4E2DC]">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={isSubmittingEdit}
+              className="bg-[#2A1F3D] text-white font-bold"
+            >
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* 6.3 Security Confirmation Modal: Freeze / Unfreeze */}
+      <Modal
+        isOpen={isFreezeModalOpen}
+        onClose={() => setIsFreezeModalOpen(false)}
+        title={targetAccountForAction?.isFrozen ? "Unfreeze Card?" : "Freeze Card?"}
+        description={
+          targetAccountForAction?.isFrozen
+            ? `Re-enabling ${targetAccountForAction?.name} will immediately allow outbound charges and transactions.`
+            : `Freezing ${targetAccountForAction?.name} will temporarily block any payment authorizations associated with this card.`
+        }
+        maxWidth="sm"
+      >
+        <div className="space-y-4 pt-2">
+          <div className={cn(
+            "p-3 rounded-xl border flex items-center gap-3 text-xs",
+            targetAccountForAction?.isFrozen
+              ? "bg-[#3B7A57]/10 border-[#3B7A57]/20 text-[#3B7A57]"
+              : "bg-[#B84233]/10 border-[#B84233]/20 text-[#B84233]"
+          )}>
+            {targetAccountForAction?.isFrozen ? (
+              <Unlock className="w-5 h-5 shrink-0" />
+            ) : (
+              <Lock className="w-5 h-5 shrink-0" />
+            )}
+            <div className="font-semibold text-[#191522]">
+              {targetAccountForAction?.isFrozen
+                ? "Your card credentials will be re-activated immediately."
+                : "You can unfreeze this card at any time from this dashboard."}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFreezeModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={targetAccountForAction?.isFrozen ? "primary" : "danger"}
+              size="sm"
+              isLoading={isActionPending}
+              onClick={handleConfirmToggleFreeze}
+              className={targetAccountForAction?.isFrozen ? "bg-[#3B7A57] text-white font-bold" : ""}
+            >
+              {targetAccountForAction?.isFrozen ? "Confirm Unfreeze" : "Confirm Freeze"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 6.4 Account Deletion Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Remove Account from MONVEX?"
+        description={`Are you sure you want to remove "${targetAccountForAction?.name}" from your portfolio?`}
+        maxWidth="sm"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="p-3 rounded-xl bg-[#B84233]/10 border border-[#B84233]/20 text-xs text-[#B84233] flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="text-[#191522] leading-relaxed">
+              This will detach <span className="font-bold">{targetAccountForAction?.name}</span> ({formatCurrency(targetAccountForAction?.balance || 0, userCurrency)}) from your liquid balance calculations. Ledger transaction histories will be preserved.
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              isLoading={isActionPending}
+              onClick={handleConfirmDelete}
+            >
+              Remove Account
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 6.5 Transfer Funds Modal */}
+      <Modal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        title="Intra-Account Transfer"
+        description="Move balances between your verified accounts with instant ledger reflection."
+        maxWidth="md"
+      >
+        <form onSubmit={handleExecuteTransfer} className="space-y-3.5 pt-2">
+          <div>
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+              Source Account (From)
+            </label>
+            <select
+              value={transferFromId}
+              onChange={(e) => setTransferFromId(e.target.value)}
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-semibold text-[#191522] focus:outline-none focus:border-[#4056A1]"
+            >
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.bankName}) — {formatCurrency(acc.balance, userCurrency)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+              Destination Account (To)
+            </label>
+            <select
+              value={transferToId}
+              onChange={(e) => setTransferToId(e.target.value)}
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-semibold text-[#191522] focus:outline-none focus:border-[#4056A1]"
+            >
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.bankName}) — {formatCurrency(acc.balance, userCurrency)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-[#191522] uppercase tracking-wider">
+                Transfer Amount ({userCurrency})
+              </label>
+              {transferFromId && (
+                <span className="text-[11px] text-[#625477]">
+                  Available: {formatCurrency(accounts.find((a) => a.id === transferFromId)?.balance || 0, userCurrency)}
+                </span>
+              )}
+            </div>
+            <input
+              type="number"
+              step="0.01"
+              required
+              value={transferAmount}
+              onChange={(e) => setTransferAmount(e.target.value)}
+              placeholder="0.00"
+              className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3.5 py-2 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#E4E2DC]">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTransferModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={isSubmittingTransfer}
+              className="bg-[#2A1F3D] text-white font-bold"
             >
               Execute Transfer
             </Button>
@@ -1322,4 +1986,3 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     </div>
   );
 };
-

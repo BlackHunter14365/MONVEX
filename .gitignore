@@ -53,6 +53,8 @@ yarn-error.log*
 # Tauri & Rust Desktop
 desktop/src-tauri/target/
 desktop/src-tauri/target/*
+web/src-tauri/target/
+web/src-tauri/target/*
 desktop/*.exe
 desktop/*.msi
 web/public/downloads/*.exe

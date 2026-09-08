@@ -36,15 +36,17 @@
       width: 56px;
       height: 56px;
       border-radius: 16px;
-      background: linear-gradient(135deg, #2563EB, #4F46E5);
+      background: #ffffff;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
-      font-size: 24px;
-      font-weight: 900;
-      color: #ffffff;
-      letter-spacing: -0.05em;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .logo-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     .spinner {
       width: 32px;
@@ -72,7 +74,9 @@
 </head>
 <body>
   <div class="brand-container">
-    <div class="logo-badge">M</div>
+    <div class="logo-badge">
+      <img src="logo.png" alt="MONVEX" />
+    </div>
     <div class="spinner"></div>
     <h1>MONVEX Desktop</h1>
     <p>Connecting to production financial intelligence cloud...</p>

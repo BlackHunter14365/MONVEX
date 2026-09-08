@@ -10,8 +10,8 @@ export default function NotFound() {
     <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-center items-center px-4 sm:px-6 py-12">
       {/* Brand Icon */}
       <div className="text-center mb-6 space-y-3">
-        <div className="relative h-16 w-16 mx-auto rounded-2xl overflow-hidden shadow-xl ring-2 ring-white/80">
-          <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
+        <div className="relative h-16 w-16 mx-auto rounded-2xl overflow-hidden shadow-sm ring-1 ring-[#E2DFD7] bg-white p-1.5 flex items-center justify-center">
+          <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
         </div>
         <span className="text-xl font-black tracking-tight text-[#191522]">MONVEX</span>
       </div>

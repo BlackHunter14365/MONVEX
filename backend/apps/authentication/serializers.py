@@ -18,6 +18,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'first_name', 'last_name', 'phone_number', 'status', 'email_verified', 'is_verified',
             'currency', 'monthly_income', 'savings_target_percentage', 'theme',
+            'avatar_url', 'avatar_preset', 'bio', 'preferences',
             'has_google_auth', 'has_password_auth'
         ]
 
@@ -42,6 +43,12 @@ class ProfileSerializer(serializers.ModelSerializer):
                         raise serializers.ValidationError({"username": "A user with that username already exists."})
                     user.username = new_u
             user.save()
+
+        if 'preferences' in validated_data and isinstance(validated_data['preferences'], dict):
+            curr_prefs = instance.preferences or {}
+            curr_prefs.update(validated_data.pop('preferences'))
+            instance.preferences = curr_prefs
+
         return super().update(instance, validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
@@ -50,6 +57,11 @@ class UserSerializer(serializers.ModelSerializer):
     monthly_income = serializers.DecimalField(source='profile.monthly_income', max_digits=12, decimal_places=2, required=False)
     phone_number = serializers.CharField(source='profile.phone_number', required=False, allow_blank=True)
     savings_target_percentage = serializers.DecimalField(source='profile.savings_target_percentage', max_digits=5, decimal_places=2, required=False)
+    theme = serializers.CharField(source='profile.theme', required=False)
+    bio = serializers.CharField(source='profile.bio', required=False, allow_blank=True)
+    avatar_url = serializers.CharField(source='profile.avatar_url', required=False, allow_blank=True)
+    avatar_preset = serializers.CharField(source='profile.avatar_preset', required=False, allow_blank=True)
+    preferences = serializers.JSONField(source='profile.preferences', required=False)
     is_verified = serializers.BooleanField(source='profile.email_verified', read_only=True)
     status = serializers.CharField(source='profile.status', read_only=True)
     has_google_auth = serializers.SerializerMethodField()
@@ -59,7 +71,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 'phone_number',
-            'currency', 'monthly_income', 'savings_target_percentage', 'is_verified', 'status',
+            'currency', 'monthly_income', 'savings_target_percentage',
+            'theme', 'bio', 'avatar_url', 'avatar_preset', 'preferences',
+            'is_verified', 'status',
             'has_google_auth', 'has_password_auth', 'profile'
         ]
         read_only_fields = ['id', 'email', 'is_verified', 'status', 'has_google_auth', 'has_password_auth']
@@ -85,15 +99,20 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         profile = getattr(instance, 'profile', None)
-        if profile and profile_data:
-            if 'currency' in profile_data:
-                profile.currency = profile_data['currency']
-            if 'monthly_income' in profile_data:
-                profile.monthly_income = profile_data['monthly_income']
-            if 'phone_number' in profile_data:
-                profile.phone_number = profile_data['phone_number']
-            if 'savings_target_percentage' in profile_data:
-                profile.savings_target_percentage = profile_data['savings_target_percentage']
+        if not profile:
+            profile, _ = Profile.objects.get_or_create(user=instance)
+
+        if profile_data:
+            for field in ['currency', 'monthly_income', 'phone_number', 'savings_target_percentage', 'theme', 'bio', 'avatar_url', 'avatar_preset']:
+                if field in profile_data:
+                    setattr(profile, field, profile_data[field])
+            if 'preferences' in profile_data:
+                curr_prefs = profile.preferences or {}
+                if isinstance(profile_data['preferences'], dict):
+                    curr_prefs.update(profile_data['preferences'])
+                    profile.preferences = curr_prefs
+                else:
+                    profile.preferences = profile_data['preferences']
             profile.save()
         return instance
 

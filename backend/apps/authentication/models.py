@@ -26,6 +26,11 @@ class Profile(models.Model):
     monthly_income = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     savings_target_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=20.00)
     theme = models.CharField(max_length=20, default='dark')
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    avatar_url = models.TextField(blank=True, default='')
+    avatar_preset = models.CharField(max_length=64, blank=True, default='')
+    bio = models.CharField(max_length=500, blank=True, default='')
+    preferences = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

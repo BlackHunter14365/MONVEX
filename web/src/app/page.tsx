@@ -218,8 +218,8 @@ export default function LandingPage() {
         <div className="mx-auto flex h-16 max-w-[1600px] w-full items-center justify-between px-4 sm:px-6 lg:px-12">
           {/* Brand Identity */}
           <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl overflow-hidden shadow-xs ring-1 ring-black/10 transition-transform group-hover:scale-105">
-              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden bg-white shadow-xs border border-[#E4E2DC] p-1 transition-transform group-hover:scale-105">
+              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black tracking-tight text-[#191522] leading-none">
@@ -1480,8 +1480,8 @@ export default function LandingPage() {
       <footer className="mt-auto border-t border-[#E4E2DC] bg-white py-12 px-4 sm:px-6 lg:px-12 text-xs text-[#625D69]">
         <CardReveal className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded-lg bg-[#2A1F3D] text-white flex items-center justify-center font-black text-xs">
-              M
+            <div className="h-8 w-8 rounded-lg bg-white border border-[#E4E2DC] shadow-2xs flex items-center justify-center p-1 overflow-hidden">
+              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-[#191522]">MONVEX</span>

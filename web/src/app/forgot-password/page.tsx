@@ -46,8 +46,8 @@ export default function ForgotPasswordPage() {
       {/* Brand Header */}
       <div className="text-center mb-6 sm:mb-8 space-y-2.5">
         <Link href="/" className="inline-flex flex-col items-center gap-2 group">
-          <div className="h-12 sm:h-14 w-12 sm:w-14 rounded-2xl overflow-hidden shadow-lg p-0.5 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105">
-            <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover rounded-xl" />
+          <div className="h-12 sm:h-14 w-12 sm:w-14 rounded-2xl overflow-hidden shadow-lg p-1 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105 flex items-center justify-center">
+            <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
           </div>
           <span className="text-xl sm:text-2xl font-black tracking-tight text-[#191522]">MONVEX</span>
         </Link>

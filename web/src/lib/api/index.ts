@@ -46,6 +46,9 @@ export class UnifiedApiClient {
   resendOTP = (id: string) => this.auth.resendOTP(id);
   getProfile = () => this.auth.getProfile();
   updateProfile = (p: any) => this.auth.updateProfile(p);
+  uploadAvatar = (file: File | Blob) => this.auth.uploadAvatar(file);
+  deleteAvatar = () => this.auth.deleteAvatar();
+  setAvatarPreset = (preset: string) => this.auth.setAvatarPreset(preset);
   logout = () => this.auth.logout();
 
   // Dashboard & Analytics proxies

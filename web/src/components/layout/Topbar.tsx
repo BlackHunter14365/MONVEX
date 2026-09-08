@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import { UserProfileModal } from '@/components/profile/UserProfileModal';
+import { UserProfileModal, PRESET_AVATARS } from '@/components/profile/UserProfileModal';
 import { Tooltip } from '@/components/ui/Tooltip';
 
 interface TopbarProps {
@@ -37,39 +37,12 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
-  const [presetData, setPresetData] = useState<any>(null);
+
+  const avatarUrl = user?.avatar_url;
+  const avatarPreset = user?.avatar_preset ? PRESET_AVATARS.find((p) => p.id === user.avatar_preset) : null;
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
-
-  const loadUserCustomizations = () => {
-    if (!user) return;
-    try {
-      const raw = localStorage.getItem(`monvex_avatar_${user.username}`);
-      if (raw) {
-        if (raw.startsWith('data:image')) {
-          setAvatarImage(raw);
-          setPresetData(null);
-        } else if (raw.startsWith('{')) {
-          setPresetData(JSON.parse(raw));
-          setAvatarImage(null);
-        }
-      } else {
-        setAvatarImage(null);
-        setPresetData(null);
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  useEffect(() => {
-    loadUserCustomizations();
-    const handleProfileUpdated = () => loadUserCustomizations();
-    window.addEventListener('monvex:profile-updated', handleProfileUpdated);
-    return () => window.removeEventListener('monvex:profile-updated', handleProfileUpdated);
-  }, [user]);
 
   // Click-outside and Escape listener to dismiss overlays
   useEffect(() => {
@@ -275,11 +248,11 @@ export const Topbar: React.FC<TopbarProps> = ({
               className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 min-h-[44px] hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden bg-[#2A1F3D] text-white text-xs font-bold uppercase shadow-xs">
-                {avatarImage ? (
-                  <img src={avatarImage} alt={user.username} className="h-full w-full object-cover" />
-                ) : presetData ? (
-                  <div className={cn('h-full w-full flex items-center justify-center text-sm bg-gradient-to-br', presetData.bg)}>
-                    {presetData.emoji}
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={user.username} className="h-full w-full object-cover" />
+                ) : avatarPreset ? (
+                  <div className={cn('h-full w-full flex items-center justify-center text-sm bg-gradient-to-br', avatarPreset.bg)}>
+                    {avatarPreset.emoji}
                   </div>
                 ) : (
                   user.username.slice(0, 1)

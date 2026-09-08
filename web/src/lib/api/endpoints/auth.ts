@@ -139,6 +139,43 @@ export class AuthEndpoints {
     });
   }
 
+  async uploadAvatar(file: File | Blob) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return this.client.request<{
+      success: boolean;
+      avatar_url: string;
+      avatar_preset: string;
+      user: any;
+    }>('/auth/profile/avatar/', {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async deleteAvatar() {
+    return this.client.request<{
+      success: boolean;
+      avatar_url: string;
+      avatar_preset: string;
+      user: any;
+    }>('/auth/profile/avatar/', {
+      method: 'DELETE',
+    });
+  }
+
+  async setAvatarPreset(avatar_preset: string) {
+    return this.client.request<{
+      success: boolean;
+      avatar_url: string;
+      avatar_preset: string;
+      user: any;
+    }>('/auth/profile/avatar/', {
+      method: 'POST',
+      body: JSON.stringify({ avatar_preset }),
+    });
+  }
+
   async refreshToken(refresh?: string) {
     if (refresh) {
       return this.client.request<{ access: string }>('/auth/token/refresh/', {
@@ -153,7 +190,17 @@ export class AuthEndpoints {
     const refresh = this.client.getRefreshToken();
     this.client.clearTokens();
     if (typeof window !== 'undefined') {
-      sessionStorage.clear();
+      try {
+        sessionStorage.clear();
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('monvex_') || k.startsWith('user_profile'))) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+      } catch {}
     }
     if (refresh) {
       try {

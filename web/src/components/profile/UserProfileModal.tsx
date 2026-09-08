@@ -34,7 +34,7 @@ interface UserProfileModalProps {
   onClose: () => void;
 }
 
-const PRESET_AVATARS = [
+export const PRESET_AVATARS = [
   { id: 'pres_1', label: 'Executive', bg: 'from-blue-600 to-indigo-900', emoji: '💼' },
   { id: 'pres_2', label: 'Tech Lead', bg: 'from-emerald-500 to-teal-800', emoji: '⚡' },
   { id: 'pres_3', label: 'Investor', bg: 'from-amber-500 to-orange-800', emoji: '📈' },
@@ -64,45 +64,32 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState('obsidian');
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Load Initial Saved Profile State
+  // Load Initial Saved Profile State from Backend User Context
   useEffect(() => {
     if (user && isOpen) {
       setFirstName(user.first_name || '');
       setLastName(user.last_name || '');
       setPhoneNumber(user.phone_number || '');
+      setBio(user.bio || 'Building long-term financial sovereignty 🚀');
+      setSelectedTheme(user.theme || 'obsidian');
 
-      try {
-        // 1. Check Full Saved Profile Object
-        const fullSaved = localStorage.getItem(`monvex_user_profile_${user.username}`);
-        if (fullSaved) {
-          const parsed = JSON.parse(fullSaved);
-          if (parsed.firstName) setFirstName(parsed.firstName);
-          if (parsed.lastName) setLastName(parsed.lastName);
-          if (parsed.phoneNumber) setPhoneNumber(parsed.phoneNumber);
-          if (parsed.bio) setBio(parsed.bio);
-          if (parsed.theme) setSelectedTheme(parsed.theme);
-        }
-
-        // 2. Check Saved Avatar
-        const savedAvatar = localStorage.getItem(`monvex_avatar_${user.username}`);
-        if (savedAvatar) {
-          if (savedAvatar.startsWith('data:image')) {
-            setAvatarImage(savedAvatar);
-            setSelectedPreset(null);
-          } else if (savedAvatar.startsWith('{')) {
-            const pres = JSON.parse(savedAvatar);
-            setSelectedPreset(pres.id);
-            setAvatarImage(null);
-          }
-        }
-      } catch {
-        // ignore
+      if (user.avatar_url) {
+        setAvatarImage(user.avatar_url);
+        setSelectedPreset(null);
+      } else if (user.avatar_preset) {
+        setSelectedPreset(user.avatar_preset);
+        setAvatarImage(null);
+      } else {
+        setAvatarImage(null);
+        setSelectedPreset(null);
       }
 
+      setPendingPhotoFile(null);
       setHasUnsavedChanges(false);
       setSaveSuccess(false);
     }
@@ -118,18 +105,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
       return;
     }
 
+    setPendingPhotoFile(file);
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
       setAvatarImage(base64);
       setSelectedPreset(null);
       setHasUnsavedChanges(true);
-
-      // Auto-cache to local storage for instant feedback
-      if (user) {
-        localStorage.setItem(`monvex_avatar_${user.username}`, base64);
-        window.dispatchEvent(new Event('monvex:profile-updated'));
-      }
       toast.info('Photo preview loaded. Click "Save Profile" to make it permanent.');
     };
     reader.readAsDataURL(file);
@@ -138,24 +120,16 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   const handleSelectPreset = (preset: typeof PRESET_AVATARS[0]) => {
     setSelectedPreset(preset.id);
     setAvatarImage(null);
+    setPendingPhotoFile(null);
     setHasUnsavedChanges(true);
-
-    if (user) {
-      localStorage.setItem(`monvex_avatar_${user.username}`, JSON.stringify(preset));
-      window.dispatchEvent(new Event('monvex:profile-updated'));
-    }
     toast.info(`Selected "${preset.label}" preset style.`);
   };
 
   const handleRemovePhoto = () => {
     setAvatarImage(null);
     setSelectedPreset(null);
+    setPendingPhotoFile(null);
     setHasUnsavedChanges(true);
-
-    if (user) {
-      localStorage.removeItem(`monvex_avatar_${user.username}`);
-      window.dispatchEvent(new Event('monvex:profile-updated'));
-    }
     toast.success('Avatar reset to default initials.');
   };
 
@@ -165,41 +139,24 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
     setSaveSuccess(false);
 
     try {
-      // 1. Persist to Backend API (Database)
+      // 1. If a new photo file was picked, upload to backend media storage
+      if (pendingPhotoFile) {
+        await api.uploadAvatar(pendingPhotoFile);
+      } else if (selectedPreset) {
+        await api.setAvatarPreset(selectedPreset);
+      } else if (!avatarImage && !selectedPreset) {
+        await api.deleteAvatar();
+      }
+
+      // 2. Persist profile fields to Backend Database (Single Source of Truth)
       await api.updateProfile({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone_number: phoneNumber.trim(),
+        bio: bio.trim(),
         theme: selectedTheme,
+        avatar_preset: selectedPreset || '',
       });
-
-      // 2. Persist to LocalStorage (Permanent Client Store)
-      if (user) {
-        if (avatarImage) {
-          localStorage.setItem(`monvex_avatar_${user.username}`, avatarImage);
-          localStorage.setItem('monvex_avatar_active', avatarImage);
-        } else if (selectedPreset) {
-          const pres = PRESET_AVATARS.find((p) => p.id === selectedPreset);
-          if (pres) {
-            localStorage.setItem(`monvex_avatar_${user.username}`, JSON.stringify(pres));
-          }
-        } else {
-          localStorage.removeItem(`monvex_avatar_${user.username}`);
-        }
-
-        const profileRecord = {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          phoneNumber: phoneNumber.trim(),
-          bio: bio.trim(),
-          theme: selectedTheme,
-          savedAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem(`monvex_user_profile_${user.username}`, JSON.stringify(profileRecord));
-        localStorage.setItem(`monvex_bio_${user.username}`, bio.trim());
-        localStorage.setItem(`monvex_theme_${user.username}`, selectedTheme);
-      }
 
       // 3. Refresh user Context & Dispatch global update
       await refreshUser();
@@ -207,9 +164,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
         window.dispatchEvent(new Event('monvex:profile-updated'));
       }
 
+      setPendingPhotoFile(null);
       setSaveSuccess(true);
       setHasUnsavedChanges(false);
-      toast.success('✓ Profile changes saved permanently!');
+      toast.success('✓ Profile changes saved permanently to account!');
 
       setTimeout(() => {
         onClose();

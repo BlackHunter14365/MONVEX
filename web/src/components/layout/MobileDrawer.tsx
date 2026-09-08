@@ -132,8 +132,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         {/* Top Header */}
         <div className="p-4 border-b border-[#E4E2DC] flex items-center justify-between bg-white/80">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl overflow-hidden shadow-sm bg-[#2A1F3D] flex items-center justify-center text-white font-black text-xs ring-2 ring-[#EEEAF7]">
-              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
+            <div className="h-8 w-8 rounded-xl overflow-hidden shadow-2xs bg-white border border-[#E4E2DC] flex items-center justify-center p-0.5">
+              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
             </div>
             <div>
               <span className="text-sm font-extrabold text-[#191522] block leading-tight">MONVEX</span>

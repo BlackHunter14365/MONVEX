@@ -19,6 +19,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useSpeechRecognition } from '@/lib/useSpeechRecognition';
+import { PRESET_AVATARS } from '@/components/profile/UserProfileModal';
 
 export default function AIPage() {
   const { user } = useAuth();
@@ -38,10 +39,9 @@ export default function AIPage() {
   const [likedMap, setLikedMap] = useState<Record<string, 'like' | 'dislike' | null>>({});
   const [speakingId, setSpeakingId] = useState<string | null>(null);
 
-  // User Profile
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
-  const [userPreset, setUserPreset] = useState<any>(null);
-  const [cachedName, setCachedName] = useState<string | null>(null);
+  // User Profile derived directly from Backend Context
+  const userAvatar = user?.avatar_url || null;
+  const userPreset = user?.avatar_preset ? PRESET_AVATARS.find((p) => p.id === user.avatar_preset) : null;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -117,38 +117,8 @@ export default function AIPage() {
     }
   };
 
-  const loadProfileData = () => {
-    if (!user) return;
-    try {
-      const raw = localStorage.getItem(`monvex_avatar_${user.username}`);
-      if (raw) {
-        if (raw.startsWith('data:image')) {
-          setUserAvatar(raw);
-          setUserPreset(null);
-        } else if (raw.startsWith('{')) {
-          setUserPreset(JSON.parse(raw));
-          setUserAvatar(null);
-        }
-      }
-
-      const pRaw = localStorage.getItem(`monvex_user_profile_${user.username}`);
-      if (pRaw) {
-        const parsed = JSON.parse(pRaw);
-        if (parsed.firstName || parsed.lastName) {
-          setCachedName(`${parsed.firstName || ''} ${parsed.lastName || ''}`.trim());
-        }
-      }
-    } catch {
-      // ignore
-    }
-  };
-
   useEffect(() => {
-    loadProfileData();
     fetchRealAIHistory();
-    const handleUpdate = () => loadProfileData();
-    window.addEventListener('monvex:profile-updated', handleUpdate);
-    return () => window.removeEventListener('monvex:profile-updated', handleUpdate);
   }, [user]);
 
   // Voice Recognition Hook
@@ -457,7 +427,7 @@ export default function AIPage() {
     );
   };
 
-  const displayName = cachedName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'Danish';
+  const displayName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'You';
 
   return (
     <AppShell>

@@ -2,14 +2,20 @@
 Authentication & Verification Views
 Handles user registration, login, logout, provider-backed OTP check, resend, and JWT lifecycle.
 """
+import base64
+import io
+import uuid
+from PIL import Image
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.db.models import Q
+from django.core.files.base import ContentFile
 
 from .serializers import (
     RegisterSerializer,
@@ -374,4 +380,117 @@ class GoogleLinkAccountView(APIView):
                 "code": "LINK_FAILED",
                 "message": "Account linking could not be completed."
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class AvatarUploadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def post(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+        # 1. File Upload (multipart/form-data)
+        file = request.FILES.get('avatar') or request.FILES.get('file')
+        if file:
+            if file.size > 5 * 1024 * 1024:
+                return Response({
+                    "success": False,
+                    "message": "Avatar file size must not exceed 5MB."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                img = Image.open(file)
+                img.verify()
+                file.seek(0)
+                img = Image.open(file)
+            except Exception:
+                return Response({
+                    "success": False,
+                    "message": "Invalid image file format. Please upload a valid JPEG, PNG, WEBP, or GIF."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Convert format and thumbnail to 400x400
+            if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+                img = img.convert('RGBA')
+                save_format = 'PNG'
+                mime = 'image/png'
+            else:
+                img = img.convert('RGB')
+                save_format = 'JPEG'
+                mime = 'image/jpeg'
+
+            img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+            buffer = io.BytesIO()
+            if save_format == 'JPEG':
+                img.save(buffer, format='JPEG', quality=85, optimize=True)
+            else:
+                img.save(buffer, format='PNG', optimize=True)
+
+            encoded_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            data_uri = f"data:{mime};base64,{encoded_data}"
+
+            filename = f"avatar_{request.user.id}_{uuid.uuid4().hex[:8]}.{save_format.lower()}"
+            profile.avatar.save(filename, ContentFile(buffer.getvalue()), save=False)
+            profile.avatar_url = data_uri
+            profile.avatar_preset = ''
+            profile.save()
+
+            return Response({
+                "success": True,
+                "avatar_url": profile.avatar_url,
+                "avatar_preset": profile.avatar_preset,
+                "user": UserSerializer(request.user).data
+            }, status=status.HTTP_200_OK)
+
+        # 2. JSON Payload with preset or custom url
+        avatar_preset = request.data.get('avatar_preset')
+        avatar_url = request.data.get('avatar_url') or request.data.get('data_url')
+        remove = request.data.get('remove', False)
+
+        if remove:
+            if profile.avatar:
+                profile.avatar.delete(save=False)
+            profile.avatar = None
+            profile.avatar_url = ''
+            profile.avatar_preset = ''
+            profile.save()
+            return Response({
+                "success": True,
+                "message": "Avatar removed successfully.",
+                "avatar_url": "",
+                "avatar_preset": "",
+                "user": UserSerializer(request.user).data
+            }, status=status.HTTP_200_OK)
+
+        if avatar_preset is not None:
+            profile.avatar_preset = str(avatar_preset)
+            if profile.avatar_preset and not avatar_url:
+                profile.avatar_url = ''
+        if avatar_url is not None:
+            profile.avatar_url = str(avatar_url)
+            if profile.avatar_url:
+                profile.avatar_preset = ''
+
+        profile.save()
+        return Response({
+            "success": True,
+            "avatar_url": profile.avatar_url,
+            "avatar_preset": profile.avatar_preset,
+            "user": UserSerializer(request.user).data
+        }, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if profile.avatar:
+            profile.avatar.delete(save=False)
+        profile.avatar = None
+        profile.avatar_url = ''
+        profile.avatar_preset = ''
+        profile.save()
+        return Response({
+            "success": True,
+            "message": "Avatar reset to default.",
+            "avatar_url": "",
+            "avatar_preset": "",
+            "user": UserSerializer(request.user).data
+        }, status=status.HTTP_200_OK)
 

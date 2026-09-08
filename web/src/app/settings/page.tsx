@@ -87,7 +87,9 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
-  // Load initial preferences & profile state
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+
+  // Load initial preferences & profile state directly from backend User Context
   const loadSettings = () => {
     if (!user) return;
     setCurrency(user.currency || 'INR');
@@ -96,47 +98,30 @@ export default function SettingsPage() {
     setFirstName(user.first_name || '');
     setLastName(user.last_name || '');
     setPhoneNumber(user.phone_number || '');
+    setBio(user.bio || 'Building long-term financial sovereignty 🚀');
 
-    // Hydrate from localStorage
-    try {
-      const fullSaved = localStorage.getItem(`monvex_user_profile_${user.username}`);
-      if (fullSaved) {
-        const parsed = JSON.parse(fullSaved);
-        if (parsed.firstName) setFirstName(parsed.firstName);
-        if (parsed.lastName) setLastName(parsed.lastName);
-        if (parsed.phoneNumber) setPhoneNumber(parsed.phoneNumber);
-        if (parsed.bio) setBio(parsed.bio);
-      }
-
-      const savedAvatar = localStorage.getItem(`monvex_avatar_${user.username}`);
-      if (savedAvatar) {
-        if (savedAvatar.startsWith('data:image')) {
-          setAvatarImage(savedAvatar);
-          setSelectedPreset(null);
-        } else if (savedAvatar.startsWith('{')) {
-          const pres = JSON.parse(savedAvatar);
-          setSelectedPreset(pres.id);
-          setAvatarImage(null);
-        }
-      }
-
-      const savedPrefs = localStorage.getItem('monvex_app_preferences');
-      if (savedPrefs) {
-        const p = JSON.parse(savedPrefs);
-        if (p.fiscalStartDay) setFiscalStartDay(p.fiscalStartDay);
-        if (p.notifAnomaly !== undefined) setNotifAnomaly(p.notifAnomaly);
-        if (p.notifBudget80 !== undefined) setNotifBudget80(p.notifBudget80);
-        if (p.notifGoalMilestone !== undefined) setNotifGoalMilestone(p.notifGoalMilestone);
-        if (p.notifWeeklyDigest !== undefined) setNotifWeeklyDigest(p.notifWeeklyDigest);
-        if (p.aiEmergencyBuffer) setAiEmergencyBuffer(p.aiEmergencyBuffer);
-        if (p.voiceLang) setVoiceLang(p.voiceLang);
-        if (p.aiAutoCategorize !== undefined) setAiAutoCategorize(p.aiAutoCategorize);
-        if (p.sessionTimeout) setSessionTimeout(p.sessionTimeout);
-        if (p.requireOtpLogin !== undefined) setRequireOtpLogin(p.requireOtpLogin);
-      }
-    } catch {
-      // ignore
+    if (user.avatar_url) {
+      setAvatarImage(user.avatar_url);
+      setSelectedPreset(null);
+    } else if (user.avatar_preset) {
+      setSelectedPreset(user.avatar_preset);
+      setAvatarImage(null);
+    } else {
+      setAvatarImage(null);
+      setSelectedPreset(null);
     }
+
+    const p = user.preferences || {};
+    if (p.fiscalStartDay) setFiscalStartDay(p.fiscalStartDay);
+    if (p.notifAnomaly !== undefined) setNotifAnomaly(p.notifAnomaly);
+    if (p.notifBudget80 !== undefined) setNotifBudget80(p.notifBudget80);
+    if (p.notifGoalMilestone !== undefined) setNotifGoalMilestone(p.notifGoalMilestone);
+    if (p.notifWeeklyDigest !== undefined) setNotifWeeklyDigest(p.notifWeeklyDigest);
+    if (p.aiEmergencyBuffer) setAiEmergencyBuffer(p.aiEmergencyBuffer);
+    if (p.voiceLang) setVoiceLang(p.voiceLang);
+    if (p.aiAutoCategorize !== undefined) setAiAutoCategorize(p.aiAutoCategorize);
+    if (p.sessionTimeout) setSessionTimeout(p.sessionTimeout);
+    if (p.requireOtpLogin !== undefined) setRequireOtpLogin(p.requireOtpLogin);
   };
 
   useEffect(() => {
@@ -156,18 +141,13 @@ export default function SettingsPage() {
       return;
     }
 
+    setPendingPhotoFile(file);
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
       setAvatarImage(base64);
       setSelectedPreset(null);
-
-      if (user) {
-        localStorage.setItem(`monvex_avatar_${user.username}`, base64);
-        localStorage.setItem('monvex_avatar_active', base64);
-        window.dispatchEvent(new Event('monvex:profile-updated'));
-      }
-      toast.success('Photo uploaded! Click "Save changes" to permanently apply.');
+      toast.info('Photo loaded. Click "Save changes" to permanently apply.');
     };
     reader.readAsDataURL(file);
   };
@@ -175,21 +155,14 @@ export default function SettingsPage() {
   const handleSelectPreset = (preset: typeof PRESET_AVATARS[0]) => {
     setSelectedPreset(preset.id);
     setAvatarImage(null);
-
-    if (user) {
-      localStorage.setItem(`monvex_avatar_${user.username}`, JSON.stringify(preset));
-      window.dispatchEvent(new Event('monvex:profile-updated'));
-    }
+    setPendingPhotoFile(null);
     toast.info(`Selected "${preset.label}" avatar style.`);
   };
 
   const handleRemovePhoto = () => {
     setAvatarImage(null);
     setSelectedPreset(null);
-    if (user) {
-      localStorage.removeItem(`monvex_avatar_${user.username}`);
-      window.dispatchEvent(new Event('monvex:profile-updated'));
-    }
+    setPendingPhotoFile(null);
     toast.success('Avatar reset to default initials.');
   };
 
@@ -199,41 +172,17 @@ export default function SettingsPage() {
     setStatusMsg('');
 
     try {
-      // 1. Update Backend Profile (Server Synced)
-      await api.updateProfile({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        phone_number: phoneNumber.trim(),
-        currency,
-        monthly_income: parseFloat(monthlyIncome) || 75000,
-        savings_target_percentage: parseFloat(savingsTarget) || 20,
-      });
-
-      // 2. Persist Client User Profile & Avatar (Device Stored)
-      if (user) {
-        if (avatarImage) {
-          localStorage.setItem(`monvex_avatar_${user.username}`, avatarImage);
-          localStorage.setItem('monvex_avatar_active', avatarImage);
-        } else if (selectedPreset) {
-          const pres = PRESET_AVATARS.find((p) => p.id === selectedPreset);
-          if (pres) localStorage.setItem(`monvex_avatar_${user.username}`, JSON.stringify(pres));
-        }
-
-        const profileRecord = {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          phoneNumber: phoneNumber.trim(),
-          bio: bio.trim(),
-          savedAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem(`monvex_user_profile_${user.username}`, JSON.stringify(profileRecord));
-        localStorage.setItem(`monvex_bio_${user.username}`, bio.trim());
+      // 1. If a new photo file was picked, upload to backend media storage
+      if (pendingPhotoFile) {
+        await api.uploadAvatar(pendingPhotoFile);
+      } else if (selectedPreset) {
+        await api.setAvatarPreset(selectedPreset);
+      } else if (!avatarImage && !selectedPreset) {
+        await api.deleteAvatar();
       }
 
-      // 3. Persist Client Preferences (Device Stored)
-      const clientPrefs = {
-        savingsTarget,
+      // 2. Structured App Preferences for Backend Database
+      const appPreferences = {
         fiscalStartDay,
         notifAnomaly,
         notifBudget80,
@@ -245,14 +194,27 @@ export default function SettingsPage() {
         sessionTimeout,
         requireOtpLogin,
       };
-      localStorage.setItem('monvex_app_preferences', JSON.stringify(clientPrefs));
+
+      // 3. Update Backend Profile & Preferences (Database Single Source of Truth)
+      await api.updateProfile({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone_number: phoneNumber.trim(),
+        bio: bio.trim(),
+        avatar_preset: selectedPreset || '',
+        currency,
+        monthly_income: parseFloat(monthlyIncome) || 75000,
+        savings_target_percentage: parseFloat(savingsTarget) || 20,
+        preferences: appPreferences,
+      });
 
       await refreshUser();
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('monvex:profile-updated'));
       }
 
-      toast.success('✓ Profile details & system preferences successfully saved.');
+      setPendingPhotoFile(null);
+      toast.success('✓ Profile details & system preferences successfully saved to backend.');
       setStatusMsg('Preferences saved & verified.');
       setTimeout(() => setStatusMsg(''), 3000);
     } catch (err: any) {

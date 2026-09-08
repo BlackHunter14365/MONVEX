@@ -114,8 +114,8 @@ export default function LoginPage() {
             {/* Top Brand Mark */}
             <div className="space-y-6 relative z-10">
               <Link href="/" className="inline-flex items-center gap-3 group">
-                <div className="h-11 w-11 rounded-2xl overflow-hidden shadow-lg p-0.5 bg-white/10 ring-1 ring-white/20 transition-transform group-hover:scale-105">
-                  <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover rounded-xl" />
+                <div className="h-11 w-11 rounded-2xl overflow-hidden shadow-lg p-1 bg-white ring-1 ring-white/20 transition-transform group-hover:scale-105 flex items-center justify-center">
+                  <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
                 </div>
                 <div>
                   <span className="text-xl font-black tracking-tight text-white block leading-tight">
@@ -186,8 +186,8 @@ export default function LoginPage() {
               {/* Mobile-Only Dedicated App Header */}
               <div className="lg:hidden text-center space-y-2.5 pb-1">
                 <Link href="/" className="inline-flex flex-col items-center gap-2 group">
-                  <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-md p-0.5 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105">
-                    <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover rounded-xl" />
+                  <div className="h-12 w-12 rounded-2xl overflow-hidden shadow-md p-1 bg-white ring-1 ring-[#E2DFD7] transition-transform group-hover:scale-105 flex items-center justify-center">
+                    <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
                   </div>
                   <div>
                     <span className="text-xl font-black tracking-tight text-[#191522] block leading-tight">

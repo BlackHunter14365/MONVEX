@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { UserProfileModal } from '@/components/profile/UserProfileModal';
+import { UserProfileModal, PRESET_AVATARS } from '@/components/profile/UserProfileModal';
 
 interface SidebarProps {
   onOpenAddTransaction?: () => void;
@@ -35,49 +35,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
   const { user } = useAuth();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
-  const [presetData, setPresetData] = useState<any>(null);
-  const [cachedName, setCachedName] = useState<string | null>(null);
 
-  const loadUserCustomizations = () => {
-    if (!user) return;
-    try {
-      const profileRaw = localStorage.getItem(`monvex_user_profile_${user.username}`);
-      if (profileRaw) {
-        const parsed = JSON.parse(profileRaw);
-        if (parsed.firstName || parsed.lastName) {
-          setCachedName(`${parsed.firstName || ''} ${parsed.lastName || ''}`.trim());
-        }
-      }
-
-      const raw = localStorage.getItem(`monvex_avatar_${user.username}`);
-      if (raw) {
-        if (raw.startsWith('data:image')) {
-          setAvatarImage(raw);
-          setPresetData(null);
-        } else if (raw.startsWith('{')) {
-          setPresetData(JSON.parse(raw));
-          setAvatarImage(null);
-        }
-      } else {
-        setAvatarImage(null);
-        setPresetData(null);
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  useEffect(() => {
-    loadUserCustomizations();
-
-    const handleProfileUpdated = () => {
-      loadUserCustomizations();
-    };
-
-    window.addEventListener('monvex:profile-updated', handleProfileUpdated);
-    return () => window.removeEventListener('monvex:profile-updated', handleProfileUpdated);
-  }, [user]);
+  const avatarUrl = user?.avatar_url;
+  const avatarPreset = user?.avatar_preset ? PRESET_AVATARS.find((p) => p.id === user.avatar_preset) : null;
 
   interface NavItem {
     name: string;
@@ -120,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
     { name: 'Settings & Profile', href: '/settings', icon: Settings },
   ];
 
-  const fullName = cachedName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User Profile';
+  const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User Profile';
 
   const renderNavGroup = (title: string, items: NavItem[]) => (
     <div className="space-y-1">
@@ -181,8 +141,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                 {/* User Avatar with Online Dot */}
                 <div className="relative shrink-0">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md ring-2 ring-white/90 bg-[#2A1F3D] text-white text-xs font-black">
-                    {avatarImage ? (
-                      <img src={avatarImage} alt="Profile" className="h-full w-full object-cover" />
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                    ) : avatarPreset ? (
+                      <div className={cn('h-full w-full flex items-center justify-center text-lg bg-gradient-to-br', avatarPreset.bg)}>
+                        {avatarPreset.emoji}
+                      </div>
                     ) : (
                       <span>{fullName.slice(0, 2).toUpperCase()}</span>
                     )}

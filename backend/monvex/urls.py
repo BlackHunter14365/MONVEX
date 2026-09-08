@@ -7,6 +7,9 @@ from .views import health_check, readiness_check, observability_status
 from apps.security.views import ContactSubmissionView
 from apps.transactions.views_extra import UniversalSearchView
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     # Probes & Observability
     path('health/', health_check, name='health-check'),
@@ -25,4 +28,8 @@ urlpatterns = [
     path('api/v1/security/', include('apps.security.urls')),
     path('api/v1/contact/', ContactSubmissionView.as_view(), name='api-contact'),
 ]
+
+if settings.MEDIA_ROOT:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 

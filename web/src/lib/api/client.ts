@@ -9,18 +9,18 @@ export class HttpClient {
 
   public getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('monvex_access_token') || sessionStorage.getItem('monvex_access_token');
+    return sessionStorage.getItem('monvex_access_token');
   }
 
   public getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('monvex_refresh_token') || sessionStorage.getItem('monvex_refresh_token');
+    return sessionStorage.getItem('monvex_refresh_token');
   }
 
   public setAccessToken(token: string) {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('monvex_access_token', token);
+        localStorage.removeItem('monvex_access_token');
       } catch {}
       sessionStorage.setItem('monvex_access_token', token);
     }
@@ -29,8 +29,8 @@ export class HttpClient {
   public setTokens(access: string, refresh: string) {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('monvex_access_token', access);
-        localStorage.setItem('monvex_refresh_token', refresh);
+        localStorage.removeItem('monvex_access_token');
+        localStorage.removeItem('monvex_refresh_token');
       } catch {}
       sessionStorage.setItem('monvex_access_token', access);
       sessionStorage.setItem('monvex_refresh_token', refresh);
@@ -100,11 +100,16 @@ export class HttpClient {
     const token = this.getAccessToken();
     const reqId = typeof crypto !== 'undefined' && crypto.randomUUID ? `req_${crypto.randomUUID().slice(0, 16)}` : `req_${Math.random().toString(36).substring(2, 10)}`;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'X-Request-ID': reqId,
       'X-Client-Platform': 'web',
       ...(options.headers as Record<string, string>),
     };
+
+    if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    } else if (options.body instanceof FormData) {
+      delete headers['Content-Type'];
+    }
 
     const isPublicAuthEndpoint =
       endpoint.startsWith('/auth/login') ||

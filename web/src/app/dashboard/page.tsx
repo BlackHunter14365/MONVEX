@@ -68,33 +68,15 @@ export default function DashboardPage() {
   // Chart Metric Mode
   const [chartMetric, setChartMetric] = useState<'EXPENSE' | 'DUAL' | 'NET'>('EXPENSE');
 
-  // Dynamic user name
-  const [cachedName, setCachedName] = useState<string | null>(null);
-
-  const loadProfileInfo = () => {
-    try {
-      const stored = localStorage.getItem('user_profile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const name = `${parsed.first_name || ''} ${parsed.last_name || ''}`.trim();
-        if (name) setCachedName(name);
-      }
-    } catch {
-      // ignore
-    }
-  };
-
   useEffect(() => {
-    loadProfileInfo();
     const handleProfileUpdate = () => {
-      loadProfileInfo();
       refetch();
     };
     window.addEventListener('monvex:profile-updated', handleProfileUpdate);
     return () => {
       window.removeEventListener('monvex:profile-updated', handleProfileUpdate);
     };
-  }, [user, refetch]);
+  }, [refetch]);
 
   // Verified financial totals from backend API
   const totalIncome = summary?.monthly_income ?? summary?.total_income ?? 0;
@@ -106,7 +88,7 @@ export default function DashboardPage() {
   const netSavings = summary?.net_savings ?? Math.max(0, totalIncome - totalExpense);
   const savingsRate = summary?.savings_rate ?? summary?.savings_rate_pct ?? (totalIncome > 0 ? ((netSavings / totalIncome) * 100).toFixed(1) : 0);
 
-  const displayName = cachedName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'there';
+  const displayName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'there';
 
   const getGreeting = () => {
     const hour = new Date().getHours();

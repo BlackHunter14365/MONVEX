@@ -57,8 +57,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 space-y-3">
-        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md ring-1 ring-black/10 animate-pulse">
-          <img src="/logo.png" alt="MONVEX" className="h-full w-full object-cover" />
+        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-xs border border-[#E4E2DC] bg-white p-1 animate-pulse">
+          <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
         </div>
         <div className="w-40 space-y-2">
           <Skeleton className="h-2 w-full" />

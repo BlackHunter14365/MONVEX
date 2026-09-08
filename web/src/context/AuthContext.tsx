@@ -11,6 +11,11 @@ interface UserProfile {
   first_name?: string;
   last_name?: string;
   phone_number?: string;
+  bio?: string;
+  theme?: string;
+  avatar_url?: string;
+  avatar_preset?: string;
+  preferences?: Record<string, any>;
   is_verified?: boolean;
   status?: string;
   currency: string;
@@ -18,6 +23,7 @@ interface UserProfile {
   savings_target_percentage?: number;
   has_google_auth?: boolean;
   has_password_auth?: boolean;
+  profile?: Record<string, any>;
 }
 
 interface AuthContextType {
@@ -112,6 +118,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryClient.clear();
     api.clearTokens();
     setUser(null);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.clear();
+      } catch {}
+    }
     try {
       await api.logout();
     } catch {

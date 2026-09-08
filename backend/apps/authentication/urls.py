@@ -14,6 +14,7 @@ from .views import (
     CurrentUserView,
     GoogleLoginView,
     GoogleLinkAccountView,
+    AvatarUploadView,
 )
 
 urlpatterns = [
@@ -37,5 +38,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', CurrentUserView.as_view(), name='auth_me'),
     path('profile/', ProfileView.as_view(), name='auth_profile'),
+    path('profile/avatar/', AvatarUploadView.as_view(), name='auth_avatar_upload'),
+    path('avatar/', AvatarUploadView.as_view(), name='auth_avatar_alias'),
 ]
 

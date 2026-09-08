@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Copy, Check, Lock, RotateCw } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check, Lock, RotateCw, ShieldCheck } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 
 export type CardTheme = 'obsidian' | 'sapphire' | 'emerald' | 'amber' | 'gold' | 'platinum';
@@ -14,7 +14,6 @@ export interface BankingCardViewProps {
   cardNumber?: string;
   rawCardNumber?: string;
   expiryDate?: string;
-  cvv?: string;
   balance: number;
   currency?: string;
   theme?: CardTheme;
@@ -60,7 +59,6 @@ export const BankingCardView: React.FC<BankingCardViewProps> = ({
   cardNumber = '•••• •••• •••• 8821',
   rawCardNumber,
   expiryDate = '12/28',
-  cvv = '882',
   balance,
   currency = 'INR',
   theme = 'obsidian',
@@ -86,22 +84,18 @@ export const BankingCardView: React.FC<BankingCardViewProps> = ({
 
   const [internalNumberRevealed, setInternalNumberRevealed] = useState(false);
   const isNumberRevealed = showNumber !== undefined ? (showNumber || internalNumberRevealed) : internalNumberRevealed;
-  const [isCvvRevealed, setIsCvvRevealed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   // Derive display card number
   const full16 = rawCardNumber ? formatCardNumber(rawCardNumber) : cardNumber;
-  const last4 = full16.replace(/\D/g, '').slice(-4) || '8821';
+  const last4 = full16.replace(/\D/g, '').slice(-4) || '1639';
   const displayedNumber = isNumberRevealed
     ? (rawCardNumber ? formatCardNumber(rawCardNumber) : (full16.includes('•') ? full16 : formatCardNumber(full16)))
     : `•••• •••• •••• ${last4}`;
 
-  const cleanCvv = (cvv || '882').replace(/\D/g, '').slice(0, 4) || '882';
-  const displayedCvv = isCvvRevealed ? cleanCvv : '•••';
-
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const textToCopy = rawCardNumber ? rawCardNumber.replace(/\D/g, '') : full16.replace(/\s+/g, '');
+    const textToCopy = rawCardNumber ? rawCardNumber.replace(/\D/g, '') : `•••• •••• •••• ${last4}`;
     navigator.clipboard.writeText(textToCopy);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 1800);
@@ -183,7 +177,7 @@ export const BankingCardView: React.FC<BankingCardViewProps> = ({
                   type="button"
                   onClick={toggleFlipped}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white/90 hover:text-white text-[10px] font-mono transition-colors"
-                  title="Flip to back (CVV & signature)"
+                  title="Flip to back (Signature & EMV Token)"
                 >
                   <RotateCw className="h-3 w-3" />
                   <span className="hidden sm:inline">Flip</span>
@@ -297,7 +291,7 @@ export const BankingCardView: React.FC<BankingCardViewProps> = ({
         </div>
 
         {/* =========================================================================
-            BACK FACE OF BANKING CARD (MAGNETIC STRIPE, SIGNATURE, CVV REVEAL/HIDE)
+            BACK FACE OF BANKING CARD (MAGNETIC STRIPE, SIGNATURE, EMV TOKEN BADGE)
             ========================================================================= */}
         <div
           className={cn(
@@ -313,11 +307,11 @@ export const BankingCardView: React.FC<BankingCardViewProps> = ({
           {/* Black Magnetic Stripe */}
           <div className="w-full h-10 bg-[#0A0A0A] border-y border-black/40 shadow-inner" />
 
-          {/* Signature Panel & CVV Box */}
+          {/* Signature Panel & Secure EMV Token Strip */}
           <div className="px-5 space-y-1">
             <div className="flex items-center justify-between text-[8px] font-mono text-white/60 tracking-wider">
               <span>AUTHORIZED SIGNATURE</span>
-              <span>SECURITY CODE (CVV)</span>
+              <span>SECURITY VERIFICATION</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -329,25 +323,15 @@ export const BankingCardView: React.FC<BankingCardViewProps> = ({
                 </span>
               </div>
 
-              {/* CVV Security Box with Reveal/Hide Toggle */}
+              {/* Secure EMV Token Box */}
               <div
-                className="h-9 px-3 rounded-md bg-white border border-white/40 flex items-center gap-2 shadow-xs shrink-0"
+                className="h-9 px-2.5 rounded-md bg-white/10 border border-white/30 flex items-center gap-1.5 shadow-xs shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="font-mono text-xs sm:text-sm font-bold text-[#191522] tracking-widest min-w-[32px] text-center">
-                  {displayedCvv}
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-mono text-[9px] font-bold text-white tracking-wider">
+                  EMV TOKEN
                 </span>
-
-                {showControls && (
-                  <button
-                    type="button"
-                    onClick={() => setIsCvvRevealed(!isCvvRevealed)}
-                    className="p-1 text-slate-500 hover:text-slate-900 transition-colors"
-                    title={isCvvRevealed ? 'Hide CVV' : 'Reveal CVV'}
-                  >
-                    {isCvvRevealed ? <EyeOff className="h-3 w-3 text-amber-600" /> : <Eye className="h-3 w-3" />}
-                  </button>
-                )}
               </div>
             </div>
           </div>

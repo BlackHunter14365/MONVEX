@@ -31,7 +31,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FinancialAmount } from '@/components/ui/FinancialAmount';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, cn, getTransactionDisplayName } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardQuery } from '@/hooks/queries/useDashboardQuery';
 import {
@@ -625,11 +625,11 @@ export default function DashboardPage() {
                             <div key={`mob-${tx.id}`} className="py-3 flex items-center justify-between gap-3">
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg shrink-0 text-xs font-black', catStyles.bg, catStyles.text)}>
-                                  {(tx.merchant_name || tx.category_name || 'T').slice(0,1).toUpperCase()}
+                                  {(getTransactionDisplayName(tx)).slice(0,1).toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
                                   <span className="font-bold text-xs text-[#191522] block truncate">
-                                    {tx.merchant_name || tx.description || 'Transaction'}
+                                    {getTransactionDisplayName(tx)}
                                   </span>
                                   <span className="text-[11px] text-[#898390] block">
                                     {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -676,7 +676,7 @@ export default function DashboardPage() {
                                 </td>
                                 <td>
                                   <span className="font-bold text-xs text-[#191522] truncate max-w-[240px] block">
-                                    {tx.merchant_name || tx.description || 'Transaction'}
+                                    {getTransactionDisplayName(tx)}
                                   </span>
                                 </td>
                                 <td>

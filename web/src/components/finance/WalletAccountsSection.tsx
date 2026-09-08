@@ -26,10 +26,8 @@ import {
   TrendingUp,
   TrendingDown,
   ChevronRight,
-  Sparkles,
   ExternalLink,
   CheckCircle2,
-  AlertTriangle,
   Receipt,
   Settings2,
 } from 'lucide-react';
@@ -44,7 +42,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, cn, getTransactionDisplayName } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
@@ -61,7 +59,6 @@ export interface AccountItem {
   rawCardNumber?: string;
   cardholderName?: string;
   expiryDate?: string;
-  cvv?: string;
   balance: number;
   creditLimit?: number;
   availableCredit?: number;
@@ -100,8 +97,6 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   const [filterType, setFilterType] = useState<'ALL' | 'BANK' | 'CREDIT' | 'WALLET'>('ALL');
 
   // Security & Display States
-  const [isCardNumberRevealed, setIsCardNumberRevealed] = useState(false);
-  const [isCvvRevealed, setIsCvvRevealed] = useState(false);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -116,28 +111,27 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   const [targetAccount, setTargetAccount] = useState<AccountItem | null>(null);
   const [isActionPending, setIsActionPending] = useState(false);
 
-  // Add Account Form State
+  // Add Account Form State (Safe attributes - no CVV, no payment checkout heuristics)
   const [addBankName, setAddBankName] = useState('');
   const [addAccountName, setAddAccountName] = useState('');
   const [addAccountType, setAddAccountType] = useState<'CHECKING' | 'SAVINGS' | 'CREDIT' | 'WALLET' | 'CASH'>('CHECKING');
   const [addBalance, setAddBalance] = useState('');
-  const [addCardNumber, setAddCardNumber] = useState('');
+  const [addCardDigits, setAddCardDigits] = useState('');
   const [addCardholderName, setAddCardholderName] = useState('');
   const [addExpiryDate, setAddExpiryDate] = useState('');
-  const [addCvv, setAddCvv] = useState('');
   const [addTheme, setAddTheme] = useState<CardTheme>('obsidian');
   const [addCardFlipped, setAddCardFlipped] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
 
-  // Edit Card & Account Form State
+  // Edit Card & Account Form State (Preserves last4, optional card replacement, no CVV)
   const [editBankName, setEditBankName] = useState('');
   const [editAccountName, setEditAccountName] = useState('');
   const [editBalance, setEditBalance] = useState('');
-  const [editCardNumber, setEditCardNumber] = useState('');
   const [editCardholderName, setEditCardholderName] = useState('');
   const [editExpiryDate, setEditExpiryDate] = useState('');
-  const [editCvv, setEditCvv] = useState('');
   const [editTheme, setEditTheme] = useState<CardTheme>('obsidian');
+  const [isReplacingCard, setIsReplacingCard] = useState(false);
+  const [replacementCardDigits, setReplacementCardDigits] = useState('');
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   // Transfer Form State
@@ -159,7 +153,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   } | null>(null);
 
   // ---------------------------------------------------------------------------
-  // 1. Data Fetching & Normalization
+  // 1. Data Fetching & Normalization (Single Source of Truth)
   // ---------------------------------------------------------------------------
   const fetchUserAccounts = useCallback(async () => {
     if (!user) {
@@ -192,13 +186,19 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
         const chosenTheme: CardTheme = meta.theme || themes[idx % themes.length];
         const val = parseFloat(ast.value) || 0;
-        const rawNum: string = (meta.raw_card_number || meta.full_card_number || '').replace(/\D/g, '');
-        const last4 = meta.last4 || (rawNum ? rawNum.slice(-4) : (ast.name ? String(ast.name.length * 111).slice(-4).padStart(4, '0') : '1639'));
-        const fullCardNumber = rawNum ? formatCardNumber(rawNum) : `•••• •••• •••• ${last4}`;
+
+        // Clean last 4 digits resolver
+        const rawDigits = String(meta.last4 || meta.lastFour || meta.raw_card_number || '').replace(/\D/g, '');
+        const last4 = rawDigits.length >= 4
+          ? rawDigits.slice(-4)
+          : ast.name
+          ? String(ast.name.length * 111).slice(-4).padStart(4, '0')
+          : '1639';
+
+        const fullCardNumber = `•••• •••• •••• ${last4}`;
         const cardholderName = meta.cardholder_name || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
         const expiryDate = meta.expiry_date || '12/28';
-        const cvv = meta.cvv || '882';
-        const detectedNet: CardNetwork = meta.network || (rawNum ? detectCardNetwork(rawNum) : (idx % 2 === 0 ? 'VISA' : 'MASTERCARD'));
+        const detectedNet: CardNetwork = meta.network || (idx % 2 === 0 ? 'VISA' : 'MASTERCARD');
         const accType: AccountItem['type'] = meta.account_type || (ast.asset_type === 'CASH' ? 'WALLET' : (ast.asset_type === 'OTHER' ? 'CREDIT' : 'CHECKING'));
         const isCredit = accType === 'CREDIT';
 
@@ -209,10 +209,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           type: accType,
           accountNumber: last4,
           fullCardNumber,
-          rawCardNumber: rawNum || undefined,
           cardholderName,
           expiryDate,
-          cvv,
           balance: val,
           creditLimit: isCredit ? (meta.credit_limit || val * 2) : undefined,
           availableCredit: isCredit ? (meta.available_credit || val) : undefined,
@@ -241,15 +239,13 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     return accounts.find((a) => a.id === selectedAccountId) || accounts[0] || null;
   }, [accounts, selectedAccountId]);
 
-  // Reset visibility when switching accounts
+  // Reset card face when switching accounts
   useEffect(() => {
-    setIsCardNumberRevealed(false);
-    setIsCvvRevealed(false);
     setIsCardFlipped(false);
   }, [selectedAccountId]);
 
   // ---------------------------------------------------------------------------
-  // 2. Financial Metrics (Derived 100% from backend state)
+  // 2. Financial Metrics (Derived 100% from verified DB state)
   // ---------------------------------------------------------------------------
   const totalPortfolioLiquidity = useMemo(() => {
     return accounts.reduce((sum, a) => (a.type === 'CREDIT' ? sum : sum + a.balance), 0);
@@ -320,7 +316,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     return result;
   }, [accounts, filterType, searchQuery]);
 
-  // Selected Account Transactions with cleaned-up human names
+  // Selected Account Transactions with bulletproof UUID leak prevention
   const accountTransactions = useMemo(() => {
     if (!selectedAccount) return [];
     const bName = selectedAccount.bankName.toLowerCase();
@@ -335,14 +331,9 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
     const list = matches.length > 0 ? matches : realTransactions;
 
-    // Sanitize and format transactions for readable presentation
     return list.slice(0, 8).map((tx, idx) => {
-      let title = tx.description || tx.merchant || 'General Transaction';
-      // If title looks like a UUID or raw hash, make it clean
-      if (title.length > 28 && title.includes('-')) {
-        title = tx.category ? `${tx.category} Payment` : 'Card Transaction';
-      }
-
+      // Guarantees zero UUID leaks by resolving merchant/description/category properly
+      const title = getTransactionDisplayName(tx);
       const isIncome = tx.type === 'INCOME';
       const amt = parseFloat(tx.amount) || 0;
       const dateObj = new Date(tx.date || tx.created_at);
@@ -356,7 +347,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       return {
         id: tx.id || String(idx),
         title,
-        category: tx.category || (isIncome ? 'Income' : 'General'),
+        category: tx.category_name || (isIncome ? 'Income' : 'General'),
         dateLabel,
         amount: amt,
         isIncome,
@@ -365,30 +356,31 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
   }, [selectedAccount, realTransactions]);
 
   // ---------------------------------------------------------------------------
-  // 4. Action Handlers: Copy, Reveal, Edit, Freeze, Delete, Transfer
+  // 4. Action Handlers: Copy, Edit, Freeze, Delete, Transfer
   // ---------------------------------------------------------------------------
-  const handleCopyText = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(label);
-    toast.success(`✓ Copied ${label} to clipboard`);
+  const handleCopyCardReference = (acc: AccountItem) => {
+    const textToCopy = `•••• •••• •••• ${acc.accountNumber}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedField('Card Number');
+    toast.success(`✓ Copied card ending in ${acc.accountNumber}`);
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  // Open Edit Modal with full card fields populated
+  // Open Unified Edit Modal
   const handleOpenEditModal = (acc: AccountItem) => {
     setTargetAccount(acc);
     setEditBankName(acc.bankName);
     setEditAccountName(acc.name);
     setEditBalance(String(acc.balance));
-    setEditCardNumber(acc.rawCardNumber ? formatCardNumber(acc.rawCardNumber) : acc.fullCardNumber);
     setEditCardholderName(acc.cardholderName || '');
     setEditExpiryDate(acc.expiryDate || '');
-    setEditCvv(acc.cvv || '');
     setEditTheme(acc.theme);
+    setIsReplacingCard(false);
+    setReplacementCardDigits('');
     setIsEditModalOpen(true);
   };
 
-  // Submit Edit Card & Account
+  // Submit Edit Card & Account (Preserves existing last4 if not replacing)
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetAccount) return;
@@ -398,25 +390,37 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       return;
     }
 
-    const val = parseFloat(editBalance) || 0;
-    const cleanCardDigits = editCardNumber.replace(/\D/g, '');
-    const last4 = cleanCardDigits.length >= 4 ? cleanCardDigits.slice(-4) : targetAccount.accountNumber;
-    const fullNum = cleanCardDigits.length > 0 ? formatCardNumber(cleanCardDigits) : `•••• •••• •••• ${last4}`;
-    const detectedNet = cleanCardDigits.length > 0 ? detectCardNetwork(cleanCardDigits) : targetAccount.network;
-    const cardholder = editCardholderName.trim() || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
-    const expiry = editExpiryDate.trim() || '12/28';
-    const cvv = editCvv.trim() || '882';
+    const val = parseFloat(editBalance);
+    if (isNaN(val) || val < 0) {
+      toast.error('Please enter a valid positive balance.');
+      return;
+    }
+
+    // Determine card numbers safely
+    let updatedLast4 = targetAccount.accountNumber;
+    let updatedNetwork = targetAccount.network;
+
+    if (isReplacingCard && replacementCardDigits.trim()) {
+      const cleanDigits = replacementCardDigits.replace(/\D/g, '');
+      if (cleanDigits.length < 4) {
+        toast.error('Replacement card must have at least 4 digits.');
+        return;
+      }
+      updatedLast4 = cleanDigits.slice(-4);
+      updatedNetwork = cleanDigits.length >= 12 ? detectCardNetwork(cleanDigits) : targetAccount.network;
+    }
+
+    const cardholder = editCardholderName.trim().replace(/[0-9]/g, '') || targetAccount.cardholderName;
+    const expiry = editExpiryDate.trim() || targetAccount.expiryDate || '12/28';
 
     setIsSubmittingEdit(true);
     try {
+      // Clean metadata: NO CVV, NO plaintext PAN
       const meta = {
-        last4,
-        raw_card_number: cleanCardDigits || targetAccount.rawCardNumber,
-        full_card_number: fullNum,
+        last4: updatedLast4,
         cardholder_name: cardholder,
         expiry_date: expiry,
-        cvv,
-        network: detectedNet,
+        network: updatedNetwork,
         theme: editTheme,
         is_frozen: targetAccount.isFrozen,
         account_type: targetAccount.type,
@@ -437,13 +441,11 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                 name: editAccountName.trim(),
                 bankName: editBankName.trim(),
                 balance: val,
-                accountNumber: last4,
-                fullCardNumber: fullNum,
-                rawCardNumber: cleanCardDigits || targetAccount.rawCardNumber,
+                accountNumber: updatedLast4,
+                fullCardNumber: `•••• •••• •••• ${updatedLast4}`,
                 cardholderName: cardholder,
                 expiryDate: expiry,
-                cvv,
-                network: detectedNet,
+                network: updatedNetwork,
                 theme: editTheme,
               }
             : a
@@ -453,7 +455,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
       setIsEditModalOpen(false);
-      toast.success(`✓ Card and account details for "${editAccountName}" updated.`);
+      toast.success(`✓ Account "${editAccountName}" successfully updated.`);
     } catch (err: any) {
       toast.error(err?.message || 'Failed to update account.');
     } finally {
@@ -461,7 +463,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     }
   };
 
-  // Open Freeze Modal
+  // Open Freeze Confirmation Modal
   const handleOpenFreezeModal = (acc: AccountItem) => {
     setTargetAccount(acc);
     setIsFreezeModalOpen(true);
@@ -475,11 +477,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
 
     const meta = {
       last4: targetAccount.accountNumber,
-      raw_card_number: targetAccount.rawCardNumber,
-      full_card_number: targetAccount.fullCardNumber,
       cardholder_name: targetAccount.cardholderName,
       expiry_date: targetAccount.expiryDate,
-      cvv: targetAccount.cvv,
       network: targetAccount.network,
       theme: targetAccount.theme,
       is_frozen: newFreeze,
@@ -500,7 +499,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     }
   };
 
-  // Open Delete Modal
+  // Open Delete Confirmation Modal
   const handleOpenDeleteModal = (acc: AccountItem) => {
     setTargetAccount(acc);
     setIsDeleteModalOpen(true);
@@ -529,33 +528,34 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
     }
   };
 
-  // Create New Account / Card Submission
+  // Create New Account Submission (No CVV, safe field names)
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addBankName.trim() || !addAccountName.trim() || !addBalance) {
-      toast.error('Please fill in Bank Name, Account Nickname, and Balance.');
+      toast.error('Please enter Bank Name, Account Nickname, and Balance.');
       return;
     }
 
-    const val = parseFloat(addBalance) || 0;
-    const cleanDigits = addCardNumber.replace(/\D/g, '');
+    const val = parseFloat(addBalance);
+    if (isNaN(val) || val < 0) {
+      toast.error('Please enter a valid positive balance.');
+      return;
+    }
+
+    const cleanDigits = addCardDigits.replace(/\D/g, '');
     const last4 = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : String(Math.floor(1000 + Math.random() * 9000));
-    const fullNum = cleanDigits.length > 0 ? formatCardNumber(cleanDigits) : `•••• •••• •••• ${last4}`;
-    const cardholder = addCardholderName.trim() || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
+    const cardholder = addCardholderName.trim().replace(/[0-9]/g, '') || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER');
     const expiry = addExpiryDate.trim() || '12/28';
-    const cvv = addCvv.trim() || '882';
-    const detectedNet: CardNetwork = cleanDigits.length > 0 ? detectCardNetwork(cleanDigits) : 'VISA';
+    const detectedNet: CardNetwork = cleanDigits.length >= 12 ? detectCardNetwork(cleanDigits) : 'VISA';
 
     setIsSubmittingAdd(true);
     try {
       const assetType = addAccountType === 'CREDIT' ? 'OTHER' : (addAccountType === 'WALLET' || addAccountType === 'CASH') ? 'CASH' : 'BANK';
+      // Secure storage: last4 only, no CVV, no raw PAN
       const meta = {
         last4,
-        raw_card_number: cleanDigits,
-        full_card_number: fullNum,
         cardholder_name: cardholder,
         expiry_date: expiry,
-        cvv,
         network: detectedNet,
         theme: addTheme,
         is_frozen: false,
@@ -576,11 +576,9 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         bankName: addBankName.trim(),
         type: addAccountType,
         accountNumber: last4,
-        fullCardNumber: fullNum,
-        rawCardNumber: cleanDigits || undefined,
+        fullCardNumber: `•••• •••• •••• ${last4}`,
         cardholderName: cardholder,
         expiryDate: expiry,
-        cvv,
         balance: val,
         creditLimit: addAccountType === 'CREDIT' ? val * 2 : undefined,
         availableCredit: addAccountType === 'CREDIT' ? val : undefined,
@@ -597,10 +595,9 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
       setAddBankName('');
       setAddAccountName('');
       setAddBalance('');
-      setAddCardNumber('');
+      setAddCardDigits('');
       setAddCardholderName('');
       setAddExpiryDate('');
-      setAddCvv('');
 
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
@@ -1077,7 +1074,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                       onClick={() => handleOpenEditModal(selectedAccount)}
                       className="text-xs font-bold border-[#E4E2DC] hover:bg-white"
                     >
-                      Edit
+                      Edit Account
                     </Button>
 
                     <Button
@@ -1137,9 +1134,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                           accountName={selectedAccount.name}
                           cardholderName={selectedAccount.cardholderName}
                           cardNumber={selectedAccount.fullCardNumber}
-                          rawCardNumber={selectedAccount.rawCardNumber}
                           expiryDate={selectedAccount.expiryDate}
-                          cvv={selectedAccount.cvv}
                           balance={selectedAccount.balance}
                           currency={userCurrency}
                           theme={selectedAccount.theme}
@@ -1148,45 +1143,31 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                           isCredit={selectedAccount.type === 'CREDIT'}
                           showControls={false}
                           isFlipped={isCardFlipped}
-                          showNumber={isCardNumberRevealed}
                           onFlipChange={setIsCardFlipped}
                         />
                       </div>
 
                       {/* Explicit Contextual Card Controls */}
                       <div className="w-full max-w-[340px] space-y-2">
-                        {/* Number reveal & copy bar */}
+                        {/* Number reference & copy bar */}
                         <div className="rounded-xl bg-[#F6F5F2] border border-[#E4E2DC] p-3 flex items-center justify-between gap-2 text-xs">
                           <div className="min-w-0">
                             <span className="text-[10px] text-[#625477] font-semibold uppercase block">
-                              Card Number
+                              Card Reference
                             </span>
                             <span className="font-mono font-bold text-[#191522] truncate text-xs block">
-                              {isCardNumberRevealed
-                                ? (selectedAccount.rawCardNumber ? formatCardNumber(selectedAccount.rawCardNumber) : selectedAccount.fullCardNumber)
-                                : `•••• •••• •••• ${selectedAccount.accountNumber}`}
+                              •••• •••• •••• {selectedAccount.accountNumber}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => setIsCardNumberRevealed((prev) => !prev)}
-                              className="px-2 py-1 rounded-lg bg-white border border-[#E4E2DC] hover:bg-[#F6F5F2] text-[11px] font-bold text-[#191522] flex items-center gap-1 shadow-2xs"
-                            >
-                              {isCardNumberRevealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                              <span>{isCardNumberRevealed ? 'Mask' : 'Show'}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleCopyText(selectedAccount.rawCardNumber || selectedAccount.fullCardNumber, 'Card Number')}
-                              className="px-2 py-1 rounded-lg bg-white border border-[#E4E2DC] hover:bg-[#F6F5F2] text-[11px] font-bold text-[#191522] flex items-center gap-1 shadow-2xs"
-                            >
-                              {copiedField === 'Card Number' ? <Check className="w-3 h-3 text-[#3B7A57]" /> : <Copy className="w-3 h-3" />}
-                              <span>Copy</span>
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyCardReference(selectedAccount)}
+                            className="px-2.5 py-1 rounded-lg bg-white border border-[#E4E2DC] hover:bg-[#F6F5F2] text-[11px] font-bold text-[#191522] flex items-center gap-1 shadow-2xs shrink-0"
+                          >
+                            {copiedField === 'Card Number' ? <Check className="w-3 h-3 text-[#3B7A57]" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedField === 'Card Number' ? 'Copied' : 'Copy'}</span>
+                          </button>
                         </div>
 
                         {/* Action buttons grid */}
@@ -1197,7 +1178,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                             className="p-2.5 rounded-xl border border-[#E4E2DC] hover:bg-[#F6F5F2] text-xs font-bold text-[#191522] flex items-center justify-center gap-1.5 transition-colors"
                           >
                             <RotateCw className="w-3.5 h-3.5 text-[#625477]" />
-                            <span>Flip to {isCardFlipped ? 'Front' : 'CVV'}</span>
+                            <span>Flip to {isCardFlipped ? 'Front' : 'Back'}</span>
                           </button>
 
                           <button
@@ -1206,7 +1187,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                             className="p-2.5 rounded-xl border border-[#E4E2DC] hover:bg-[#F6F5F2] text-xs font-bold text-[#191522] flex items-center justify-center gap-1.5 transition-colors"
                           >
                             <Edit2 className="w-3.5 h-3.5 text-[#625477]" />
-                            <span>Edit Details</span>
+                            <span>Manage Details</span>
                           </button>
                         </div>
                       </div>
@@ -1220,7 +1201,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                             Recent Transactions
                           </h4>
                           <span className="text-[11px] text-[#625477]">
-                            Recent ledger activity associated with your financial accounts
+                            Verified ledger activity associated with your financial accounts
                           </span>
                         </div>
                         <Link
@@ -1303,9 +1284,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                           accountName={selectedAccount.name}
                           cardholderName={selectedAccount.cardholderName}
                           cardNumber={selectedAccount.fullCardNumber}
-                          rawCardNumber={selectedAccount.rawCardNumber}
                           expiryDate={selectedAccount.expiryDate}
-                          cvv={selectedAccount.cvv}
                           balance={selectedAccount.balance}
                           currency={userCurrency}
                           theme={selectedAccount.theme}
@@ -1314,70 +1293,54 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                           isCredit={selectedAccount.type === 'CREDIT'}
                           showControls={false}
                           isFlipped={isCardFlipped}
-                          showNumber={isCardNumberRevealed}
                           onFlipChange={setIsCardFlipped}
                         />
                       </div>
                       <p className="text-[11px] text-[#625477] mt-2.5 text-center">
-                        Click card or use controls to inspect front and back faces.
+                        Flip card to inspect authorized signature and security tokens.
                       </p>
                     </div>
 
                     <div className="lg:col-span-7 space-y-4">
                       <div className="rounded-xl bg-[#FAF9F7] border border-[#E4E2DC] p-4 space-y-3">
                         <h4 className="text-xs font-bold uppercase tracking-wider text-[#191522]">
-                          Security Credentials
+                          Security Credentials & Identification
                         </h4>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                          {/* 16 Digit Display */}
+                          {/* Card Reference Display */}
                           <div className="p-3 bg-white rounded-xl border border-[#E4E2DC]">
                             <span className="text-[10px] text-[#625477] font-semibold uppercase block">
-                              Card Number
+                              Linked Card
                             </span>
                             <div className="font-mono font-bold text-sm text-[#191522] mt-1 truncate">
-                              {isCardNumberRevealed
-                                ? (selectedAccount.rawCardNumber ? formatCardNumber(selectedAccount.rawCardNumber) : selectedAccount.fullCardNumber)
-                                : `•••• •••• •••• ${selectedAccount.accountNumber}`}
+                              •••• •••• •••• {selectedAccount.accountNumber}
                             </div>
                             <div className="flex items-center gap-2 mt-2">
                               <button
                                 type="button"
-                                onClick={() => setIsCardNumberRevealed((prev) => !prev)}
+                                onClick={() => handleCopyCardReference(selectedAccount)}
                                 className="text-[11px] font-bold text-[#4056A1] hover:underline flex items-center gap-1"
                               >
-                                {isCardNumberRevealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                <span>{isCardNumberRevealed ? 'Mask' : 'Show Full Number'}</span>
-                              </button>
-                              <span className="text-[#E4E2DC]">|</span>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyText(selectedAccount.rawCardNumber || selectedAccount.fullCardNumber, 'Card Number')}
-                                className="text-[11px] font-bold text-[#625477] hover:text-[#191522] flex items-center gap-1"
-                              >
                                 <Copy className="w-3 h-3" />
-                                <span>Copy</span>
+                                <span>Copy Reference</span>
                               </button>
                             </div>
                           </div>
 
-                          {/* CVV Display */}
+                          {/* Network & Status */}
                           <div className="p-3 bg-white rounded-xl border border-[#E4E2DC]">
                             <span className="text-[10px] text-[#625477] font-semibold uppercase block">
-                              Security Code (CVV)
+                              Payment Network
                             </span>
-                            <div className="font-mono font-bold text-sm text-[#191522] mt-1">
-                              {isCvvRevealed ? (selectedAccount.cvv || '882') : '•••'}
+                            <div className="font-bold text-sm text-[#191522] mt-1 flex items-center gap-1.5">
+                              <span>{selectedAccount.network}</span>
+                              <Badge variant={selectedAccount.isFrozen ? "rose" : "emerald"} size="sm" className="text-[10px]">
+                                {selectedAccount.isFrozen ? "Suspended" : "Active"}
+                              </Badge>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <button
-                                type="button"
-                                onClick={() => setIsCvvRevealed((prev) => !prev)}
-                                className="text-[11px] font-bold text-[#4056A1] hover:underline flex items-center gap-1"
-                              >
-                                {isCvvRevealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                <span>{isCvvRevealed ? 'Hide' : 'Reveal CVV'}</span>
-                              </button>
+                            <div className="text-[11px] text-[#625477] mt-2">
+                              Protected by MONVEX Ledger
                             </div>
                           </div>
 
@@ -1410,7 +1373,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                             onClick={() => handleOpenEditModal(selectedAccount)}
                             className="bg-[#2A1F3D] text-white font-bold text-xs"
                           >
-                            Edit Card Details & Number
+                            Manage Card Appearance & Details
                           </Button>
                         </div>
                       </div>
@@ -1565,6 +1528,10 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               value={impactItem}
               onChange={(e) => setImpactItem(e.target.value)}
               placeholder="e.g. Flight Tickets, Smart Display"
+              name="monvex_budget_plan_item"
+              autoComplete="off"
+              data-lpignore="true"
+              data-form-type="other"
               className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-1.5 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
             />
           </div>
@@ -1578,6 +1545,10 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               value={impactCost}
               onChange={(e) => setImpactCost(e.target.value)}
               placeholder="5000"
+              name="monvex_budget_plan_amount"
+              autoComplete="off"
+              data-lpignore="true"
+              data-form-type="other"
               className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-1.5 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
             />
           </div>
@@ -1652,7 +1623,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           6. MODALS
           ===================================================================== */}
 
-      {/* 6.1 Add Account Modal */}
+      {/* 6.1 Add Account Modal (Safe fields, no CVV, no browser checkout prompt) */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -1660,21 +1631,25 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         description="Connect your checking accounts, credit lines, or wallets."
         maxWidth="xl"
       >
-        <form onSubmit={handleAddSubmit} className="space-y-4 pt-2">
+        <form
+          onSubmit={handleAddSubmit}
+          className="space-y-4 pt-2"
+          autoComplete="off"
+          data-lpignore="true"
+          data-form-type="other"
+        >
           <div className="flex justify-center pb-2">
             <div className="w-full max-w-[320px]">
               <BankingCardView
                 bankName={addBankName || 'BANK INSTITUTION'}
                 accountName={addAccountName || 'PRIMARY ACCOUNT'}
                 cardholderName={addCardholderName || (user?.username ? user.username.toUpperCase() : 'MONVEX HOLDER')}
-                cardNumber={addCardNumber ? formatCardNumber(addCardNumber) : '•••• •••• •••• 1639'}
-                rawCardNumber={addCardNumber.replace(/\D/g, '') || undefined}
+                cardNumber={addCardDigits ? `•••• •••• •••• ${addCardDigits.slice(-4)}` : '•••• •••• •••• 1639'}
                 expiryDate={addExpiryDate || '12/28'}
-                cvv={addCvv || '882'}
                 balance={parseFloat(addBalance) || 0}
                 currency={userCurrency}
                 theme={addTheme}
-                network={addCardNumber ? detectCardNetwork(addCardNumber) : 'VISA'}
+                network={addCardDigits.length >= 12 ? detectCardNetwork(addCardDigits) : 'VISA'}
                 isCredit={addAccountType === 'CREDIT'}
                 showControls={false}
                 isFlipped={addCardFlipped}
@@ -1686,11 +1661,15 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Bank Name <span className="text-[#B84233]">*</span>
+                Bank Institution <span className="text-[#B84233]">*</span>
               </label>
               <input
                 type="text"
                 required
+                name="monvex_inst_name"
+                autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
                 value={addBankName}
                 onChange={(e) => setAddBankName(e.target.value)}
                 placeholder="e.g. State Bank of India"
@@ -1705,6 +1684,10 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               <input
                 type="text"
                 required
+                name="monvex_acc_alias"
+                autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
                 value={addAccountName}
                 onChange={(e) => setAddAccountName(e.target.value)}
                 placeholder="e.g. Salary Account"
@@ -1717,6 +1700,7 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                 Account Type
               </label>
               <select
+                name="monvex_acc_type"
                 value={addAccountType}
                 onChange={(e: any) => setAddAccountType(e.target.value)}
                 className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-semibold text-[#191522] focus:outline-none focus:border-[#4056A1]"
@@ -1737,6 +1721,10 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
                 type="number"
                 step="0.01"
                 required
+                name="monvex_initial_balance"
+                autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
                 value={addBalance}
                 onChange={(e) => setAddBalance(e.target.value)}
                 placeholder="0.00"
@@ -1751,11 +1739,18 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               <input
                 type="text"
                 maxLength={19}
-                value={addCardNumber}
-                onChange={(e) => setAddCardNumber(formatCardNumber(e.target.value))}
+                name="monvex_card_digits"
+                autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
+                value={addCardDigits}
+                onChange={(e) => setAddCardDigits(formatCardNumber(e.target.value))}
                 placeholder="•••• •••• •••• ••••"
                 className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
+              <span className="text-[10px] text-[#625477] mt-0.5 block">
+                Only the last 4 digits are saved for identification.
+              </span>
             </div>
 
             <div>
@@ -1764,8 +1759,12 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               </label>
               <input
                 type="text"
+                name="monvex_holder_name"
+                autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
                 value={addCardholderName}
-                onChange={(e) => setAddCardholderName(e.target.value.toUpperCase())}
+                onChange={(e) => setAddCardholderName(e.target.value.toUpperCase().replace(/[0-9]/g, ''))}
                 placeholder="FULL NAME"
                 className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs uppercase text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
@@ -1778,23 +1777,13 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
               <input
                 type="text"
                 maxLength={5}
+                name="monvex_valid_period"
+                autoComplete="off"
+                data-lpignore="true"
+                data-form-type="other"
                 value={addExpiryDate}
                 onChange={(e) => setAddExpiryDate(formatExpiryDate(e.target.value))}
                 placeholder="12/28"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                CVV
-              </label>
-              <input
-                type="password"
-                maxLength={4}
-                value={addCvv}
-                onChange={(e) => setAddCvv(e.target.value.replace(/\D/g, ''))}
-                placeholder="•••"
                 className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
               />
             </div>
@@ -1844,135 +1833,198 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         </form>
       </Modal>
 
-      {/* 6.2 Edit Card Details & Account Modal (Full Functionality) */}
+      {/* 6.2 Unified Edit Card & Account Details Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Card & Account Details"
-        description="Update cardholder details, 16-digit number, expiry date, or balance."
+        title="Manage Account & Card Details"
+        description="Update account nickname, banking institution, or verified balance."
         maxWidth="lg"
       >
-        <form onSubmit={handleEditSubmit} className="space-y-3.5 pt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Bank Name
-              </label>
-              <input
-                type="text"
-                required
-                value={editBankName}
-                onChange={(e) => setEditBankName(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
+        <form
+          onSubmit={handleEditSubmit}
+          className="space-y-4 pt-2"
+          autoComplete="off"
+          data-lpignore="true"
+          data-form-type="other"
+        >
+          {targetAccount && (
+            <div className="space-y-3.5">
+              {/* SECTION A: Account Basics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                    Bank / Institution
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    name="monvex_edit_bank"
+                    autoComplete="off"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    value={editBankName}
+                    onChange={(e) => setEditBankName(e.target.value)}
+                    className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Account Nickname
-              </label>
-              <input
-                type="text"
-                required
-                value={editAccountName}
-                onChange={(e) => setEditAccountName(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                    Account Nickname
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    name="monvex_edit_alias"
+                    autoComplete="off"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    value={editAccountName}
+                    onChange={(e) => setEditAccountName(e.target.value)}
+                    className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Card Number (16 Digits)
-              </label>
-              <input
-                type="text"
-                maxLength={19}
-                value={editCardNumber}
-                onChange={(e) => setEditCardNumber(formatCardNumber(e.target.value))}
-                placeholder="•••• •••• •••• ••••"
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                    Verified Balance ({userCurrency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    name="monvex_edit_balance"
+                    autoComplete="off"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    value={editBalance}
+                    onChange={(e) => setEditBalance(e.target.value)}
+                    className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Cardholder Name
-              </label>
-              <input
-                type="text"
-                value={editCardholderName}
-                onChange={(e) => setEditCardholderName(e.target.value.toUpperCase())}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs uppercase text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
+              {/* SECTION B: Linked Card Reference & Replacement */}
+              <div className="pt-2 border-t border-[#E4E2DC] space-y-2.5">
+                <span className="text-xs font-bold text-[#191522] uppercase tracking-wider block">
+                  Linked Banking Card
+                </span>
 
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Expiry Date (MM/YY)
-              </label>
-              <input
-                type="text"
-                maxLength={5}
-                value={editExpiryDate}
-                onChange={(e) => setEditExpiryDate(formatExpiryDate(e.target.value))}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
+                {/* Masked Card Reference Strip */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F6F5F2] border border-[#E4E2DC]">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <CreditCard className="w-4 h-4 text-[#2A1F3D] shrink-0" />
+                    <span className="font-mono font-bold text-xs sm:text-sm text-[#191522] tracking-wider">
+                      •••• •••• •••• {targetAccount.accountNumber}
+                    </span>
+                    <Badge variant="neutral" size="sm" className="text-[10px]">
+                      {targetAccount.network}
+                    </Badge>
+                  </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                CVV
-              </label>
-              <input
-                type="password"
-                maxLength={4}
-                value={editCvv}
-                onChange={(e) => setEditCvv(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReplacingCard((prev) => !prev);
+                      setReplacementCardDigits('');
+                    }}
+                    className="text-xs font-bold text-[#4056A1] hover:underline flex items-center gap-1 shrink-0"
+                  >
+                    <RotateCw className="w-3 h-3" />
+                    <span>{isReplacingCard ? 'Cancel Replacement' : 'Replace Card Number'}</span>
+                  </button>
+                </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
-                Verified Balance ({userCurrency})
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                value={editBalance}
-                onChange={(e) => setEditBalance(e.target.value)}
-                className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-black text-[#191522] focus:outline-none focus:border-[#4056A1]"
-              />
-            </div>
-          </div>
+                {/* Conditional Replacement Field */}
+                {isReplacingCard && (
+                  <div className="p-3 rounded-xl border border-[#4056A1]/30 bg-[#4056A1]/5 space-y-1.5">
+                    <label className="block text-[11px] font-bold text-[#191522] uppercase tracking-wider">
+                      Enter Replacement Card Number
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={19}
+                      name="monvex_replace_digits"
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      value={replacementCardDigits}
+                      onChange={(e) => setReplacementCardDigits(formatCardNumber(e.target.value))}
+                      placeholder="•••• •••• •••• ••••"
+                      className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                    />
+                    <p className="text-[10px] text-[#625477]">
+                      Card network is auto-detected. Only the last 4 digits are permanently retained for ledger identification.
+                    </p>
+                  </div>
+                )}
 
-          <div>
-            <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1.5">
-              Card Finish Theme
-            </label>
-            <div className="grid grid-cols-6 gap-2">
-              {(['obsidian', 'sapphire', 'emerald', 'amber', 'gold', 'platinum'] as CardTheme[]).map((themeName) => (
-                <button
-                  key={themeName}
-                  type="button"
-                  onClick={() => setEditTheme(themeName)}
-                  className={cn(
-                    "h-7 rounded-lg border-2 capitalize text-[10px] font-bold transition-all",
-                    themeName === 'obsidian' && "bg-[#191522] text-white",
-                    themeName === 'sapphire' && "bg-[#1E3A8A] text-white",
-                    themeName === 'emerald' && "bg-[#064E3B] text-white",
-                    themeName === 'amber' && "bg-[#78350F] text-white",
-                    themeName === 'gold' && "bg-[#854D0E] text-white",
-                    themeName === 'platinum' && "bg-[#334155] text-white",
-                    editTheme === themeName ? "border-[#4056A1] ring-2 ring-[#4056A1]/30 scale-105" : "border-transparent opacity-80"
-                  )}
-                >
-                  {themeName}
-                </button>
-              ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                      Cardholder Name
+                    </label>
+                    <input
+                      type="text"
+                      name="monvex_edit_holder"
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      value={editCardholderName}
+                      onChange={(e) => setEditCardholderName(e.target.value.toUpperCase().replace(/[0-9]/g, ''))}
+                      className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs uppercase text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1">
+                      Expiry Date (MM/YY)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={5}
+                      name="monvex_edit_period"
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      value={editExpiryDate}
+                      onChange={(e) => setEditExpiryDate(formatExpiryDate(e.target.value))}
+                      className="w-full rounded-xl bg-white border border-[#E4E2DC] px-3 py-2 text-xs font-mono text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION C: Card Theme Finish */}
+              <div className="pt-2 border-t border-[#E4E2DC]">
+                <label className="block text-xs font-bold text-[#191522] uppercase tracking-wider mb-1.5">
+                  Card Finish Theme
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {(['obsidian', 'sapphire', 'emerald', 'amber', 'gold', 'platinum'] as CardTheme[]).map((themeName) => (
+                    <button
+                      key={themeName}
+                      type="button"
+                      onClick={() => setEditTheme(themeName)}
+                      className={cn(
+                        "h-7 rounded-lg border-2 capitalize text-[10px] font-bold transition-all",
+                        themeName === 'obsidian' && "bg-[#191522] text-white",
+                        themeName === 'sapphire' && "bg-[#1E3A8A] text-white",
+                        themeName === 'emerald' && "bg-[#064E3B] text-white",
+                        themeName === 'amber' && "bg-[#78350F] text-white",
+                        themeName === 'gold' && "bg-[#854D0E] text-white",
+                        themeName === 'platinum' && "bg-[#334155] text-white",
+                        editTheme === themeName ? "border-[#4056A1] ring-2 ring-[#4056A1]/30 scale-105" : "border-transparent opacity-80"
+                      )}
+                    >
+                      {themeName}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E2DC]">
             <Button type="button" variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)}>
@@ -1998,8 +2050,8 @@ export const WalletAccountsSection: React.FC<WalletAccountsSectionProps> = ({
         title={targetAccount?.isFrozen ? "Unfreeze Card?" : "Freeze Card?"}
         description={
           targetAccount?.isFrozen
-            ? `Re-enabling ${targetAccount?.name} will allow outgoing charges immediately.`
-            : `Freezing ${targetAccount?.name} will temporarily suspend outgoing transactions.`
+            ? `Re-enabling ${targetAccount?.name} will allow outgoing transactions and card references to be active.`
+            : `Freezing ${targetAccount?.name} will suspend outgoing transactions for this card.`
         }
         maxWidth="sm"
       >

@@ -29,7 +29,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { FinancialAmount } from '@/components/ui/FinancialAmount';
 import { AddTransactionModal } from '@/components/finance/AddTransactionModal';
 import { api } from '@/lib/api';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency, cn, getTransactionDisplayName, isUuid } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useTransactionsQuery } from '@/hooks/queries/useTransactionsQuery';
@@ -394,7 +394,7 @@ export default function TransactionsPage() {
                             {getMerchantLogo(tx.merchant_name, tx.category_name)}
                             <div className="min-w-0">
                               <span className="font-bold text-xs text-[#191522] block truncate">
-                                {tx.merchant_name || tx.description || 'Transaction'}
+                                {getTransactionDisplayName(tx)}
                               </span>
                               <span className="text-[11px] text-[#898390] block">
                                 {new Date(tx.date).toLocaleDateString('en-US', {
@@ -470,9 +470,9 @@ export default function TransactionsPage() {
                                 {getMerchantLogo(tx.merchant_name, tx.category_name)}
                                 <div className="min-w-0">
                                   <span className="font-bold text-xs text-[#191522] block truncate max-w-[280px]">
-                                    {tx.merchant_name || tx.description || 'Transaction'}
+                                    {getTransactionDisplayName(tx)}
                                   </span>
-                                  {tx.description && tx.merchant_name && (
+                                  {tx.description && tx.merchant_name && !isUuid(tx.description) && (
                                     <span className="text-[11px] text-[#898390] block truncate max-w-[280px]">
                                       {tx.description}
                                     </span>
@@ -548,7 +548,7 @@ export default function TransactionsPage() {
                     Transaction Record
                   </span>
                   <h3 className="text-base font-black text-[#191522]">
-                    {selectedTx.merchant_name || selectedTx.description || 'Transaction Detail'}
+                    {getTransactionDisplayName(selectedTx)}
                   </h3>
                 </div>
                 <button
@@ -598,7 +598,7 @@ export default function TransactionsPage() {
                   <span className="text-[#898390] font-medium">Capture Ingestion</span>
                   <span className="font-mono font-bold text-[#898390]">{selectedTx.source || 'MANUAL'}</span>
                 </div>
-                {selectedTx.description && (
+                {selectedTx.description && !isUuid(selectedTx.description) && (
                   <div className="py-2 border-b border-[#F0EFEA] space-y-1">
                     <span className="text-[#898390] font-medium block">Description / Memo</span>
                     <p className="font-medium text-[#191522] bg-[#F6F5F1] p-2.5 rounded-lg leading-relaxed">

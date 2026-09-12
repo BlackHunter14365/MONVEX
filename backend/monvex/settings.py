@@ -262,7 +262,11 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 # Email & OTP Delivery Architecture
 EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', 'resend')).strip().lower()
+if EMAIL_PROVIDER == 'email':
+    EMAIL_PROVIDER = 'resend'
 OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER).strip().lower()
+if OTP_PROVIDER == 'email':
+    OTP_PROVIDER = 'resend'
 
 # Resend HTTPS Email API Configuration (Production Default)
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip().strip('\'"')

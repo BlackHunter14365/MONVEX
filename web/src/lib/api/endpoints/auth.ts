@@ -188,20 +188,6 @@ export class AuthEndpoints {
 
   async logout() {
     const refresh = this.client.getRefreshToken();
-    this.client.clearTokens();
-    if (typeof window !== 'undefined') {
-      try {
-        sessionStorage.clear();
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && (k.startsWith('monvex_') || k.startsWith('user_profile'))) {
-            keysToRemove.push(k);
-          }
-        }
-        keysToRemove.forEach((k) => localStorage.removeItem(k));
-      } catch {}
-    }
     if (refresh) {
       try {
         await this.client.request('/auth/logout/', {
@@ -212,5 +198,6 @@ export class AuthEndpoints {
         // ignore logout network errors
       }
     }
+    this.client.clearTokens();
   }
 }

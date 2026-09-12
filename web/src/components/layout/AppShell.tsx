@@ -28,7 +28,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.replace('/login');
     }
     const handleOpenModal = () => setIsAddTxOpen(true);
     const handleOpenCommandCenter = () => setIsCommandCenterOpen(true);

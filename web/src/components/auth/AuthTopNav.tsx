@@ -26,19 +26,12 @@ export const AuthTopNav: React.FC<AuthTopNavProps> = ({ className = '' }) => {
           </div>
         </Link>
 
-        {/* Minimal system status & navigation */}
+        {/* Minimal system status */}
         <div className="flex items-center gap-3">
-          <div className="hidden xs:inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/90 border border-[#E4E2DC] text-[11px] font-medium text-[#625D69]">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/90 border border-[#E4E2DC] text-[11px] font-medium text-[#625D69]">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
             <span>Operational</span>
           </div>
-
-          <Link
-            href="/"
-            className="text-xs font-medium text-[#625D69] hover:text-[#191522] transition-colors py-1 px-2 rounded-md hover:bg-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#191522]/30"
-          >
-            Exit to Home
-          </Link>
         </div>
       </div>
     </header>

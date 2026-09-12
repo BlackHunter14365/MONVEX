@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, Clock } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import {
@@ -17,9 +17,11 @@ import {
 } from '@/components/auth';
 import { api } from '@/lib/api';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const { login, loginWithGoogle, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const reason = searchParams.get('reason');
+  const { login, loginWithGoogle, isAuthenticated, user, isLoading: authLoading, sessionExpiredReason } = useAuth();
   const toast = useToast();
 
   const [identifier, setIdentifier] = useState('');
@@ -35,9 +37,22 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && user && api.getAccessToken()) {
-      router.push('/dashboard');
+      router.replace('/dashboard');
     }
   }, [authLoading, isAuthenticated, user, router]);
+
+  if (authLoading || (isAuthenticated && user)) {
+    return (
+      <div className="min-h-[360px] flex flex-col items-center justify-center space-y-4 p-8">
+        <div className="h-12 w-12 rounded-2xl bg-white p-2 border border-[#E4E2DC] shadow-xs flex items-center justify-center animate-pulse">
+          <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
+        </div>
+        <div className="text-xs font-medium text-[#898390]">Validating session...</div>
+      </div>
+    );
+  }
+
+  const isInactiveExpiry = reason === 'inactivity' || sessionExpiredReason === 'inactivity';
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,19 +108,29 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell>
-      <div className="space-y-6 w-full">
-        {/* Human-focused header */}
-        <AuthHeader
-          title="Welcome back."
-          subtitle="Sign in to continue to your financial workspace."
-        />
+    <div className="space-y-6 w-full">
+      {/* Human-focused header */}
+      <AuthHeader
+        title="Welcome back."
+        subtitle="Sign in to continue to your financial workspace."
+      />
 
-        {/* Accessible error feedback */}
-        {errorMsg && <AuthFeedback type="error" message={errorMsg} />}
+      {/* Inactivity Expiry Notice */}
+      {isInactiveExpiry && (
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs flex items-start gap-2.5">
+          <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold block text-amber-950">Session Expired</span>
+            Your session timed out after 7 days of inactivity. Please log in again to resume your workspace.
+          </div>
+        </div>
+      )}
 
-        {/* Primary Authentication Form */}
-        <form onSubmit={handleLoginSubmit} className="space-y-4">
+      {/* Accessible error feedback */}
+      {errorMsg && <AuthFeedback type="error" message={errorMsg} />}
+
+      {/* Primary Authentication Form */}
+      <form onSubmit={handleLoginSubmit} className="space-y-4">
           <AuthInput
             label="Username or email"
             name="identifier"
@@ -171,19 +196,37 @@ export default function LoginPage() {
             Create one
           </Link>
         </div>
-      </div>
 
-      {/* ACCOUNT LINKING MODAL */}
-      <AccountLinkDialog
-        isOpen={isLinkDialogOpen}
-        onClose={() => setIsLinkDialogOpen(false)}
-        email={linkEmail}
-        credential={pendingGoogleCredential}
-        onSuccess={() => {
-          setIsLinkDialogOpen(false);
-          router.push('/dashboard');
-        }}
-      />
+        {/* ACCOUNT LINKING MODAL */}
+        <AccountLinkDialog
+          isOpen={isLinkDialogOpen}
+          onClose={() => setIsLinkDialogOpen(false)}
+          email={linkEmail}
+          credential={pendingGoogleCredential}
+          onSuccess={() => {
+            setIsLinkDialogOpen(false);
+            router.push('/dashboard');
+          }}
+        />
+      </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <AuthShell>
+      <Suspense
+        fallback={
+          <div className="min-h-[360px] flex flex-col items-center justify-center space-y-4 p-8">
+            <div className="h-12 w-12 rounded-2xl bg-white p-2 border border-[#E4E2DC] shadow-xs flex items-center justify-center animate-pulse">
+              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
+            </div>
+            <div className="text-xs font-medium text-[#898390]">Loading authentication...</div>
+          </div>
+        }
+      >
+        <LoginContent />
+      </Suspense>
     </AuthShell>
   );
 }

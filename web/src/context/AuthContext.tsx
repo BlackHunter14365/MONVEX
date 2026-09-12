@@ -1,8 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { queryClient } from '@/lib/query/queryClient';
+import { authStorage } from '@/lib/authStorage';
+import { AUTH_CONFIG, SessionExpiredReason } from '@/config/auth';
+
+export type AuthStatus = 'AUTH_INITIALIZING' | 'AUTHENTICATED' | 'UNAUTHENTICATED' | 'SESSION_EXPIRED';
 
 interface UserProfile {
   id: string;
@@ -28,8 +32,11 @@ interface UserProfile {
 
 interface AuthContextType {
   user: UserProfile | null;
+  authStatus: AuthStatus;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sessionExpiredReason: SessionExpiredReason | null;
+  clearSessionExpiredReason: () => void;
   login: (credentials: any) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<any>;
   linkGoogleAccount: (payload: { credential: string; password: string }) => Promise<any>;
@@ -42,25 +49,80 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('AUTH_INITIALIZING');
+  const [sessionExpiredReason, setSessionExpiredReasonState] = useState<SessionExpiredReason | null>(null);
 
-  const refreshUser = async () => {
-    const token = api.getAccessToken();
-    if (!token) {
+  const clearSessionExpiredReason = useCallback(() => {
+    authStorage.clearSessionExpiredReason();
+    setSessionExpiredReasonState(null);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    // 1. Inactivity verification
+    if (authStorage.isInactive()) {
+      authStorage.setSessionExpiredReason('inactivity');
+      authStorage.clearSession(false);
+      queryClient.clear();
       setUser(null);
-      setIsLoading(false);
+      setSessionExpiredReasonState('inactivity');
+      setAuthStatus('SESSION_EXPIRED');
       return;
     }
+
+    const token = authStorage.getAccessToken();
+    const refreshToken = authStorage.getRefreshToken();
+
+    if (!token && !refreshToken) {
+      const reason = authStorage.getSessionExpiredReason();
+      setUser(null);
+      setSessionExpiredReasonState(reason);
+      setAuthStatus(reason ? 'SESSION_EXPIRED' : 'UNAUTHENTICATED');
+      return;
+    }
+
     try {
+      // Proactively refresh access token if absent but refresh token exists
+      if (!token && refreshToken) {
+        const newAccess = await api.client.refreshAccessToken();
+        if (!newAccess) {
+          const reason = authStorage.getSessionExpiredReason() || 'invalid_token';
+          setUser(null);
+          setSessionExpiredReasonState(reason);
+          setAuthStatus('SESSION_EXPIRED');
+          return;
+        }
+      }
+
       const profile = await api.getProfile();
       setUser(profile);
-    } catch {
-      api.clearTokens();
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      setAuthStatus('AUTHENTICATED');
+      setSessionExpiredReasonState(null);
+      authStorage.updateActivity(true);
+    } catch (err: any) {
+      // Only clear credentials if backend explicitly returns 401 or invalid token
+      const isExplicitAuthFailure =
+        err.message?.includes('401') ||
+        err.message?.includes('invalid') ||
+        err.message?.includes('expired') ||
+        err.message?.includes('Authentication credentials');
+
+      if (isExplicitAuthFailure) {
+        authStorage.clearSession();
+        queryClient.clear();
+        setUser(null);
+        setSessionExpiredReasonState('invalid_token');
+        setAuthStatus('UNAUTHENTICATED');
+      } else {
+        // Network drop or server cold start: preserve valid local session
+        const hasSession = !!authStorage.getSession();
+        if (hasSession) {
+          setAuthStatus('AUTHENTICATED');
+        } else {
+          setAuthStatus('UNAUTHENTICATED');
+        }
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshUser();
@@ -68,23 +130,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleAuthLogout = () => {
       queryClient.clear();
       setUser(null);
-      setIsLoading(false);
+      const reason = authStorage.getSessionExpiredReason();
+      setSessionExpiredReasonState(reason);
+      setAuthStatus(reason ? 'SESSION_EXPIRED' : 'UNAUTHENTICATED');
+    };
+
+    // User interaction listeners for activity renewal
+    const handleUserActivity = () => {
+      authStorage.updateActivity();
     };
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('monvex:auth-logout', handleAuthLogout);
-    }
+      window.addEventListener(AUTH_CONFIG.EVENTS.LOGOUT, handleAuthLogout);
+      window.addEventListener('pointerdown', handleUserActivity, { passive: true });
+      window.addEventListener('keydown', handleUserActivity, { passive: true });
+      window.addEventListener('focus', handleUserActivity);
 
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('monvex:auth-logout', handleAuthLogout);
-      }
-    };
-  }, []);
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          if (authStorage.isInactive()) {
+            handleAuthLogout();
+          } else {
+            handleUserActivity();
+          }
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        window.removeEventListener(AUTH_CONFIG.EVENTS.LOGOUT, handleAuthLogout);
+        window.removeEventListener('pointerdown', handleUserActivity);
+        window.removeEventListener('keydown', handleUserActivity);
+        window.removeEventListener('focus', handleUserActivity);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [refreshUser]);
 
   const login = async (credentials: any) => {
     queryClient.clear();
     await api.login(credentials);
+    authStorage.clearSessionExpiredReason();
+    setSessionExpiredReasonState(null);
     await refreshUser();
   };
 
@@ -92,6 +180,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryClient.clear();
     const res = await api.googleLogin(credential);
     if (res.access) {
+      authStorage.clearSessionExpiredReason();
+      setSessionExpiredReasonState(null);
       await refreshUser();
     }
     return res;
@@ -100,6 +190,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const linkGoogleAccount = async (payload: { credential: string; password: string }) => {
     const res = await api.linkGoogleAccount(payload);
     if (res.access) {
+      authStorage.clearSessionExpiredReason();
+      setSessionExpiredReasonState(null);
       await refreshUser();
     }
     return res;
@@ -109,6 +201,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryClient.clear();
     const res = await api.register(userData);
     if (res.access) {
+      authStorage.clearSessionExpiredReason();
+      setSessionExpiredReasonState(null);
       await refreshUser();
     }
     return res;
@@ -116,20 +210,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     queryClient.clear();
-    api.clearTokens();
+    const refresh = authStorage.getRefreshToken();
+    authStorage.clearSession(true);
     setUser(null);
-    if (typeof window !== 'undefined') {
-      try {
-        sessionStorage.clear();
-      } catch {}
-    }
+    setAuthStatus('UNAUTHENTICATED');
+    setSessionExpiredReasonState(null);
+
     try {
-      await api.logout();
+      if (refresh) {
+        await api.logout();
+      }
     } catch {
       // ignore
     }
+
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('monvex:auth-logout'));
+      window.dispatchEvent(new Event(AUTH_CONFIG.EVENTS.LOGOUT));
     }
   };
 
@@ -137,8 +233,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
-        isLoading,
+        authStatus,
+        isAuthenticated: authStatus === 'AUTHENTICATED' && !!user,
+        isLoading: authStatus === 'AUTH_INITIALIZING',
+        sessionExpiredReason,
+        clearSessionExpiredReason,
         login,
         loginWithGoogle,
         linkGoogleAccount,
@@ -159,4 +258,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
 

@@ -50,9 +50,20 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && user && api.getAccessToken()) {
-      router.push('/dashboard');
+      router.replace('/dashboard');
     }
   }, [authLoading, isAuthenticated, user, router]);
+
+  if (authLoading || (isAuthenticated && user)) {
+    return (
+      <div className="min-h-screen bg-[#F6F5F1] flex flex-col items-center justify-center p-6 space-y-4">
+        <div className="h-12 w-12 rounded-2xl bg-white p-2 border border-[#E4E2DC] shadow-xs flex items-center justify-center animate-pulse">
+          <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
+        </div>
+        <div className="text-xs font-medium text-[#898390]">Validating session...</div>
+      </div>
+    );
+  }
 
   // Step state: 'register' -> 'otp'
   const [step, setStep] = useState<'register' | 'otp'>('register');

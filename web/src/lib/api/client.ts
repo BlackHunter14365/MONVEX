@@ -2,50 +2,32 @@
  * MONVEX HTTP Client Core
  */
 
+import { authStorage } from '@/lib/authStorage';
+import { AUTH_CONFIG } from '@/config/auth';
+
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://monvex-backend.onrender.com/api/v1';
 
 export class HttpClient {
   private refreshPromise: Promise<string | null> | null = null;
 
   public getAccessToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem('monvex_access_token');
+    return authStorage.getAccessToken();
   }
 
   public getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return sessionStorage.getItem('monvex_refresh_token');
+    return authStorage.getRefreshToken();
   }
 
   public setAccessToken(token: string) {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('monvex_access_token');
-      } catch {}
-      sessionStorage.setItem('monvex_access_token', token);
-    }
+    authStorage.updateTokens(token);
   }
 
   public setTokens(access: string, refresh: string) {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('monvex_access_token');
-        localStorage.removeItem('monvex_refresh_token');
-      } catch {}
-      sessionStorage.setItem('monvex_access_token', access);
-      sessionStorage.setItem('monvex_refresh_token', refresh);
-    }
+    authStorage.saveSession(access, refresh);
   }
 
   public clearTokens() {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('monvex_access_token');
-        localStorage.removeItem('monvex_refresh_token');
-      } catch {}
-      sessionStorage.removeItem('monvex_access_token');
-      sessionStorage.removeItem('monvex_refresh_token');
-    }
+    authStorage.clearSession();
   }
 
   public async refreshAccessToken(): Promise<string | null> {
@@ -53,11 +35,20 @@ export class HttpClient {
       return this.refreshPromise;
     }
 
+    if (authStorage.isInactive()) {
+      authStorage.setSessionExpiredReason('inactivity');
+      this.clearTokens();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(AUTH_CONFIG.EVENTS.LOGOUT));
+      }
+      return null;
+    }
+
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
       this.clearTokens();
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('monvex:auth-logout'));
+        window.dispatchEvent(new Event(AUTH_CONFIG.EVENTS.LOGOUT));
       }
       return null;
     }
@@ -74,7 +65,16 @@ export class HttpClient {
         });
 
         if (!res.ok) {
-          throw new Error('Refresh token invalid or expired');
+          // Token is blacklisted, expired, or invalid
+          if (res.status === 401 || res.status === 400) {
+            authStorage.setSessionExpiredReason('invalid_token');
+            this.clearTokens();
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event(AUTH_CONFIG.EVENTS.LOGOUT));
+            }
+            return null;
+          }
+          throw new Error('Temporary error refreshing authentication token');
         }
 
         const data = await res.json();
@@ -82,10 +82,10 @@ export class HttpClient {
         const newRefresh = data.refresh || refreshToken;
         this.setTokens(newAccess, newRefresh);
         return newAccess;
-      } catch {
-        this.clearTokens();
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('monvex:auth-logout'));
+      } catch (err: any) {
+        // If network error occurred, do NOT clear tokens immediately (graceful degradation)
+        if (err.name === 'TypeError' || err.message?.includes('fetch')) {
+          return null;
         }
         return null;
       } finally {
@@ -124,6 +124,7 @@ export class HttpClient {
 
     if (token && !isPublicAuthEndpoint) {
       headers['Authorization'] = `Bearer ${token}`;
+      authStorage.updateActivity();
     }
 
     const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -147,6 +148,7 @@ export class HttpClient {
           });
 
           if (retryRes.ok) {
+            authStorage.updateActivity();
             if (retryRes.status === 204) {
               return {} as T;
             }
@@ -161,7 +163,7 @@ export class HttpClient {
       if (res.status === 401 && !isPublicAuthEndpoint) {
         this.clearTokens();
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('monvex:auth-logout'));
+          window.dispatchEvent(new Event(AUTH_CONFIG.EVENTS.LOGOUT));
         }
       }
 

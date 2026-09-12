@@ -7,3 +7,4 @@ export * from './PasswordField';
 export * from './GoogleSignInButton';
 export * from './AuthFeedback';
 export * from './AccountLinkDialog';
+export * from './OtpVerificationView';

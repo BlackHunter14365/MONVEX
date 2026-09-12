@@ -283,6 +283,46 @@ class VerificationSendView(APIView):
                 "message": pe.message
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
 
+class VerificationStatusView(APIView):
+    """
+    Returns session metadata for safe route refresh recovery without leaking sensitive data.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        vid = request.query_params.get('verification_id') or request.query_params.get('id')
+        if not vid:
+            return Response({
+                "success": False,
+                "code": "MISSING_VERIFICATION_ID",
+                "message": "verification_id parameter is required."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        session = VerificationSession.objects.filter(id=vid).first()
+        if not session:
+            return Response({
+                "success": False,
+                "code": "VERIFICATION_NOT_FOUND",
+                "message": "Verification session not found or expired."
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        now = timezone.now()
+        seconds_left = max(0, int((session.expires_at - now).total_seconds())) if session.expires_at else 0
+        resend_cooldown_left = session.seconds_until_resend(60)
+
+        return Response({
+            "success": True,
+            "verification_id": str(session.id),
+            "status": session.status,
+            "purpose": session.purpose,
+            "email_masked": VerificationService.mask_email(session.destination),
+            "expires_in": seconds_left,
+            "resend_after": resend_cooldown_left,
+            "is_expired": session.is_expired(),
+            "attempts_remaining": max(0, session.max_attempts - session.attempt_count)
+        }, status=status.HTTP_200_OK)
+
 class CustomLoginView(APIView):
     """
     Two-Stage Login View:
@@ -319,12 +359,31 @@ class CustomLoginView(APIView):
         if require_otp:
             # Check if user account was never verified at registration
             if not user.is_active or (profile and not profile.email_verified and profile.status == 'PENDING_VERIFICATION'):
-                return Response({
-                    "success": False,
-                    "code": "ACCOUNT_NOT_VERIFIED",
-                    "message": "Your account requires email verification before signing in.",
-                    "email": user.email
-                }, status=status.HTTP_403_FORBIDDEN)
+                ctx = get_client_context(request)
+                try:
+                    otp_resp = VerificationService.start_email_verification(
+                        user=user,
+                        email=user.email,
+                        purpose="REGISTRATION",
+                        channel="EMAIL",
+                        request_context=ctx
+                    )
+                    return Response({
+                        "success": True,
+                        "requires_otp": True,
+                        "verification_purpose": "REGISTRATION",
+                        "verification_id": otp_resp["verification_id"],
+                        "email_masked": otp_resp["email_masked"],
+                        "expires_in": otp_resp["expires_in"],
+                        "resend_after": otp_resp["resend_after"],
+                        "message": "Your account requires email verification before signing in. We've sent a 6-digit code to your email."
+                    }, status=status.HTTP_200_OK)
+                except ProviderError as pe:
+                    return Response({
+                        "success": False,
+                        "code": pe.code,
+                        "message": pe.message
+                    }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
 
             # Stage 1: Send LOGIN OTP
             ctx = get_client_context(request)
@@ -339,6 +398,7 @@ class CustomLoginView(APIView):
                 return Response({
                     "success": True,
                     "requires_otp": True,
+                    "verification_purpose": "LOGIN",
                     "verification_id": otp_resp["verification_id"],
                     "email_masked": otp_resp["email_masked"],
                     "expires_in": otp_resp["expires_in"],
@@ -384,11 +444,14 @@ class LoginVerifyOTPView(APIView):
         code = str(serializer.validated_data['code'])
         ctx = get_client_context(request)
 
+        session = VerificationSession.objects.filter(id=vid).first()
+        target_purpose = session.purpose if (session and session.purpose in ['LOGIN', 'REGISTRATION', 'EMAIL_SIGNUP']) else "LOGIN"
+
         try:
             result = VerificationService.check_email_verification(
                 verification_id=vid,
                 code=code,
-                purpose="LOGIN",
+                purpose=target_purpose,
                 request_context=ctx
             )
         except ProviderError as pe:
@@ -431,10 +494,13 @@ class LoginResendOTPView(APIView):
         vid = str(serializer.validated_data['verification_id'])
         ctx = get_client_context(request)
 
+        session = VerificationSession.objects.filter(id=vid).first()
+        target_purpose = session.purpose if (session and session.purpose in ['LOGIN', 'REGISTRATION', 'EMAIL_SIGNUP']) else "LOGIN"
+
         try:
             result = VerificationService.resend_email_verification(
                 verification_id=vid,
-                purpose="LOGIN",
+                purpose=target_purpose,
                 request_context=ctx
             )
         except ProviderError as pe:

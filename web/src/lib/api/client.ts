@@ -196,7 +196,7 @@ export class HttpClient {
         }
       }
 
-      throw new Error(msg);
+      throw new ApiError(msg, res.status, err);
     }
 
     if (res.status === 204) {
@@ -204,6 +204,20 @@ export class HttpClient {
     }
 
     return res.json();
+  }
+}
+
+export class ApiError extends Error {
+  public status: number;
+  public data: any;
+  public code?: string;
+
+  constructor(message: string, status: number, data: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+    this.code = data?.code || data?.error?.code;
   }
 }
 

@@ -10,6 +10,7 @@ from .views import (
     VerificationCheckView,
     VerificationResendView,
     VerificationSendView,
+    VerificationStatusView,
     CustomLoginView,
     LoginVerifyOTPView,
     LoginResendOTPView,
@@ -33,6 +34,7 @@ urlpatterns = [
     path('login/resend-otp/', LoginResendOTPView.as_view(), name='auth_login_resend_otp'),
 
     # Generic & Backward-Compatible Verification Endpoints
+    path('verification/status/', VerificationStatusView.as_view(), name='auth_verification_status'),
     path('verification/send/', VerificationSendView.as_view(), name='auth_verification_send'),
     path('verification/check/', VerificationCheckView.as_view(), name='auth_verification_check'),
     path('verification/resend/', VerificationResendView.as_view(), name='auth_verification_resend'),

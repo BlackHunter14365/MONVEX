@@ -37,11 +37,27 @@ services:
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: EMAIL_BACKEND
-        value: "django.core.mail.backends.console.EmailBackend"
+      - key: EMAIL_PROVIDER
+        value: "smtp"
       - key: OTP_PROVIDER
-        value: "console"
+        value: "smtp"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        value: "monvexfinance@gmail.com"
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: "MONVEX <monvexfinance@gmail.com>"
+      - key: SERVER_EMAIL
+        value: "monvexfinance@gmail.com"
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.smtp.EmailBackend"
+
 
   # =========================================================================
   # 2. MONVEX WEB (Next.js 14 Standalone / SSR Application)
@@ -59,7 +75,7 @@ services:
       - key: NODE_VERSION
         value: 20.14.0
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: "https://monvex-backend.onrender.com/api/v1"
       - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
         sync: false
 

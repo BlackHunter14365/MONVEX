@@ -5,7 +5,33 @@
 import { authStorage } from '@/lib/authStorage';
 import { AUTH_CONFIG } from '@/config/auth';
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://monvex-backend.onrender.com/api/v1';
+export function resolveApiBaseUrl(): string {
+  let raw = (process.env.NEXT_PUBLIC_API_URL || '').trim();
+  if (!raw) {
+    return 'https://monvex-backend.onrender.com/api/v1';
+  }
+  // Strip quotes and trailing slashes
+  raw = raw.replace(/^["']|["']$/g, '').replace(/\/+$/, '');
+
+  // Prevent mixed content: ensure HTTPS if onrender.com
+  if (raw.includes('.onrender.com') && raw.startsWith('http://')) {
+    raw = raw.replace('http://', 'https://');
+  }
+
+  // Normalize path to ensure exactly /api/v1 suffix
+  if (!raw.endsWith('/api/v1')) {
+    if (raw.endsWith('/api')) {
+      raw = `${raw}/v1`;
+    } else {
+      raw = `${raw}/api/v1`;
+    }
+  }
+
+  return raw;
+}
+
+export const API_BASE = resolveApiBaseUrl();
+
 
 export class HttpClient {
   private refreshPromise: Promise<string | null> | null = null;
@@ -111,23 +137,28 @@ export class HttpClient {
       delete headers['Content-Type'];
     }
 
+    let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    if (cleanEndpoint.startsWith('/api/v1/')) {
+      cleanEndpoint = cleanEndpoint.replace('/api/v1', '');
+    }
+
     const isPublicAuthEndpoint =
-      endpoint.startsWith('/auth/login') ||
-      endpoint.startsWith('/auth/register') ||
-      endpoint.startsWith('/auth/google') ||
-      endpoint.startsWith('/auth/token/refresh') ||
-      endpoint.startsWith('/auth/verification') ||
-      endpoint.startsWith('/auth/verify-otp') ||
-      endpoint.startsWith('/auth/resend-otp') ||
-      endpoint.startsWith('/contact') ||
-      endpoint.startsWith('/security/contact');
+      cleanEndpoint.startsWith('/auth/login') ||
+      cleanEndpoint.startsWith('/auth/register') ||
+      cleanEndpoint.startsWith('/auth/google') ||
+      cleanEndpoint.startsWith('/auth/token/refresh') ||
+      cleanEndpoint.startsWith('/auth/verification') ||
+      cleanEndpoint.startsWith('/auth/verify-otp') ||
+      cleanEndpoint.startsWith('/auth/resend-otp') ||
+      cleanEndpoint.startsWith('/contact') ||
+      cleanEndpoint.startsWith('/security/contact');
 
     if (token && !isPublicAuthEndpoint) {
       headers['Authorization'] = `Bearer ${token}`;
       authStorage.updateActivity();
     }
 
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(`${API_BASE}${cleanEndpoint}`, {
       ...options,
       headers,
     });
@@ -142,7 +173,7 @@ export class HttpClient {
             ...headers,
             'Authorization': `Bearer ${newAccessToken}`,
           };
-          const retryRes = await fetch(`${API_BASE}${endpoint}`, {
+          const retryRes = await fetch(`${API_BASE}${cleanEndpoint}`, {
             ...options,
             headers: retryHeaders,
           });

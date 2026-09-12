@@ -18,6 +18,8 @@ declare global {
   }
 }
 
+import { googleAuthCoordinator } from '@/lib/googleAuthCoordinator';
+
 interface GoogleSignInButtonProps {
   onSuccess: (credential: string) => void;
   onError?: (errorMsg: string) => void;
@@ -29,76 +31,6 @@ interface GoogleSignInButtonProps {
 }
 
 type GisState = 'LOADING' | 'READY' | 'ERROR';
-
-let gisScriptPromise: Promise<void> | null = null;
-const gisActiveCallbacks = new Set<(resp: any) => void>();
-let isGisGloballyInitialized = false;
-let currentGisClientId = '';
-
-function setupGlobalGis(clientId: string) {
-  if (typeof window === 'undefined' || !window.google?.accounts?.id) return;
-  if (!isGisGloballyInitialized || currentGisClientId !== clientId) {
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (resp: any) => {
-        gisActiveCallbacks.forEach((cb) => cb(resp));
-      },
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
-    isGisGloballyInitialized = true;
-    currentGisClientId = clientId;
-  }
-}
-
-
-function loadGoogleIdentityServicesScript(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.reject(new Error('Window not available'));
-  if (window.google?.accounts?.id) return Promise.resolve();
-  if (gisScriptPromise) return gisScriptPromise;
-
-  gisScriptPromise = new Promise<void>((resolve, reject) => {
-    const existingScript = document.getElementById('google-gsi-client-script') as HTMLScriptElement | null;
-    if (existingScript) {
-      if (window.google?.accounts?.id) {
-        resolve();
-        return;
-      }
-      existingScript.addEventListener('load', () => resolve());
-      existingScript.addEventListener('error', (e) => reject(e));
-
-      const poll = setInterval(() => {
-        if (window.google?.accounts?.id) {
-          clearInterval(poll);
-          resolve();
-        }
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(poll);
-        if (window.google?.accounts?.id) resolve();
-        else reject(new Error('Google Identity Services script load timed out'));
-      }, 6000);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'google-gsi-client-script';
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      resolve();
-    };
-    script.onerror = (e) => {
-      gisScriptPromise = null;
-      reject(e);
-    };
-    document.head.appendChild(script);
-  });
-
-  return gisScriptPromise;
-}
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onSuccess,
@@ -119,9 +51,9 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     '1068232450695-drbp5fk2066qtl9j83s69kkgk1gbc984.apps.googleusercontent.com';
 
   const handleCredentialCallback = useCallback(
-    (response: { credential?: string; select_by?: string }) => {
-      if (response?.credential) {
-        onSuccess(response.credential);
+    (credential: string) => {
+      if (credential) {
+        onSuccess(credential);
       } else {
         const err = 'Google credential was not returned.';
         setErrorMessage(err);
@@ -144,13 +76,13 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   }, [shape]);
 
   const renderGoogleButton = useCallback(() => {
-    if (!googleBtnContainerRef.current || !window.google?.accounts?.id) return;
+    if (!googleBtnContainerRef.current) return;
 
     try {
       googleBtnContainerRef.current.innerHTML = '';
       const targetWidth = computeButtonWidth();
 
-      window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
+      googleAuthCoordinator.renderButton(googleBtnContainerRef.current, {
         type: shape === 'circle' ? 'icon' : 'standard',
         theme: 'outline',
         size: 'large',
@@ -160,7 +92,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         width: targetWidth,
       });
     } catch (err) {
-      console.error('[MONVEX-GOOGLE] Error rendering button:', err);
+      console.warn('[MONVEX-GOOGLE] Error rendering button:', err);
     }
   }, [text, shape, computeButtonWidth]);
 
@@ -176,26 +108,22 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       return;
     }
 
-    const callback = (resp: any) => {
+    // Subscribe to centralized coordinator
+    const unsubscribe = googleAuthCoordinator.addListener((credential) => {
       if (isMounted) {
-        handleCredentialCallback(resp);
+        handleCredentialCallback(credential);
       }
-    };
-    gisActiveCallbacks.add(callback);
+    });
 
-    loadGoogleIdentityServicesScript()
+    googleAuthCoordinator.loadScript()
       .then(() => {
         if (!isMounted) return;
 
-        if (!window.google?.accounts?.id) {
-          throw new Error('Google Identity Services API not available');
-        }
-
-        // Initialize Google Identity Services singleton
-        setupGlobalGis(clientId);
+        // Initialize GIS singleton safely
+        googleAuthCoordinator.initialize(clientId);
         isInitializedRef.current = true;
 
-        // Render button immediately and after layout measurement tick
+        // Render button immediately and after layout tick
         renderGoogleButton();
         timer = setTimeout(() => {
           if (isMounted) renderGoogleButton();
@@ -203,21 +131,10 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 
         setGisState('READY');
         setErrorMessage(null);
-
-        // Optional non-intrusive one-tap prompt
-        try {
-          window.google.accounts.id.prompt((notification: any) => {
-            if (notification?.isNotDisplayed?.()) {
-              console.log('[MONVEX-GOOGLE] One-tap not displayed:', notification.getNotDisplayedReason?.());
-            }
-          });
-        } catch {
-          // non-fatal
-        }
       })
       .catch((err) => {
         if (!isMounted) return;
-        console.error('[MONVEX-GOOGLE] GIS load/init error:', err);
+        console.error('[MONVEX-GOOGLE] GIS load error:', err);
         const msg = 'Google Sign-In could not be loaded.';
         setErrorMessage(msg);
         setGisState('ERROR');
@@ -226,7 +143,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 
     return () => {
       isMounted = false;
-      gisActiveCallbacks.delete(callback);
+      unsubscribe();
       if (timer) clearTimeout(timer);
     };
   }, [clientId, handleCredentialCallback, onError, renderGoogleButton]);
@@ -238,7 +155,6 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     let lastWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
     const handleResize = () => {
       const currentWidth = window.innerWidth;
-      // Re-render if crossing responsive breakpoint
       if ((lastWidth < 420 && currentWidth >= 420) || (lastWidth >= 420 && currentWidth < 420)) {
         lastWidth = currentWidth;
         renderGoogleButton();
@@ -248,6 +164,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [gisState, renderGoogleButton]);
+
 
   const buttonTextLabel =
     text === 'signup_with'
@@ -364,8 +281,18 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
             type="button"
             onClick={() => {
               setGisState('LOADING');
-              gisScriptPromise = null;
-              loadGoogleIdentityServicesScript();
+              setErrorMessage(null);
+              googleAuthCoordinator.loadScript()
+                .then(() => {
+                  googleAuthCoordinator.initialize(clientId);
+                  renderGoogleButton();
+                  setGisState('READY');
+                })
+                .catch((err) => {
+                  console.error('[MONVEX-GOOGLE] Retry failed:', err);
+                  setErrorMessage('Google Sign-In could not be loaded.');
+                  setGisState('ERROR');
+                });
             }}
             className="font-medium underline hover:text-[#BE123C]"
           >

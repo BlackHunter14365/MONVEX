@@ -16,11 +16,11 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'monvex-insecure-dev-key-super-secret-12345
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com').split(',') if host.strip()
-]
-if 'testserver' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('testserver')
+_raw_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com,monvex-backend.onrender.com')
+ALLOWED_HOSTS = list({
+    host.strip().strip('"\'').rstrip('/') for host in _raw_hosts.split(',') if host.strip()
+} | {'localhost', '127.0.0.1', 'testserver', '.onrender.com', 'monvex-backend.onrender.com'})
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -267,12 +267,25 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com').strip().strip('\'"')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>')
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com'))
 EMAIL_BACKEND = os.getenv(
     'EMAIL_BACKEND',
     'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST_PASSWORD else 'django.core.mail.backends.console.EmailBackend'
 )
+
+# Startup Configuration Validation for Production (DEBUG=False)
+if not DEBUG:
+    import logging
+    _config_logger = logging.getLogger('monvex.startup')
+    if not EMAIL_HOST_PASSWORD:
+        _config_logger.warning(
+            "CRITICAL CONFIGURATION NOTICE: EMAIL_HOST_PASSWORD is not set in Render environment. "
+            "OTP dispatches will fail until EMAIL_HOST_PASSWORD is set."
+        )
+    else:
+        _config_logger.info("Production SMTP configured with user: monvexfinance@gmail.com")
 
 # Managed OTP Verification Provider Configuration
 OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER)
@@ -281,6 +294,7 @@ OTP_EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 600))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', 60))
 OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', 5))
 OTP_MAX_RESENDS = int(os.getenv('OTP_MAX_RESENDS', 5))
+
 
 # Authentication & Verification Policy Flags
 AUTH_REQUIRE_EMAIL_VERIFICATION = os.getenv('AUTH_REQUIRE_EMAIL_VERIFICATION', 'true').lower() in ('true', '1', 'yes')

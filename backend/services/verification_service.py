@@ -123,12 +123,15 @@ class VerificationService:
 
         return {
             "success": True,
+            "requires_otp": True,
+            "verification_purpose": purpose,
             "message": "Verification code requested. Check your inbox.",
             "verification_id": str(session.id),
             "email_masked": cls.mask_email(clean_email),
             "expires_in": cls.EXPIRY_SECONDS,
             "resend_after": cls.COOLDOWN_SECONDS
         }
+
 
     @classmethod
     def check_email_verification(

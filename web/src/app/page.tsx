@@ -271,10 +271,10 @@ export default function LandingPage() {
               transition={{ duration: 0.15 }}
             >
               <Link
-                href="/app"
+                href="/dashboard"
                 className="flex items-center gap-1.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors"
               >
-                <span>Open Web App</span>
+                <span>Launch App</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </motion.div>
@@ -356,10 +356,10 @@ export default function LandingPage() {
                   Sign In
                 </Link>
                 <Link
-                  href="/app"
+                  href="/dashboard"
                   className="w-1/2 text-center text-xs font-bold py-2 bg-[#2A1F3D] text-white rounded-lg"
                 >
-                  Open Web App
+                  Launch App
                 </Link>
               </div>
             </motion.div>
@@ -450,11 +450,11 @@ export default function LandingPage() {
                   transition={{ duration: 0.15 }}
                 >
                   <Link
-                    href="/app"
+                    href="/login"
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-[#F2F1EC] border border-[#E4E2DC] px-6 py-3.5 text-xs font-bold text-[#191522] shadow-2xs transition-colors w-full sm:w-auto"
                   >
                     <Smartphone className="h-4 w-4 text-[#2563EB]" />
-                    <span>Open Web App</span>
+                    <span>Launch Mobile Web</span>
                   </Link>
                 </motion.div>
               ) : (
@@ -1349,7 +1349,7 @@ export default function LandingPage() {
                       whileHover={{ scale: 1.015, y: -1 }}
                       whileTap={{ scale: 0.985 }}
                       transition={{ duration: 0.15 }}
-                      className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2.5"
+                      className="w-full sm:w-auto"
                     >
                       <a
                         href={windowsDownloadUrl}
@@ -1359,12 +1359,6 @@ export default function LandingPage() {
                         <Download className="h-4 w-4 text-[#38BDF8]" />
                         <span>Download for Windows</span>
                       </a>
-                      <Link
-                        href="/app"
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-white hover:bg-[#F2F1EC] border border-[#E4E2DC] text-[#191522] px-6 py-4 text-xs sm:text-sm font-bold shadow-xs transition-all"
-                      >
-                        <span>Open Web App</span>
-                      </Link>
                     </motion.div>
                   )}
                 </div>
@@ -1415,7 +1409,7 @@ export default function LandingPage() {
                     className="w-full sm:w-auto"
                   >
                     <Link
-                      href="/app"
+                      href="/login"
                       className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white px-8 py-4 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all"
                     >
                       <Smartphone className="h-4 w-4 text-[#38BDF8]" />

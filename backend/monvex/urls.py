@@ -32,4 +32,9 @@ urlpatterns = [
 if settings.MEDIA_ROOT:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+handler500 = 'monvex.views.custom_handler500'
+handler400 = 'monvex.views.custom_handler400'
+handler403 = 'monvex.views.custom_handler403'
+handler404 = 'monvex.views.custom_handler404'
+
 

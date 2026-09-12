@@ -31,6 +31,26 @@ interface GoogleSignInButtonProps {
 type GisState = 'LOADING' | 'READY' | 'ERROR';
 
 let gisScriptPromise: Promise<void> | null = null;
+const gisActiveCallbacks = new Set<(resp: any) => void>();
+let isGisGloballyInitialized = false;
+let currentGisClientId = '';
+
+function setupGlobalGis(clientId: string) {
+  if (typeof window === 'undefined' || !window.google?.accounts?.id) return;
+  if (!isGisGloballyInitialized || currentGisClientId !== clientId) {
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (resp: any) => {
+        gisActiveCallbacks.forEach((cb) => cb(resp));
+      },
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+    isGisGloballyInitialized = true;
+    currentGisClientId = clientId;
+  }
+}
+
 
 function loadGoogleIdentityServicesScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.reject(new Error('Window not available'));
@@ -146,6 +166,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 
   useEffect(() => {
     let isMounted = true;
+    let timer: NodeJS.Timeout | null = null;
 
     if (!clientId) {
       const err = 'Google Sign-In is not configured.';
@@ -155,6 +176,13 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       return;
     }
 
+    const callback = (resp: any) => {
+      if (isMounted) {
+        handleCredentialCallback(resp);
+      }
+    };
+    gisActiveCallbacks.add(callback);
+
     loadGoogleIdentityServicesScript()
       .then(() => {
         if (!isMounted) return;
@@ -163,20 +191,13 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           throw new Error('Google Identity Services API not available');
         }
 
-        // Initialize Google Identity Services
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (resp: any) => {
-            handleCredentialCallback(resp);
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
+        // Initialize Google Identity Services singleton
+        setupGlobalGis(clientId);
         isInitializedRef.current = true;
 
         // Render button immediately and after layout measurement tick
         renderGoogleButton();
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           if (isMounted) renderGoogleButton();
         }, 80);
 
@@ -193,8 +214,6 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         } catch {
           // non-fatal
         }
-
-        return () => clearTimeout(timer);
       })
       .catch((err) => {
         if (!isMounted) return;
@@ -207,6 +226,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
 
     return () => {
       isMounted = false;
+      gisActiveCallbacks.delete(callback);
+      if (timer) clearTimeout(timer);
     };
   }, [clientId, handleCredentialCallback, onError, renderGoogleButton]);
 

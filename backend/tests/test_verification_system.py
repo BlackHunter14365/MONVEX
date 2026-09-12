@@ -55,7 +55,13 @@ class VerificationSystemTests(TestCase):
         user.profile.save()
 
         res = self.client.post('/api/v1/auth/login/', {'username': 'pending_user', 'password': 'Password123!'}, format='json')
-        self.assertIn(res.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_400_BAD_REQUEST, status.HTTP_403_FORBIDDEN])
+        if res.status_code == status.HTTP_200_OK:
+            self.assertTrue(res.data.get('requires_otp'))
+            self.assertEqual(res.data.get('verification_purpose'), 'REGISTRATION')
+            self.assertNotIn('access', res.data)
+            self.assertNotIn('refresh', res.data)
+        else:
+            self.assertIn(res.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_400_BAD_REQUEST, status.HTTP_403_FORBIDDEN])
 
     def test_03_correct_otp_verifies_activates_user_and_issues_jwt(self):
         # 1. Register

@@ -77,3 +77,83 @@ def observability_status(request):
     }
 
     return JsonResponse(snapshot, status=200)
+
+
+import re
+from django.conf import settings
+
+def _attach_cors_headers(request, response):
+    origin = request.META.get('HTTP_ORIGIN')
+    if not origin:
+        return response
+
+    clean_origin = origin.strip().rstrip('/')
+    allowed_origins = getattr(settings, 'CORS_ALLOWED_ORIGINS', [])
+    allowed_regexes = getattr(settings, 'CORS_ALLOWED_ORIGIN_REGEXES', [])
+
+    is_allowed = (
+        getattr(settings, 'CORS_ALLOW_ALL_ORIGINS', False)
+        or clean_origin in allowed_origins
+        or any(re.match(pattern, origin) for pattern in allowed_regexes)
+        or origin.endswith('.onrender.com')
+    )
+
+    if is_allowed:
+        response['Access-Control-Allow-Origin'] = origin
+        if getattr(settings, 'CORS_ALLOW_CREDENTIALS', True):
+            response['Access-Control-Allow-Credentials'] = 'true'
+        response['Access-Control-Expose-Headers'] = 'X-Request-ID, X-Response-Time-Ms'
+    return response
+
+def custom_handler500(request):
+    req_id = getattr(request, 'request_id', 'req_system')
+    response = JsonResponse({
+        "success": False,
+        "error": {
+            "code": "INTERNAL_SERVER_ERROR",
+            "status": 500,
+            "message": f"A server error occurred. Reference Request ID: {req_id}",
+            "request_id": req_id
+        }
+    }, status=500)
+    return _attach_cors_headers(request, response)
+
+def custom_handler400(request, exception=None):
+    req_id = getattr(request, 'request_id', 'req_system')
+    response = JsonResponse({
+        "success": False,
+        "error": {
+            "code": "BAD_REQUEST",
+            "status": 400,
+            "message": "Malformed or invalid request.",
+            "request_id": req_id
+        }
+    }, status=400)
+    return _attach_cors_headers(request, response)
+
+def custom_handler403(request, exception=None):
+    req_id = getattr(request, 'request_id', 'req_system')
+    response = JsonResponse({
+        "success": False,
+        "error": {
+            "code": "PERMISSION_DENIED",
+            "status": 403,
+            "message": "Access permission denied.",
+            "request_id": req_id
+        }
+    }, status=403)
+    return _attach_cors_headers(request, response)
+
+def custom_handler404(request, exception=None):
+    req_id = getattr(request, 'request_id', 'req_system')
+    response = JsonResponse({
+        "success": False,
+        "error": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "The requested resource was not found.",
+            "request_id": req_id
+        }
+    }, status=404)
+    return _attach_cors_headers(request, response)
+

@@ -72,21 +72,41 @@ def custom_exception_handler(exc, context):
             }
         }
         response.data = custom_data
-    else:
-        # Unhandled 500 server errors
-        logger.error(f"[{request_id}] Unhandled Exception: {str(exc)}", exc_info=True)
-        response = Response(
+        return response
+
+    from django.db import IntegrityError
+    if isinstance(exc, IntegrityError):
+        logger.warning(f"[{request_id}] IntegrityError intercepted: {str(exc)}")
+        msg = "An account with these credentials already exists. Please sign in or use different details."
+        return Response(
             {
                 'success': False,
                 'error': {
-                    'code': 'INTERNAL_SERVER_ERROR',
-                    'status': 500,
-                    'message': f'A critical server error occurred. Reference Request ID: {request_id}',
+                    'code': 'CONFLICT_OR_DUPLICATE',
+                    'status': status.HTTP_400_BAD_REQUEST,
+                    'message': msg,
                     'request_id': request_id,
                     'details': None,
                 }
             },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            status=status.HTTP_400_BAD_REQUEST
         )
 
+    # Unhandled 500 server errors
+    logger.error(f"[{request_id}] Unhandled Exception: {str(exc)}", exc_info=True)
+    response = Response(
+        {
+            'success': False,
+            'error': {
+                'code': 'INTERNAL_SERVER_ERROR',
+                'status': 500,
+                'message': f'A critical server error occurred. Reference Request ID: {request_id}',
+                'request_id': request_id,
+                'details': None,
+            }
+        },
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
+
     return response
+

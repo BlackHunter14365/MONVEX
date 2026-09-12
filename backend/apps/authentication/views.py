@@ -5,6 +5,7 @@ Handles user registration, login, logout, provider-backed OTP check, resend, and
 import base64
 import io
 import uuid
+import logging
 from PIL import Image
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.views import APIView
@@ -14,8 +15,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.conf import settings
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.core.files.base import ContentFile
+
+logger = logging.getLogger('monvex.auth')
+
 
 from .serializers import (
     RegisterSerializer,
@@ -47,37 +52,55 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
 
         require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
-
-        if not require_otp:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                "success": True,
-                "message": "Account created successfully.",
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-                "user": UserSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
-
         ctx = get_client_context(request)
 
         try:
-            verification_resp = VerificationService.start_email_verification(
-                user=user,
-                email=user.email,
-                purpose="REGISTRATION",
-                channel="EMAIL",
-                request_context=ctx
-            )
-            return Response(verification_resp, status=status.HTTP_201_CREATED)
+            with transaction.atomic():
+                user = serializer.save()
+
+                if not require_otp:
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        "success": True,
+                        "message": "Account created successfully.",
+                        "access": str(refresh.access_token),
+                        "refresh": str(refresh),
+                        "user": UserSerializer(user).data
+                    }, status=status.HTTP_201_CREATED)
+
+                verification_resp = VerificationService.start_email_verification(
+                    user=user,
+                    email=user.email,
+                    purpose="REGISTRATION",
+                    channel="EMAIL",
+                    request_context=ctx
+                )
+                return Response(verification_resp, status=status.HTTP_201_CREATED)
+
+        except IntegrityError as ie:
+            logger.warning(f"Registration integrity conflict for {request.data.get('username')}: {ie}")
+            return Response({
+                "success": False,
+                "code": "USER_ALREADY_EXISTS",
+                "message": "An account with this username or email already exists. Please sign in or use different credentials."
+            }, status=status.HTTP_400_BAD_REQUEST)
         except ProviderError as pe:
+            logger.error(f"Registration OTP dispatch failed: {pe.code} - {pe.message}")
             return Response({
                 "success": False,
                 "code": pe.code,
                 "message": pe.message
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            logger.error(f"Unexpected registration exception: {str(exc)}", exc_info=True)
+            return Response({
+                "success": False,
+                "code": "REGISTRATION_FAILED",
+                "message": "Unable to complete registration right now. Please try again or contact support."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class RegisterVerifyOTPView(APIView):
     authentication_classes = []

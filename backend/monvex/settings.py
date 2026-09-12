@@ -93,7 +93,7 @@ if DATABASE_URL:
             default=DATABASE_URL,
             conn_max_age=600,
             conn_health_checks=True,
-            ssl_require=not DEBUG,
+            ssl_require=not DEBUG if 'sqlite' not in DATABASE_URL else False,
         )
     }
 elif os.getenv('DB_ENGINE') == 'postgres':
@@ -203,8 +203,30 @@ from corsheaders.defaults import default_headers
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = [
-    origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost').split(',') if origin.strip()
+CORS_ALLOW_CREDENTIALS = True
+
+def _clean_origin_url(url_str: str) -> str:
+    return url_str.strip().strip('"\'').rstrip('/')
+
+_raw_cors = os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    'https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost'
+)
+_base_cors_origins = {
+    'https://monvex-web.onrender.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'tauri://localhost',
+}
+CORS_ALLOWED_ORIGINS = list(
+    _base_cors_origins | {_clean_origin_url(orig) for orig in _raw_cors.split(',') if _clean_origin_url(orig)}
+)
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.onrender\.com$",
+    r"^http:\/\/localhost(:\d+)?$",
+    r"^http:\/\/127\.0\.0\.1(:\d+)?$",
+    r"^tauri:\/\/localhost$",
 ]
 
 CORS_ALLOW_HEADERS = (
@@ -220,9 +242,20 @@ CORS_EXPOSE_HEADERS = (
 )
 
 # CSRF Trusted Origins for Secure Production Web Requests
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com,https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost').split(',') if origin.strip()
-]
+_raw_csrf = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.onrender.com,https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost'
+)
+_base_csrf_origins = {
+    'https://*.onrender.com',
+    'https://monvex-web.onrender.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'tauri://localhost',
+}
+CSRF_TRUSTED_ORIGINS = list(
+    _base_csrf_origins | {_clean_origin_url(orig) for orig in _raw_csrf.split(',') if _clean_origin_url(orig)}
+)
 
 # Gemini API Config
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
@@ -232,8 +265,8 @@ EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', 'smtp')).
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com').strip().strip('\'"')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>')
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com'))
 EMAIL_BACKEND = os.getenv(

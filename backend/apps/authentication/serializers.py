@@ -142,14 +142,16 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         from django.conf import settings
         clean_user = value.strip()
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', False)
+        if not clean_user:
+            raise serializers.ValidationError("Valid username is required.")
         
         user = User.objects.filter(username__iexact=clean_user).first()
         if user:
-            if not require_otp:
+            prof = getattr(user, 'profile', None)
+            is_verified = bool(prof and prof.email_verified)
+            is_active_acc = bool(user.is_active or user.is_staff or user.is_superuser or is_verified)
+            if is_active_acc:
                 raise serializers.ValidationError("This username is already taken. Please choose another.")
-            elif getattr(user, 'profile', None) and user.profile.email_verified and user.profile.status == 'ACTIVE':
-                raise serializers.ValidationError("This username is already taken by an active account. Please choose another.")
         return clean_user
 
     def validate_email(self, value):
@@ -158,18 +160,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         if not clean_email:
             raise serializers.ValidationError("Valid email address is required.")
         
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', False)
         user = User.objects.filter(email__iexact=clean_email).first()
         if user:
-            if not require_otp:
-                raise serializers.ValidationError("An account with this email already exists. Please sign in instead.")
-            elif getattr(user, 'profile', None) and user.profile.email_verified and user.profile.status == 'ACTIVE':
-                raise serializers.ValidationError("An account with this email is already verified. Please sign in instead.")
+            prof = getattr(user, 'profile', None)
+            is_verified = bool(prof and prof.email_verified)
+            is_active_acc = bool(user.is_active or user.is_staff or user.is_superuser or is_verified)
+            if is_active_acc:
+                raise serializers.ValidationError("An account with this email is already registered. Please sign in instead.")
         return clean_email
 
     def create(self, validated_data):
         from django.conf import settings
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', False)
+        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
 
         validated_data.pop('confirm_password', None)
         currency = validated_data.pop('currency', 'INR')
@@ -180,12 +182,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         email = validated_data.get('email', '').strip().lower()
 
         if require_otp:
-            # Clean up abandoned unverified accounts so credentials can be re-attempted
-            unverified_users = User.objects.filter(
+            # Clean up abandoned, unverified user instances for this username or email
+            stale_users = User.objects.filter(
                 (Q(username__iexact=username) | Q(email__iexact=email)),
-                profile__email_verified=False
+                is_staff=False,
+                is_superuser=False
             )
-            unverified_users.delete()
+            for u in stale_users:
+                prof = getattr(u, 'profile', None)
+                if prof and prof.email_verified:
+                    continue
+                if u.is_active and (prof is None or prof.email_verified):
+                    continue
+                u.verification_sessions.all().delete()
+                u.delete()
 
         user = User.objects.create_user(
             username=username,

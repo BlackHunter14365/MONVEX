@@ -260,8 +260,17 @@ CSRF_TRUSTED_ORIGINS = list(
 # Gemini API Config
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
-# Official MONVEX Sender Email & SMTP Configuration
-EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', 'smtp')).strip().lower()
+# Email & OTP Delivery Architecture
+EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', 'resend')).strip().lower()
+OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER).strip().lower()
+
+# Resend HTTPS Email API Configuration (Production Default)
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip().strip('\'"')
+RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', 'MONVEX <onboarding@resend.dev>').strip()
+RESEND_API_URL = os.getenv('RESEND_API_URL', 'https://api.resend.com/emails').strip()
+RESEND_TIMEOUT = int(os.getenv('RESEND_TIMEOUT', 10))
+
+# Secondary / Local Development SMTP Configuration
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
 
@@ -293,7 +302,7 @@ _raw_email_pwd = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
 EMAIL_HOST_PASSWORD = _raw_email_pwd.replace(' ', '') if _raw_email_pwd else ''
 
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 10))
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', RESEND_FROM_EMAIL)
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com'))
 EMAIL_BACKEND = os.getenv(
     'EMAIL_BACKEND',
@@ -304,18 +313,28 @@ EMAIL_BACKEND = os.getenv(
 if not DEBUG:
     import logging
     _config_logger = logging.getLogger('monvex.startup')
-    if not EMAIL_HOST_PASSWORD:
-        _config_logger.warning(
-            "CRITICAL CONFIGURATION NOTICE: EMAIL_HOST_PASSWORD is not set in Render environment. "
-            "OTP dispatches will fail until EMAIL_HOST_PASSWORD is set."
-        )
-    else:
-        _config_logger.info(
-            f"Production SMTP configured with user: monvexfinance@gmail.com (port={EMAIL_PORT}, ssl={EMAIL_USE_SSL}, tls={EMAIL_USE_TLS})"
-        )
+    if OTP_PROVIDER == 'resend':
+        if not RESEND_API_KEY:
+            _config_logger.warning(
+                "CRITICAL CONFIGURATION NOTICE: RESEND_API_KEY is not set in Render environment. "
+                "Production OTP dispatches via HTTPS Resend API will fail until RESEND_API_KEY is configured."
+            )
+        else:
+            _config_logger.info(
+                f"Production Resend HTTPS Email API configured (sender: {RESEND_FROM_EMAIL})."
+            )
+    elif OTP_PROVIDER in ['smtp', 'email']:
+        if not EMAIL_HOST_PASSWORD:
+            _config_logger.warning(
+                "CRITICAL CONFIGURATION NOTICE: EMAIL_HOST_PASSWORD is not set in Render environment. "
+                "OTP dispatches will fail until EMAIL_HOST_PASSWORD is set."
+            )
+        else:
+            _config_logger.info(
+                f"Production SMTP configured with user: monvexfinance@gmail.com (port={EMAIL_PORT}, ssl={EMAIL_USE_SSL}, tls={EMAIL_USE_TLS})"
+            )
 
-# Managed OTP Verification Provider Configuration
-OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER)
+# Managed OTP Verification Policies
 OTP_CHANNEL = os.getenv('OTP_CHANNEL', 'email')
 OTP_EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 600))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', 60))

@@ -38,29 +38,15 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
       - key: EMAIL_PROVIDER
-        value: "smtp"
+        value: "resend"
       - key: OTP_PROVIDER
-        value: "smtp"
-      - key: EMAIL_HOST
-        value: "smtp.gmail.com"
-      - key: EMAIL_PORT
-        value: "465"
-      - key: EMAIL_USE_SSL
-        value: "True"
-      - key: EMAIL_USE_TLS
-        value: "False"
-      - key: EMAIL_TIMEOUT
-        value: "10"
-      - key: EMAIL_HOST_USER
-        value: "monvexfinance@gmail.com"
-      - key: EMAIL_HOST_PASSWORD
+        value: "resend"
+      - key: RESEND_API_KEY
         sync: false
-      - key: DEFAULT_FROM_EMAIL
-        value: "MONVEX <monvexfinance@gmail.com>"
-      - key: SERVER_EMAIL
-        value: "monvexfinance@gmail.com"
-      - key: EMAIL_BACKEND
-        value: "django.core.mail.backends.smtp.EmailBackend"
+      - key: RESEND_FROM_EMAIL
+        value: "MONVEX <onboarding@resend.dev>"
+      - key: RESEND_TIMEOUT
+        value: "10"
 
 
   # =========================================================================

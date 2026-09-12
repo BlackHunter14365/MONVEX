@@ -226,6 +226,7 @@ function LoginContent() {
           {/* Primary Authentication Form */}
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <AuthInput
+              id="login-identifier"
               label="Username or email"
               name="identifier"
               type="text"
@@ -238,9 +239,11 @@ function LoginContent() {
             />
 
             <PasswordField
+              id="login-password"
               label="Password"
               name="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your account password"

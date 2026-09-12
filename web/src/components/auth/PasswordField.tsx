@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, forwardRef } from 'react';
+import React, { useState, forwardRef, useId } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -13,24 +13,33 @@ export interface PasswordFieldProps extends React.InputHTMLAttributes<HTMLInputE
 export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
   (
     {
-      id = 'password',
+      id,
       label = 'Password',
       error,
       showForgotPassword = true,
       className = '',
       required = true,
       disabled,
+      autoComplete,
+      name,
       ...props
     },
     ref
   ) => {
     const [showPassword, setShowPassword] = useState(false);
-    const errorId = `${id}-error`;
+    const reactId = useId();
+    const cleanReactId = reactId.replace(/:/g, '');
+    const fieldName = name || 'password';
+    const inputId = id || (fieldName ? `${fieldName}-${cleanReactId}` : `password-${cleanReactId}`);
+    const errorId = `${inputId}-error`;
+    const computedAutoComplete =
+      autoComplete ||
+      (fieldName.toLowerCase().includes('confirm') ? 'new-password' : 'current-password');
 
     return (
       <div className="space-y-1.5 text-left w-full">
         <div className="flex items-center justify-between">
-          <label htmlFor={id} className="text-xs font-medium text-[#191522] block select-none">
+          <label htmlFor={inputId} className="text-xs font-medium text-[#191522] block select-none">
             {label}
             {required && <span className="text-[#E11D48] ml-1">*</span>}
           </label>
@@ -48,12 +57,12 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
         <div className="relative">
           <input
             ref={ref}
-            id={id}
-            name="password"
+            id={inputId}
+            name={fieldName}
             type={showPassword ? 'text' : 'password'}
             required={required}
             disabled={disabled}
-            autoComplete="current-password"
+            autoComplete={computedAutoComplete}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={error ? errorId : undefined}
             className={`w-full rounded-lg bg-white border ${

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 
 export interface AuthSelectOption {
   value: string;
@@ -15,8 +15,15 @@ export interface AuthSelectProps extends React.SelectHTMLAttributes<HTMLSelectEl
 }
 
 export const AuthSelect = forwardRef<HTMLSelectElement, AuthSelectProps>(
-  ({ id, label, options, error, helperText, className = '', required, ...props }, ref) => {
-    const selectId = id || props.name || label.toLowerCase().replace(/\s+/g, '-');
+  ({ id, label, options, error, helperText, className = '', required, name, ...props }, ref) => {
+    const autoId = useId();
+    const cleanAutoId = autoId.replace(/:/g, '');
+    const fieldName = name;
+    const selectId =
+      id ||
+      (fieldName
+        ? `${fieldName}-${cleanAutoId}`
+        : `auth-select-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${cleanAutoId}`);
     const errorId = `${selectId}-error`;
     const helperId = `${selectId}-helper`;
 
@@ -34,6 +41,7 @@ export const AuthSelect = forwardRef<HTMLSelectElement, AuthSelectProps>(
           <select
             ref={ref}
             id={selectId}
+            name={fieldName}
             required={required}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={error ? errorId : helperText ? helperId : undefined}

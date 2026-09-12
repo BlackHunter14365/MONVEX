@@ -25,6 +25,11 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
   const titleId = useId();
   const subtitleId = useId();
+  const contactFormId = useId().replace(/:/g, '');
+  const nameInputId = `contact-name-${contactFormId}`;
+  const emailInputId = `contact-email-${contactFormId}`;
+  const phoneInputId = `contact-phone-${contactFormId}`;
+  const messageInputId = `contact-message-${contactFormId}`;
   const nameInputRef = useRef<HTMLInputElement>(null);
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
@@ -228,7 +233,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
               {/* Name Field */}
               <div className="space-y-1.5">
-                <label htmlFor="contact-name" className="block text-xs font-bold text-[#191522]">
+                <label htmlFor={nameInputId} className="block text-xs font-bold text-[#191522]">
                   Name <span className="text-[#E11D48]">*</span>
                 </label>
                 <div className="relative">
@@ -237,7 +242,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                   </div>
                   <input
                     ref={nameInputRef}
-                    id="contact-name"
+                    id={nameInputId}
                     name="name"
                     type="text"
                     required
@@ -264,7 +269,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="contact-email" className="block text-xs font-bold text-[#191522]">
+                  <label htmlFor={emailInputId} className="block text-xs font-bold text-[#191522]">
                     Email <span className="text-[#E11D48]">*</span>
                   </label>
                   <div className="relative">
@@ -272,7 +277,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                       <Mail className="h-4 w-4" />
                     </div>
                     <input
-                      id="contact-email"
+                      id={emailInputId}
                       name="email"
                       type="email"
                       required
@@ -297,7 +302,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
                 {/* Phone Field */}
                 <div className="space-y-1.5">
-                  <label htmlFor="contact-phone" className="block text-xs font-bold text-[#191522]">
+                  <label htmlFor={phoneInputId} className="block text-xs font-bold text-[#191522]">
                     Phone Number <span className="text-[10px] font-normal text-[#898390]">(Optional)</span>
                   </label>
                   <div className="relative">
@@ -305,7 +310,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                       <Phone className="h-4 w-4" />
                     </div>
                     <input
-                      id="contact-phone"
+                      id={phoneInputId}
                       name="phone"
                       type="tel"
                       value={formData.phone}
@@ -330,12 +335,12 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
               {/* Message Field */}
               <div className="space-y-1.5">
-                <label htmlFor="contact-message" className="block text-xs font-bold text-[#191522]">
+                <label htmlFor={messageInputId} className="block text-xs font-bold text-[#191522]">
                   Description / Message <span className="text-[#E11D48]">*</span>
                 </label>
                 <div className="relative">
                   <textarea
-                    id="contact-message"
+                    id={messageInputId}
                     name="message"
                     rows={4}
                     required

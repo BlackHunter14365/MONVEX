@@ -339,6 +339,8 @@ export function OtpVerificationView({
           {digits.map((digit, idx) => (
             <input
               key={idx}
+              id={`otp-digit-${idx}`}
+              name={`otp-digit-${idx}`}
               ref={(el) => {
                 inputRefs.current[idx] = el;
               }}

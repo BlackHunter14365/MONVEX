@@ -8,6 +8,9 @@ interface AuthShellProps {
 }
 
 export const AuthShell: React.FC<AuthShellProps> = ({ children }) => {
+  const patternAutoId = React.useId().replace(/:/g, '');
+  const patternId = `ledger-grid-${patternAutoId}`;
+
   return (
     <div className="min-h-screen bg-[#F6F5F1] text-[#191522] flex flex-col justify-between relative overflow-x-hidden selection:bg-[#191522] selection:text-white">
       {/* =========================================================================
@@ -19,13 +22,13 @@ export const AuthShell: React.FC<AuthShellProps> = ({ children }) => {
         {/* Fine Architectural Coordinate Grid */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.35]" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="ledger-grid-pattern" width="64" height="64" patternUnits="userSpaceOnUse">
+            <pattern id={patternId} width="64" height="64" patternUnits="userSpaceOnUse">
               <path d="M 64 0 L 0 0 0 64" fill="none" stroke="#E4E2DC" strokeWidth="0.75" />
               <circle cx="64" cy="64" r="1" fill="#D6D4CD" />
               <circle cx="0" cy="0" r="1" fill="#D6D4CD" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#ledger-grid-pattern)" />
+          <rect width="100%" height="100%" fill={`url(#${patternId})`} />
         </svg>
 
         {/* Quiet Abstract Ledger Pathways (Subtle Vector Lines) */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 
 export interface AuthInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -10,8 +10,15 @@ export interface AuthInputProps extends React.InputHTMLAttributes<HTMLInputEleme
 }
 
 export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
-  ({ id, label, error, helperText, actionElement, className = '', required, ...props }, ref) => {
-    const inputId = id || props.name || label.toLowerCase().replace(/\s+/g, '-');
+  ({ id, label, error, helperText, actionElement, className = '', required, name, ...props }, ref) => {
+    const autoId = useId();
+    const cleanAutoId = autoId.replace(/:/g, '');
+    const fieldName = name;
+    const inputId =
+      id ||
+      (fieldName
+        ? `${fieldName}-${cleanAutoId}`
+        : `auth-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${cleanAutoId}`);
     const errorId = `${inputId}-error`;
     const helperId = `${inputId}-helper`;
 
@@ -32,6 +39,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           <input
             ref={ref}
             id={inputId}
+            name={fieldName}
             required={required}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={error ? errorId : helperText ? helperId : undefined}

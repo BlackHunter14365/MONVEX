@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useId } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,11 +26,11 @@ interface GoogleSignInButtonProps {
   isLoading?: boolean;
   disabled?: boolean;
   className?: string;
-  text?: 'signin_with' | 'signup_with' | 'continue_with';
-  shape?: 'pill' | 'rectangular' | 'circle';
+  text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+  shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+  width?: number | string;
+  theme?: 'outline' | 'filled_blue' | 'filled_black';
 }
-
-type GisState = 'LOADING' | 'READY' | 'ERROR';
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onSuccess,
@@ -39,9 +39,13 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   disabled = false,
   className = '',
   text = 'continue_with',
-  shape = 'pill',
+  shape = 'rectangular',
+  width,
+  theme = 'outline',
 }) => {
-  const [gisState, setGisState] = useState<GisState>('LOADING');
+  const containerAutoId = useId();
+  const containerDomId = `google-signin-btn-${containerAutoId.replace(/:/g, '')}`;
+  const [gisState, setGisState] = useState<'IDLE' | 'LOADING' | 'READY' | 'ERROR'>('IDLE');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
   const isInitializedRef = useRef<boolean>(false);
@@ -189,7 +193,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         {/* Official Google GSI Rendered Button Container (ALWAYS MOUNTED IN DOM) */}
         <div
           ref={googleBtnContainerRef}
-          id="google-signin-btn-container"
+          id={containerDomId}
           className={cn(
             'flex justify-center items-center transition-all duration-200',
             gisState === 'READY' && !isLoading && !disabled

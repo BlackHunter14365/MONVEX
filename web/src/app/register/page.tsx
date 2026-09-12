@@ -241,6 +241,7 @@ export default function RegisterPage() {
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <AuthInput
+                  id="register-username"
                   label="Username"
                   name="username"
                   type="text"
@@ -253,6 +254,7 @@ export default function RegisterPage() {
                 />
 
                 <AuthInput
+                  id="register-email"
                   label="Email address"
                   name="email"
                   type="email"
@@ -267,10 +269,12 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <PasswordField
+                  id="register-password"
                   label="Password"
                   name="password"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   showForgotPassword={false}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -279,10 +283,12 @@ export default function RegisterPage() {
                 />
 
                 <PasswordField
+                  id="register-confirm-password"
                   label="Confirm password"
                   name="confirmPassword"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   showForgotPassword={false}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -293,6 +299,7 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <AuthSelect
+                  id="register-currency"
                   label="Base currency"
                   name="currency"
                   value={currency}
@@ -302,6 +309,7 @@ export default function RegisterPage() {
                 />
 
                 <AuthInput
+                  id="register-monthly-income"
                   label="Monthly inflow"
                   name="monthlyIncome"
                   type="number"
@@ -315,9 +323,11 @@ export default function RegisterPage() {
               </div>
 
               <AuthInput
+                id="register-phone-number"
                 label="Phone number (optional)"
                 name="phoneNumber"
                 type="tel"
+                autoComplete="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+91 98765 43210"

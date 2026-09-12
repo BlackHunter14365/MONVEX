@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -24,6 +24,8 @@ export const AccountLinkDialog: React.FC<AccountLinkDialogProps> = ({
 }) => {
   const { linkGoogleAccount } = useAuth();
   const toast = useToast();
+  const rawId = useId();
+  const linkPasswordInputId = `link-pwd-${rawId.replace(/:/g, '')}`;
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -79,14 +81,17 @@ export const AccountLinkDialog: React.FC<AccountLinkDialogProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">
+            <label htmlFor={linkPasswordInputId} className="text-xs font-semibold text-[#625D69] mb-1.5 block">
               MONVEX Account Password
             </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
               <input
+                id={linkPasswordInputId}
+                name="linkPassword"
                 type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter existing password"

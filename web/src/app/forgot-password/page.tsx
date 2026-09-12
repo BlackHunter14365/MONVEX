@@ -81,6 +81,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <AuthInput
+              id="forgot-password-email"
               label="Email address"
               name="email"
               type="email"

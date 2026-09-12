@@ -15,7 +15,7 @@ def get_verification_provider() -> VerificationProvider:
     provider_name = getattr(
         settings,
         'OTP_PROVIDER',
-        os.getenv('OTP_PROVIDER', 'smtp')
+        getattr(settings, 'EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', os.getenv('EMAIL_PROVIDER', 'smtp')))
     ).strip().lower()
 
     if provider_name == 'console':

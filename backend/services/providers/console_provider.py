@@ -4,6 +4,7 @@ Strictly allowed ONLY when settings.DEBUG == True.
 Fails fast with ProviderUnavailableError if called in production.
 """
 import random
+import hashlib
 import logging
 from typing import Dict, Any, Optional
 from django.conf import settings
@@ -28,12 +29,14 @@ class ConsoleVerificationProvider(VerificationProvider):
 
         logger.info(f"[DEV DISPATCH] Verification code for {destination}: [ {otp} ]")
 
+        otp_hash = hashlib.sha256(otp.encode('utf-8')).hexdigest()
         return {
             "provider_verification_id": vid,
             "status": "pending",
             "channel": channel,
             "destination": destination,
             "provider": "console",
+            "otp_hash": otp_hash,
             "dev_code": otp # available internally to test runners
         }
 

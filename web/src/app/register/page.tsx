@@ -269,7 +269,7 @@ export default function RegisterPage() {
     setStatusMessage('');
 
     try {
-      const res = await api.checkVerification({
+      const res = await api.verifyRegisterOTP({
         verification_id: verificationId,
         code,
       });
@@ -297,7 +297,7 @@ export default function RegisterPage() {
     setStatusMessage('');
 
     try {
-      const res = await api.resendVerification(verificationId);
+      const res = await api.resendRegisterOTP(verificationId);
       if (res.success) {
         setResendCooldown(res.resend_after || 60);
         setSessionExpiresIn(600);

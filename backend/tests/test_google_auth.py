@@ -13,6 +13,7 @@ Verifies:
 """
 from decimal import Decimal
 from unittest.mock import patch
+from django.test import override_settings
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
@@ -232,6 +233,7 @@ class GoogleAuthTests(APITestCase):
         secret_ids = [t['id'] for t in results if str(t.get('id')) == str(self.secret_tx.id)]
         self.assertEqual(len(secret_ids), 0, "User A must NEVER see User B's transactions!")
 
+    @override_settings(AUTH_REQUIRE_EMAIL_VERIFICATION=False)
     def test_08_password_login_works_without_regression(self):
         """Verify normal password login continues to function with 100% stability"""
         login_url = reverse('auth_login')

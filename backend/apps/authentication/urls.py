@@ -5,10 +5,14 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView,
+    RegisterVerifyOTPView,
+    RegisterResendOTPView,
     VerificationCheckView,
     VerificationResendView,
     VerificationSendView,
     CustomLoginView,
+    LoginVerifyOTPView,
+    LoginResendOTPView,
     LogoutView,
     ProfileView,
     CurrentUserView,
@@ -18,13 +22,20 @@ from .views import (
 )
 
 urlpatterns = [
-    # Core Registration & Verification
+    # Core Registration & OTP Verification
     path('register/', RegisterView.as_view(), name='auth_register'),
+    path('register/verify-otp/', RegisterVerifyOTPView.as_view(), name='auth_register_verify_otp'),
+    path('register/resend-otp/', RegisterResendOTPView.as_view(), name='auth_register_resend_otp'),
+
+    # Two-Stage Login (Credentials + Email OTP)
+    path('login/', CustomLoginView.as_view(), name='auth_login'),
+    path('login/verify-otp/', LoginVerifyOTPView.as_view(), name='auth_login_verify_otp'),
+    path('login/resend-otp/', LoginResendOTPView.as_view(), name='auth_login_resend_otp'),
+
+    # Generic & Backward-Compatible Verification Endpoints
     path('verification/send/', VerificationSendView.as_view(), name='auth_verification_send'),
     path('verification/check/', VerificationCheckView.as_view(), name='auth_verification_check'),
     path('verification/resend/', VerificationResendView.as_view(), name='auth_verification_resend'),
-
-    # Backward-compatible aliases
     path('verify-otp/', VerificationCheckView.as_view(), name='auth_verify_otp_alias'),
     path('resend-otp/', VerificationResendView.as_view(), name='auth_resend_otp_alias'),
 
@@ -33,7 +44,6 @@ urlpatterns = [
     path('google/link/', GoogleLinkAccountView.as_view(), name='auth_google_link'),
 
     # JWT Authentication & Profiles
-    path('login/', CustomLoginView.as_view(), name='auth_login'),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', CurrentUserView.as_view(), name='auth_me'),

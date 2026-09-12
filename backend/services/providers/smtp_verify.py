@@ -1,7 +1,7 @@
 """
 Transactional SMTP / Direct Email Verification Provider
-Generates a cryptographically secure OTP, hashes it for storage, and dispatches
-a branded transactional HTML email via Django's configured email backend (Gmail, SendGrid, Amazon SES, etc.).
+Generates a cryptographically secure OTP, hashes it for database storage, and dispatches
+a branded transactional HTML email via Django's configured email backend (Gmail SMTP).
 """
 import os
 import secrets
@@ -17,67 +17,199 @@ logger = logging.getLogger('monvex.security.smtp')
 
 class SmtpVerifyProvider(VerificationProvider):
 
-    _active_tokens = {} # in-memory / session fallback for hash checks: destination -> (otp_hash, expiry)
-
     def __init__(self):
-        self.host_user = getattr(settings, 'EMAIL_HOST_USER', os.getenv('EMAIL_HOST_USER', '')).strip()
+        self.host_user = getattr(settings, 'EMAIL_HOST_USER', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com')).strip()
         self.host_password = getattr(settings, 'EMAIL_HOST_PASSWORD', os.getenv('EMAIL_HOST_PASSWORD', '')).strip()
-        self.from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'MONVEX Security <no-reply@monvex.ai>')
-
-        # Check if email credentials are configured when in production or when SMTP is selected
-        if not settings.DEBUG and not self.host_user and not self.host_password:
-            raise ProviderError(
-                code="OTP_PROVIDER_CONFIGURATION_ERROR",
-                message="SMTP email credentials (EMAIL_HOST_USER / EMAIL_HOST_PASSWORD) are not configured."
-            )
+        self.from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>').strip()
 
     def _hash_code(self, code: str) -> str:
         return hashlib.sha256(code.strip().encode('utf-8')).hexdigest()
 
     def send_code(self, destination: str, channel: str = "email", metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         dest_clean = destination.strip().lower()
-        # Generate cryptographically secure 6-digit OTP
+        meta = metadata or {}
+        purpose = meta.get('purpose', 'REGISTRATION')
+        username = meta.get('username', '').strip()
+
+        # Generate cryptographically secure 6-digit numeric OTP
         raw_otp = f"{secrets.randbelow(900000) + 100000}"
         otp_hash = self._hash_code(raw_otp)
 
-        self._active_tokens[dest_clean] = otp_hash
+        is_login = purpose == 'LOGIN'
+        subject = "MONVEX Login Verification Code" if is_login else "Verify your MONVEX account"
+        headline = "Verify Your Identity" if is_login else "Verify Your Email"
+        subhead = (
+            "Use the following verification code to authorize your MONVEX sign-in:"
+            if is_login else
+            "Use the following verification code to complete your MONVEX registration:"
+        )
+        greeting = f"Hello {username}," if username else "Hello,"
 
-        subject = f"MONVEX Security: Your Verification Passcode is {raw_otp}"
-        html_content = f"""
-<!DOCTYPE html>
-<html>
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{subject}</title>
   <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #09090b; color: #f4f4f5; margin: 0; padding: 40px 20px; }}
-    .card {{ max-width: 500px; margin: 0 auto; background-color: #18181b; border: 1px solid #27272a; border-radius: 24px; padding: 36px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }}
-    .brand {{ font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #ffffff; text-align: center; margin-bottom: 24px; }}
-    .badge {{ display: inline-block; background-color: #4f46e5; color: white; border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }}
-    .otp-box {{ background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1px solid #4338ca; border-radius: 16px; padding: 24px; text-align: center; margin: 28px 0; }}
-    .otp-code {{ font-family: monospace; font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #38bdf8; text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }}
-    .info {{ font-size: 13px; color: #a1a1aa; line-height: 1.6; text-align: center; }}
-    .footer {{ margin-top: 32px; padding-top: 20px; border-top: 1px solid #27272a; font-size: 11px; color: #71717a; text-align: center; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0B0F19;
+      color: #E2E8F0;
+      margin: 0;
+      padding: 32px 16px;
+      -webkit-font-smoothing: antialiased;
+    }}
+    .container {{
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #111827;
+      border: 1px solid #1F2937;
+      border-radius: 20px;
+      padding: 36px 28px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }}
+    .brand-header {{
+      text-align: center;
+      margin-bottom: 28px;
+    }}
+    .brand-title {{
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #FFFFFF;
+      margin: 0;
+    }}
+    .brand-subtitle {{
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #94A3B8;
+      margin-top: 4px;
+    }}
+    .badge {{
+      display: inline-block;
+      background-color: #1E293B;
+      border: 1px solid #334155;
+      color: #38BDF8;
+      border-radius: 9999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }}
+    .headline {{
+      font-size: 20px;
+      font-weight: 700;
+      color: #F8FAFC;
+      margin: 0 0 12px 0;
+      text-align: center;
+    }}
+    .greeting {{
+      font-size: 14px;
+      font-weight: 600;
+      color: #CBD5E1;
+      margin: 0 0 8px 0;
+    }}
+    .info-text {{
+      font-size: 13px;
+      line-height: 1.6;
+      color: #94A3B8;
+      margin: 0 0 24px 0;
+    }}
+    .otp-card {{
+      background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
+      border: 1px solid #3730A3;
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      margin: 24px 0;
+    }}
+    .otp-code {{
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 10px;
+      color: #38BDF8;
+      text-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+      margin: 0;
+    }}
+    .otp-caption {{
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 8px;
+      font-weight: 500;
+    }}
+    .warning-box {{
+      background-color: #181E2E;
+      border-left: 3px solid #F59E0B;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #FDE68A;
+      margin: 20px 0;
+    }}
+    .footer {{
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #1F2937;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #64748B;
+      text-align: center;
+    }}
+    .footer a {{
+      color: #38BDF8;
+      text-decoration: none;
+    }}
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">MONVEX FINANCIAL INTELLIGENCE</div>
+  <div class="container">
+    <div class="brand-header">
+      <h1 class="brand-title">MONVEX</h1>
+      <div class="brand-subtitle">Financial Intelligence Platform</div>
+    </div>
+
     <div style="text-align: center;">
-      <span class="badge">Email Verification</span>
+      <span class="badge">{purpose}</span>
     </div>
-    <p class="info">Please use the single-use passcode below to verify your email address and activate your MONVEX account.</p>
-    <div class="otp-box">
+
+    <h2 class="headline">{headline}</h2>
+    <p class="greeting">{greeting}</p>
+    <p class="info-text">{subhead}</p>
+
+    <div class="otp-card">
       <div class="otp-code">{raw_otp}</div>
+      <div class="otp-caption">One-Time Verification Passcode</div>
     </div>
-    <p class="info" style="font-size: 12px;">This passcode will expire in <strong>10 minutes</strong>. If you did not request this verification, you can safely ignore this email.</p>
+
+    <div class="warning-box">
+      <strong>Security Notice:</strong> This verification code expires in <strong>10 minutes</strong>. For your security, never share this code with anyone. MONVEX staff will never ask for your verification code.
+    </div>
+
     <div class="footer">
-      MONVEX Security Engine &bull; Automated System &bull; Please do not reply
+      This is an automated security transmission from <strong>MONVEX</strong>.<br>
+      Sent from <a href="mailto:{self.host_user}">{self.host_user}</a> &bull; Please do not reply directly to this email.
     </div>
   </div>
 </body>
-</html>
-"""
-        plain_text = strip_tags(html_content)
+</html>"""
+
+        plain_text = (
+            f"MONVEX — {headline}\n\n"
+            f"{greeting}\n\n"
+            f"{subhead}\n\n"
+            f"VERIFICATION CODE: {raw_otp}\n\n"
+            f"This code will expire in 10 minutes.\n"
+            f"For your security, never share this code with anyone.\n\n"
+            f"MONVEX Security Team\n"
+            f"Sent from: {self.host_user}\n"
+        )
 
         try:
             msg = EmailMultiAlternatives(
@@ -88,42 +220,35 @@ class SmtpVerifyProvider(VerificationProvider):
             )
             msg.attach_alternative(html_content, "text/html")
             msg.send(fail_silently=False)
-            logger.info(f"Transactional verification email dispatched successfully to {dest_clean[:3]}***")
+            logger.info(f"OTP email dispatched successfully via SMTP to {dest_clean[:2]}***")
 
             return {
                 "provider_verification_id": f"smtp_vid_{secrets.token_hex(8)}",
+                "otp_hash": otp_hash,
+                "raw_otp": raw_otp,
                 "status": "pending",
                 "channel": "email",
                 "destination": dest_clean,
                 "provider": "smtp"
             }
         except Exception as e:
-            logger.error(f"Failed to dispatch verification email via SMTP: {e}")
+            logger.error(f"Failed to dispatch verification email via SMTP to {dest_clean[:2]}***: {e}")
             raise ProviderError(
-                code="OTP_PROVIDER_ERROR",
-                message=f"Unable to send verification email via SMTP: {str(e)}"
+                code="OTP_DELIVERY_FAILED",
+                message="We couldn't send the verification code right now. Please try again in a few moments."
             )
 
     def check_code(self, destination: str, code: str, provider_verification_id: Optional[str] = None) -> Dict[str, Any]:
-        dest_clean = destination.strip().lower()
-        expected_hash = self._active_tokens.get(dest_clean)
+        """
+        Database-backed check handled by VerificationService.
+        """
         submitted_hash = self._hash_code(code)
-
-        if not expected_hash:
-            return {"approved": False, "status": "invalid", "provider_status": "not_found"}
-
-        is_approved = (submitted_hash == expected_hash)
-        if is_approved:
-            self._active_tokens.pop(dest_clean, None)
-
         return {
-            "approved": is_approved,
-            "status": "approved" if is_approved else "invalid",
-            "provider_status": "approved" if is_approved else "pending"
+            "submitted_hash": submitted_hash,
+            "provider_status": "check_delegated_to_database"
         }
 
     def cancel_verification(self, destination: str, provider_verification_id: Optional[str] = None) -> bool:
-        self._active_tokens.pop(destination.strip().lower(), None)
         return True
 
     def normalize_provider_error(self, exc: Exception) -> ProviderError:

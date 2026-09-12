@@ -227,17 +227,20 @@ CSRF_TRUSTED_ORIGINS = [
 # Gemini API Config
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
-# Email Dispatch Configuration
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+# Official MONVEX Sender Email & SMTP Configuration
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'MONVEX Security <no-reply@monvex.ai>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>')
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend' if os.getenv('EMAIL_HOST_PASSWORD') else 'django.core.mail.backends.console.EmailBackend'
+)
 
 # Managed OTP Verification Provider Configuration
-OTP_PROVIDER = os.getenv('OTP_PROVIDER', 'console' if DEBUG else 'twilio')
+OTP_PROVIDER = os.getenv('OTP_PROVIDER', 'smtp')
 OTP_CHANNEL = os.getenv('OTP_CHANNEL', 'email')
 OTP_EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 600))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', 60))
@@ -245,7 +248,7 @@ OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', 5))
 OTP_MAX_RESENDS = int(os.getenv('OTP_MAX_RESENDS', 5))
 
 # Authentication & Verification Policy Flags
-AUTH_REQUIRE_EMAIL_VERIFICATION = os.getenv('AUTH_REQUIRE_EMAIL_VERIFICATION', 'false').lower() == 'true'
+AUTH_REQUIRE_EMAIL_VERIFICATION = os.getenv('AUTH_REQUIRE_EMAIL_VERIFICATION', 'true').lower() in ('true', '1', 'yes')
 
 # Twilio Verify Settings
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')

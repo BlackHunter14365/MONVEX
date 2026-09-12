@@ -47,6 +47,8 @@ class Profile(models.Model):
 
 class VerificationSession(models.Model):
     PURPOSE_CHOICES = [
+        ('REGISTRATION', 'Registration'),
+        ('LOGIN', 'Login'),
         ('EMAIL_SIGNUP', 'Email Signup'),
         ('PASSWORD_RESET', 'Password Reset'),
         ('EMAIL_CHANGE', 'Email Change'),
@@ -66,18 +68,22 @@ class VerificationSession(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_sessions', null=True, blank=True)
-    purpose = models.CharField(max_length=32, choices=PURPOSE_CHOICES, default='EMAIL_SIGNUP')
+    purpose = models.CharField(max_length=32, choices=PURPOSE_CHOICES, default='REGISTRATION')
     channel = models.CharField(max_length=16, choices=CHANNEL_CHOICES, default='EMAIL')
     destination = models.CharField(max_length=255) # normalized email or phone
-    provider = models.CharField(max_length=32, default='twilio')
+    otp_hash = models.CharField(max_length=64, blank=True, default='', db_index=True) # SHA-256 hash
+    provider = models.CharField(max_length=32, default='smtp')
     provider_verification_id = models.CharField(max_length=255, blank=True, default='')
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='PENDING')
     attempt_count = models.PositiveIntegerField(default=0)
+    max_attempts = models.PositiveIntegerField(default=5)
     resend_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     last_sent_at = models.DateTimeField()
     verified_at = models.DateTimeField(null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    invalidated_at = models.DateTimeField(null=True, blank=True)
     last_attempt_at = models.DateTimeField(null=True, blank=True)
     ip_address_hash = models.CharField(max_length=64, blank=True, default='')
     user_agent_hash = models.CharField(max_length=64, blank=True, default='')
@@ -88,7 +94,9 @@ class VerificationSession(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['destination', 'status']),
+            models.Index(fields=['destination', 'purpose', 'status']),
             models.Index(fields=['user', 'purpose', 'status']),
+            models.Index(fields=['expires_at']),
         ]
 
     def is_expired(self) -> bool:
@@ -100,7 +108,7 @@ class VerificationSession(models.Model):
         return max(0, remaining)
 
     def __str__(self):
-        return f"VerificationSession {self.id} for {self.destination} [{self.status}]"
+        return f"VerificationSession {self.id} for {self.destination} [{self.purpose}:{self.status}]"
 
 class EmailDispatch(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -109,7 +117,7 @@ class EmailDispatch(models.Model):
     subject = models.CharField(max_length=255)
     body_text = models.TextField()
     body_html = models.TextField()
-    otp_code = models.CharField(max_length=6)
+    otp_code = models.CharField(max_length=64, blank=True, default='') # Deprecated; stores hash only if populated
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

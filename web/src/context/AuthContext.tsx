@@ -37,7 +37,9 @@ interface AuthContextType {
   isLoading: boolean;
   sessionExpiredReason: SessionExpiredReason | null;
   clearSessionExpiredReason: () => void;
-  login: (credentials: any) => Promise<void>;
+  login: (credentials: any) => Promise<any>;
+  verifyLoginOTP: (payload: { verification_id: string; code: string }) => Promise<any>;
+  resendLoginOTP: (verification_id: string) => Promise<any>;
   loginWithGoogle: (credential: string) => Promise<any>;
   linkGoogleAccount: (payload: { credential: string; password: string }) => Promise<any>;
   register: (userData: any) => Promise<any>;
@@ -170,10 +172,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (credentials: any) => {
     queryClient.clear();
-    await api.login(credentials);
-    authStorage.clearSessionExpiredReason();
-    setSessionExpiredReasonState(null);
-    await refreshUser();
+    const res = await api.login(credentials);
+    if (res.access) {
+      authStorage.clearSessionExpiredReason();
+      setSessionExpiredReasonState(null);
+      await refreshUser();
+    }
+    return res;
+  };
+
+  const verifyLoginOTP = async (payload: { verification_id: string; code: string }) => {
+    queryClient.clear();
+    const res = await api.verifyLoginOTP(payload);
+    const access = res.access || res.data?.access;
+    if (access) {
+      authStorage.clearSessionExpiredReason();
+      setSessionExpiredReasonState(null);
+      await refreshUser();
+    }
+    return res;
+  };
+
+  const resendLoginOTP = async (verification_id: string) => {
+    return api.resendLoginOTP(verification_id);
   };
 
   const loginWithGoogle = async (credential: string) => {
@@ -239,6 +260,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sessionExpiredReason,
         clearSessionExpiredReason,
         login,
+        verifyLoginOTP,
+        resendLoginOTP,
         loginWithGoogle,
         linkGoogleAccount,
         register,

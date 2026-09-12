@@ -49,7 +49,7 @@ class RegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', False)
+        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
 
         if not require_otp:
             refresh = RefreshToken.for_user(user)
@@ -67,7 +67,7 @@ class RegisterView(APIView):
             verification_resp = VerificationService.start_email_verification(
                 user=user,
                 email=user.email,
-                purpose="EMAIL_SIGNUP",
+                purpose="REGISTRATION",
                 channel="EMAIL",
                 request_context=ctx
             )
@@ -78,6 +78,85 @@ class RegisterView(APIView):
                 "code": pe.code,
                 "message": pe.message
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+
+class RegisterVerifyOTPView(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = VerificationCheckSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        vid = str(serializer.validated_data['verification_id'])
+        code = str(serializer.validated_data['code'])
+        ctx = get_client_context(request)
+
+        try:
+            result = VerificationService.check_email_verification(
+                verification_id=vid,
+                code=code,
+                purpose="REGISTRATION",
+                request_context=ctx
+            )
+        except ProviderError as pe:
+            return Response({
+                "success": False,
+                "code": pe.code,
+                "message": pe.message
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+
+        if not result.get('success', False):
+            code_type = result.get('code')
+            if code_type in ['TOO_MANY_ATTEMPTS', 'RESEND_LIMIT']:
+                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            elif code_type == 'VERIFICATION_NOT_FOUND':
+                return Response(result, status=status.HTTP_404_NOT_FOUND)
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        # Flatten token fields for direct client access
+        data_payload = result.get('data', {})
+        response_data = {
+            "success": True,
+            "message": result.get("message", "Email verified successfully."),
+            "access": data_payload.get("access"),
+            "refresh": data_payload.get("refresh"),
+            "user": data_payload.get("user"),
+            "data": data_payload
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class RegisterResendOTPView(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = VerificationResendSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        vid = str(serializer.validated_data['verification_id'])
+        ctx = get_client_context(request)
+
+        try:
+            result = VerificationService.resend_email_verification(
+                verification_id=vid,
+                purpose="REGISTRATION",
+                request_context=ctx
+            )
+        except ProviderError as pe:
+            return Response({
+                "success": False,
+                "code": pe.code,
+                "message": pe.message
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+
+        if not result.get('success', False):
+            if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:
+                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            elif result.get('code') == 'VERIFICATION_NOT_FOUND':
+                return Response(result, status=status.HTTP_404_NOT_FOUND)
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(result, status=status.HTTP_200_OK)
 
 class VerificationCheckView(APIView):
     authentication_classes = []
@@ -124,7 +203,16 @@ class VerificationCheckView(APIView):
                 return Response(result, status=status.HTTP_404_NOT_FOUND)
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(result, status=status.HTTP_200_OK)
+        data_payload = result.get('data', {})
+        response_data = {
+            "success": True,
+            "message": result.get("message", "Verification successful."),
+            "access": data_payload.get("access"),
+            "refresh": data_payload.get("refresh"),
+            "user": data_payload.get("user"),
+            "data": data_payload
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
 
 class VerificationResendView(APIView):
     authentication_classes = []
@@ -183,7 +271,7 @@ class VerificationSendView(APIView):
             result = VerificationService.start_email_verification(
                 user=user,
                 email=email,
-                purpose="EMAIL_SIGNUP",
+                purpose="REGISTRATION",
                 channel="EMAIL",
                 request_context=ctx
             )
@@ -195,66 +283,175 @@ class VerificationSendView(APIView):
                 "message": pe.message
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
 
-class CustomTokenObtainPairSerializer(serializers.Serializer):
-    username = serializers.CharField(required=False, allow_blank=True)
-    identifier = serializers.CharField(required=False, allow_blank=True)
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, attrs):
-        identifier = attrs.get('identifier') or attrs.get('username') or ''
-        identifier = identifier.strip()
-        password = attrs.get('password', '')
-
-        if not identifier or not password:
-            raise serializers.ValidationError({
-                "success": False,
-                "code": "INVALID_CREDENTIALS",
-                "message": "Invalid username/email or password."
-            })
-
-        user = User.objects.filter(Q(username__iexact=identifier) | Q(email__iexact=identifier)).first()
-        if not user or not user.check_password(password):
-            raise serializers.ValidationError({
-                "success": False,
-                "code": "INVALID_CREDENTIALS",
-                "message": "Invalid username/email or password."
-            })
-
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', False)
-        profile = getattr(user, 'profile', None)
-
-        if require_otp:
-            if not user.is_active or not profile or not profile.email_verified or profile.status == 'PENDING_VERIFICATION':
-                raise serializers.ValidationError({
-                    "success": False,
-                    "code": "ACCOUNT_NOT_VERIFIED",
-                    "message": "Your account requires email verification before signing in.",
-                    "email": user.email
-                })
-        else:
-            if not user.is_active:
-                raise serializers.ValidationError({
-                    "success": False,
-                    "code": "ACCOUNT_DISABLED",
-                    "message": "This account is disabled. Please contact support."
-                })
-
-        refresh = RefreshToken.for_user(user)
-        return {
-            "success": True,
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": UserSerializer(user).data
-        }
-
 class CustomLoginView(APIView):
+    """
+    Two-Stage Login View:
+    Stage 1: Validates credentials.
+    - If AUTH_REQUIRE_EMAIL_VERIFICATION is enabled:
+      Dispatches a 6-digit LOGIN OTP to user's registered email address and returns { requires_otp: true, verification_id: ... }.
+    - If disabled: Issues JWT tokens directly.
+    """
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = CustomTokenObtainPairSerializer(data=request.data)
+        identifier = (request.data.get('identifier') or request.data.get('username') or request.data.get('email') or '').strip()
+        password = request.data.get('password', '')
+
+        if not identifier or not password:
+            return Response({
+                "success": False,
+                "code": "INVALID_CREDENTIALS",
+                "message": "Invalid username/email or password."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(Q(username__iexact=identifier) | Q(email__iexact=identifier)).first()
+        if not user or not user.check_password(password):
+            return Response({
+                "success": False,
+                "code": "INVALID_CREDENTIALS",
+                "message": "Invalid username/email or password."
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        profile = getattr(user, 'profile', None)
+        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
+
+        if require_otp:
+            # Check if user account was never verified at registration
+            if not user.is_active or (profile and not profile.email_verified and profile.status == 'PENDING_VERIFICATION'):
+                return Response({
+                    "success": False,
+                    "code": "ACCOUNT_NOT_VERIFIED",
+                    "message": "Your account requires email verification before signing in.",
+                    "email": user.email
+                }, status=status.HTTP_403_FORBIDDEN)
+
+            # Stage 1: Send LOGIN OTP
+            ctx = get_client_context(request)
+            try:
+                otp_resp = VerificationService.start_email_verification(
+                    user=user,
+                    email=user.email,
+                    purpose="LOGIN",
+                    channel="EMAIL",
+                    request_context=ctx
+                )
+                return Response({
+                    "success": True,
+                    "requires_otp": True,
+                    "verification_id": otp_resp["verification_id"],
+                    "email_masked": otp_resp["email_masked"],
+                    "expires_in": otp_resp["expires_in"],
+                    "resend_after": otp_resp["resend_after"],
+                    "message": "Verification code sent to your email."
+                }, status=status.HTTP_200_OK)
+            except ProviderError as pe:
+                return Response({
+                    "success": False,
+                    "code": pe.code,
+                    "message": pe.message
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+        else:
+            if not user.is_active:
+                return Response({
+                    "success": False,
+                    "code": "ACCOUNT_DISABLED",
+                    "message": "This account is disabled. Please contact support."
+                }, status=status.HTTP_403_FORBIDDEN)
+
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "success": True,
+                "requires_otp": False,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+
+class LoginVerifyOTPView(APIView):
+    """
+    Two-Stage Login View:
+    Stage 2: Verifies LOGIN OTP and issues JWT access and refresh tokens.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = VerificationCheckSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+        vid = str(serializer.validated_data['verification_id'])
+        code = str(serializer.validated_data['code'])
+        ctx = get_client_context(request)
+
+        try:
+            result = VerificationService.check_email_verification(
+                verification_id=vid,
+                code=code,
+                purpose="LOGIN",
+                request_context=ctx
+            )
+        except ProviderError as pe:
+            return Response({
+                "success": False,
+                "code": pe.code,
+                "message": pe.message
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+
+        if not result.get('success', False):
+            code_type = result.get('code')
+            if code_type in ['TOO_MANY_ATTEMPTS', 'RESEND_LIMIT']:
+                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            elif code_type == 'VERIFICATION_NOT_FOUND':
+                return Response(result, status=status.HTTP_404_NOT_FOUND)
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        data_payload = result.get('data', {})
+        response_data = {
+            "success": True,
+            "message": result.get("message", "Login successful."),
+            "access": data_payload.get("access"),
+            "refresh": data_payload.get("refresh"),
+            "user": data_payload.get("user"),
+            "data": data_payload
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class LoginResendOTPView(APIView):
+    """
+    Two-Stage Login: Resends LOGIN OTP with cooldown enforcement.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = VerificationResendSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        vid = str(serializer.validated_data['verification_id'])
+        ctx = get_client_context(request)
+
+        try:
+            result = VerificationService.resend_email_verification(
+                verification_id=vid,
+                purpose="LOGIN",
+                request_context=ctx
+            )
+        except ProviderError as pe:
+            return Response({
+                "success": False,
+                "code": pe.code,
+                "message": pe.message
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+
+        if not result.get('success', False):
+            if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:
+                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            elif result.get('code') == 'VERIFICATION_NOT_FOUND':
+                return Response(result, status=status.HTTP_404_NOT_FOUND)
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(result, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):
     authentication_classes = []

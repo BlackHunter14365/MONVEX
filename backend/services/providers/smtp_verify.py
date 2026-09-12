@@ -9,7 +9,7 @@ import logging
 import hashlib
 from typing import Dict, Any, Optional
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.utils.html import strip_tags
 from .base import VerificationProvider, ProviderError, ProviderUnavailableError
 
@@ -19,7 +19,8 @@ class SmtpVerifyProvider(VerificationProvider):
 
     def __init__(self):
         self.host_user = getattr(settings, 'EMAIL_HOST_USER', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com')).strip()
-        self.host_password = getattr(settings, 'EMAIL_HOST_PASSWORD', os.getenv('EMAIL_HOST_PASSWORD', '')).strip()
+        raw_pwd = getattr(settings, 'EMAIL_HOST_PASSWORD', os.getenv('EMAIL_HOST_PASSWORD', '')).strip().strip('\'"')
+        self.host_password = raw_pwd.replace(' ', '')
         self.from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>').strip()
 
     def _hash_code(self, code: str) -> str:
@@ -211,32 +212,70 @@ class SmtpVerifyProvider(VerificationProvider):
             f"Sent from: {self.host_user}\n"
         )
 
-        try:
-            msg = EmailMultiAlternatives(
-                subject=subject,
-                body=plain_text,
-                from_email=self.from_email,
-                to=[dest_clean]
-            )
-            msg.attach_alternative(html_content, "text/html")
-            msg.send(fail_silently=False)
-            logger.info(f"OTP email dispatched successfully via SMTP to {dest_clean[:2]}***")
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_text,
+            from_email=self.from_email,
+            to=[dest_clean]
+        )
+        msg.attach_alternative(html_content, "text/html")
 
-            return {
-                "provider_verification_id": f"smtp_vid_{secrets.token_hex(8)}",
-                "otp_hash": otp_hash,
-                "raw_otp": raw_otp,
-                "status": "pending",
-                "channel": "email",
-                "destination": dest_clean,
-                "provider": "smtp"
-            }
-        except Exception as e:
-            logger.error(f"Failed to dispatch verification email via SMTP to {dest_clean[:2]}***: {e}")
-            raise ProviderError(
-                code="OTP_DELIVERY_FAILED",
-                message="We couldn't send the verification code right now. Please try again in a few moments."
+        # Dual-attempt delivery with automatic port/protocol fallback
+        primary_port = getattr(settings, 'EMAIL_PORT', 465)
+        sent = False
+        primary_error = None
+
+        try:
+            msg.send(fail_silently=False)
+            sent = True
+            logger.info(f"OTP email dispatched successfully via primary SMTP (port {primary_port}) to {dest_clean[:2]}***")
+        except Exception as pe:
+            primary_error = pe
+            logger.warning(
+                f"Primary SMTP dispatch on port {primary_port} failed ({pe}). Attempting alternate port fallback..."
             )
+
+        if not sent:
+            # Fallback: if primary was 465 (SSL), try 587 (TLS); if primary was 587 (TLS), try 465 (SSL)
+            fallback_port = 587 if primary_port == 465 else 465
+            fallback_ssl = (fallback_port == 465)
+            fallback_tls = (fallback_port == 587)
+            try:
+                fallback_conn = get_connection(
+                    backend='django.core.mail.backends.smtp.EmailBackend',
+                    host=getattr(settings, 'EMAIL_HOST', 'smtp.gmail.com'),
+                    port=fallback_port,
+                    username=self.host_user,
+                    password=self.host_password,
+                    use_ssl=fallback_ssl,
+                    use_tls=fallback_tls,
+                    timeout=8,
+                    fail_silently=False
+                )
+                msg.connection = fallback_conn
+                msg.send(fail_silently=False)
+                sent = True
+                logger.info(f"OTP email dispatched successfully via fallback SMTP (port {fallback_port}) to {dest_clean[:2]}***")
+            except Exception as fe:
+                logger.error(
+                    f"All SMTP dispatch attempts failed for {dest_clean[:2]}***: "
+                    f"Primary (port {primary_port}): {primary_error} | Fallback (port {fallback_port}): {fe}",
+                    exc_info=True
+                )
+                raise ProviderError(
+                    code="OTP_DELIVERY_FAILED",
+                    message="We couldn't send the verification code to your email address right now. Please try again in a few moments."
+                )
+
+        return {
+            "provider_verification_id": f"smtp_vid_{secrets.token_hex(8)}",
+            "otp_hash": otp_hash,
+            "raw_otp": raw_otp,
+            "status": "pending",
+            "channel": "email",
+            "destination": dest_clean,
+            "provider": "smtp"
+        }
 
     def check_code(self, destination: str, code: str, provider_verification_id: Optional[str] = None) -> Dict[str, Any]:
         """

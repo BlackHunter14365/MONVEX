@@ -45,6 +45,20 @@ def get_client_context(request):
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     return {'ip': ip, 'user_agent': user_agent}
 
+def provider_error_response(pe: ProviderError) -> Response:
+    """
+    Maps verification provider failures to appropriate HTTP status codes:
+    - 503 Service Unavailable for transport/infrastructure failures (delivery failed, provider unavailable, provider error)
+    - 400 Bad Request for client-side semantic issues (invalid recipient format, etc.)
+    """
+    service_down_codes = {'PROVIDER_UNAVAILABLE', 'OTP_DELIVERY_FAILED', 'OTP_PROVIDER_ERROR'}
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE if pe.code in service_down_codes else status.HTTP_400_BAD_REQUEST
+    return Response({
+        "success": False,
+        "code": pe.code,
+        "message": pe.message
+    }, status=status_code)
+
 class RegisterView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
@@ -88,11 +102,7 @@ class RegisterView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         except ProviderError as pe:
             logger.error(f"Registration OTP dispatch failed: {pe.code} - {pe.message}")
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+            return provider_error_response(pe)
         except Exception as exc:
             logger.error(f"Unexpected registration exception: {str(exc)}", exc_info=True)
             return Response({
@@ -122,11 +132,7 @@ class RegisterVerifyOTPView(APIView):
                 request_context=ctx
             )
         except ProviderError as pe:
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+            return provider_error_response(pe)
 
         if not result.get('success', False):
             code_type = result.get('code')
@@ -166,11 +172,7 @@ class RegisterResendOTPView(APIView):
                 request_context=ctx
             )
         except ProviderError as pe:
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+            return provider_error_response(pe)
 
         if not result.get('success', False):
             if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:
@@ -212,11 +214,7 @@ class VerificationCheckView(APIView):
                 request_context=ctx
             )
         except ProviderError as pe:
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+            return provider_error_response(pe)
 
         if not result.get('success', False):
             code_type = result.get('code')
@@ -402,11 +400,7 @@ class CustomLoginView(APIView):
                         "message": "Your account requires email verification before signing in. We've sent a 6-digit code to your email."
                     }, status=status.HTTP_200_OK)
                 except ProviderError as pe:
-                    return Response({
-                        "success": False,
-                        "code": pe.code,
-                        "message": pe.message
-                    }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+                    return provider_error_response(pe)
 
             # Stage 1: Send LOGIN OTP
             ctx = get_client_context(request)
@@ -429,11 +423,7 @@ class CustomLoginView(APIView):
                     "message": "Verification code sent to your email."
                 }, status=status.HTTP_200_OK)
             except ProviderError as pe:
-                return Response({
-                    "success": False,
-                    "code": pe.code,
-                    "message": pe.message
-                }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+                return provider_error_response(pe)
         else:
             if not user.is_active:
                 return Response({
@@ -527,11 +517,7 @@ class LoginResendOTPView(APIView):
                 request_context=ctx
             )
         except ProviderError as pe:
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+            return provider_error_response(pe)
 
         if not result.get('success', False):
             if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:

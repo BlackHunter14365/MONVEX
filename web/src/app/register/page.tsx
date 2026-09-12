@@ -81,6 +81,7 @@ export default function RegisterPage() {
   const [resendCooldown, setResendCooldown] = useState(60);
   const [sessionExpiresIn, setSessionExpiresIn] = useState(600);
   const [statusMessage, setStatusMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Restore active registration verification session on refresh or revisit
   useEffect(() => {
@@ -108,14 +109,19 @@ export default function RegisterPage() {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage('');
+    setFieldErrors({});
 
     if (password !== confirmPassword) {
-      setStatusMessage('Passwords do not match.');
+      const msg = 'Passwords do not match.';
+      setStatusMessage(msg);
+      setFieldErrors({ confirmPassword: msg });
       return;
     }
 
     if (password.length < 8) {
-      setStatusMessage('Password must be at least 8 characters long.');
+      const msg = 'Password must be at least 8 characters long.';
+      setStatusMessage(msg);
+      setFieldErrors({ password: msg });
       return;
     }
 
@@ -190,6 +196,25 @@ export default function RegisterPage() {
       }
 
       setUiState('SERVER_ERROR');
+
+      // Extract field-level errors from DRF custom_exception_handler format
+      const extracted: Record<string, string> = {};
+      const rawDetails = err.data?.error?.details || err.data?.details;
+      if (rawDetails && typeof rawDetails === 'object' && !Array.isArray(rawDetails)) {
+        for (const [key, val] of Object.entries(rawDetails)) {
+          const text = Array.isArray(val) ? val.join(' ') : String(val);
+          extracted[key] = text;
+        }
+        setFieldErrors(extracted);
+      }
+
+      // If this was an account conflict (IntegrityError or duplicate check)
+      if (err.data?.code === 'USER_ALREADY_EXISTS') {
+        extracted['username'] = extracted['username'] || 'This username or email may already be in use.';
+        extracted['email'] = extracted['email'] || 'This email or username may already be in use.';
+        setFieldErrors(extracted);
+      }
+
       setStatusMessage(err.message || 'Registration failed. Please review your credentials.');
     }
   };
@@ -248,7 +273,11 @@ export default function RegisterPage() {
                   required
                   autoComplete="username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (fieldErrors.username) setFieldErrors(prev => ({ ...prev, username: '' }));
+                  }}
+                  error={fieldErrors.username}
                   placeholder="e.g. alex"
                   disabled={uiState === 'SENDING'}
                 />
@@ -261,7 +290,11 @@ export default function RegisterPage() {
                   required
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+                  }}
+                  error={fieldErrors.email}
                   placeholder="alex@example.com"
                   disabled={uiState === 'SENDING'}
                 />
@@ -277,7 +310,11 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   showForgotPassword={false}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+                  }}
+                  error={fieldErrors.password}
                   placeholder="Minimum 8 characters"
                   disabled={uiState === 'SENDING'}
                 />
@@ -291,7 +328,13 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   showForgotPassword={false}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (fieldErrors.confirmPassword || fieldErrors.confirm_password) {
+                      setFieldErrors(prev => ({ ...prev, confirmPassword: '', confirm_password: '' }));
+                    }
+                  }}
+                  error={fieldErrors.confirmPassword || fieldErrors.confirm_password}
                   placeholder="Repeat password"
                   disabled={uiState === 'SENDING'}
                 />
@@ -303,7 +346,11 @@ export default function RegisterPage() {
                   label="Base currency"
                   name="currency"
                   value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
+                  onChange={(e) => {
+                    setCurrency(e.target.value);
+                    if (fieldErrors.currency) setFieldErrors(prev => ({ ...prev, currency: '' }));
+                  }}
+                  error={fieldErrors.currency}
                   options={CURRENCY_OPTIONS}
                   disabled={uiState === 'SENDING'}
                 />
@@ -316,7 +363,13 @@ export default function RegisterPage() {
                   step="1000"
                   required
                   value={monthlyIncome}
-                  onChange={(e) => setMonthlyIncome(e.target.value)}
+                  onChange={(e) => {
+                    setMonthlyIncome(e.target.value);
+                    if (fieldErrors.monthly_income || fieldErrors.monthlyIncome) {
+                      setFieldErrors(prev => ({ ...prev, monthly_income: '', monthlyIncome: '' }));
+                    }
+                  }}
+                  error={fieldErrors.monthly_income || fieldErrors.monthlyIncome}
                   placeholder="75000"
                   disabled={uiState === 'SENDING'}
                 />
@@ -329,7 +382,13 @@ export default function RegisterPage() {
                 type="tel"
                 autoComplete="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  if (fieldErrors.phone_number || fieldErrors.phoneNumber) {
+                    setFieldErrors(prev => ({ ...prev, phone_number: '', phoneNumber: '' }));
+                  }
+                }}
+                error={fieldErrors.phone_number || fieldErrors.phoneNumber}
                 placeholder="+91 98765 43210"
                 disabled={uiState === 'SENDING'}
               />

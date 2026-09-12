@@ -44,9 +44,13 @@ services:
       - key: EMAIL_HOST
         value: "smtp.gmail.com"
       - key: EMAIL_PORT
-        value: "587"
-      - key: EMAIL_USE_TLS
+        value: "465"
+      - key: EMAIL_USE_SSL
         value: "True"
+      - key: EMAIL_USE_TLS
+        value: "False"
+      - key: EMAIL_TIMEOUT
+        value: "10"
       - key: EMAIL_HOST_USER
         value: "monvexfinance@gmail.com"
       - key: EMAIL_HOST_PASSWORD

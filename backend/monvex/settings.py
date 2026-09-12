@@ -263,11 +263,36 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 # Official MONVEX Sender Email & SMTP Configuration
 EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', 'smtp')).strip().lower()
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
+
+# Automatic SSL/TLS protocol resolution with mutual exclusivity enforcement
+_raw_ssl = os.getenv('EMAIL_USE_SSL')
+_raw_tls = os.getenv('EMAIL_USE_TLS')
+
+if _raw_ssl is not None:
+    EMAIL_USE_SSL = _raw_ssl.lower() in ('true', '1', 'yes')
+    EMAIL_USE_TLS = False if EMAIL_USE_SSL else (_raw_tls.lower() in ('true', '1', 'yes') if _raw_tls is not None else False)
+elif _raw_tls is not None:
+    EMAIL_USE_TLS = _raw_tls.lower() in ('true', '1', 'yes')
+    EMAIL_USE_SSL = False if EMAIL_USE_TLS else False
+else:
+    # Port 465 is SMTPS (SSL); Port 587 is STARTTLS (TLS)
+    EMAIL_USE_SSL = (EMAIL_PORT == 465)
+    EMAIL_USE_TLS = (EMAIL_PORT == 587)
+
+# Strictly ensure mutual exclusivity to avoid Django backend ValueError
+if EMAIL_USE_SSL and EMAIL_USE_TLS:
+    if EMAIL_PORT == 465:
+        EMAIL_USE_TLS = False
+    else:
+        EMAIL_USE_SSL = False
+
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com').strip().strip('\'"')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
-EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
+# Sanitize Google App Password: strip quotes, leading/trailing whitespace, and internal spaces
+_raw_email_pwd = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
+EMAIL_HOST_PASSWORD = _raw_email_pwd.replace(' ', '') if _raw_email_pwd else ''
+
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 10))
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>')
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com'))
 EMAIL_BACKEND = os.getenv(
@@ -285,7 +310,9 @@ if not DEBUG:
             "OTP dispatches will fail until EMAIL_HOST_PASSWORD is set."
         )
     else:
-        _config_logger.info("Production SMTP configured with user: monvexfinance@gmail.com")
+        _config_logger.info(
+            f"Production SMTP configured with user: monvexfinance@gmail.com (port={EMAIL_PORT}, ssl={EMAIL_USE_SSL}, tls={EMAIL_USE_TLS})"
+        )
 
 # Managed OTP Verification Provider Configuration
 OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER)

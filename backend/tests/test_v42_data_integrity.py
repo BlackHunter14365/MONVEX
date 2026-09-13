@@ -42,7 +42,7 @@ from services.finance_service import FinanceService
 from services.forecast_service import ForecastService
 
 
-@override_settings(AUTH_REQUIRE_EMAIL_VERIFICATION=False, OTP_PROVIDER='console', DEBUG=True)
+@override_settings(DEBUG=True)
 class V42FinancialDataIntegrityTestSuite(TestCase):
 
     def setUp(self):

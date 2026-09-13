@@ -10,7 +10,7 @@ from apps.budgets.models import Budget
 from apps.goals.models import SavingsGoal
 from django.test import override_settings
 
-@override_settings(AUTH_REQUIRE_EMAIL_VERIFICATION=False, OTP_PROVIDER='console', DEBUG=True)
+@override_settings(DEBUG=True)
 class APITestCaseSuite(APITestCase):
 
     def setUp(self):

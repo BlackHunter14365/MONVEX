@@ -37,16 +37,30 @@ services:
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_PROVIDER
-        value: "resend"
+        value: "smtp"
       - key: OTP_PROVIDER
-        value: "resend"
-      - key: RESEND_API_KEY
+        value: "smtp"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "465"
+      - key: EMAIL_USE_SSL
+        value: "True"
+      - key: EMAIL_USE_TLS
+        value: "False"
+      - key: EMAIL_HOST_USER
         sync: false
-      - key: RESEND_FROM_EMAIL
-        value: "MONVEX <onboarding@resend.dev>"
-      - key: RESEND_TIMEOUT
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_TIMEOUT
         value: "10"
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: SERVER_EMAIL
+        sync: false
 
 
   # =========================================================================

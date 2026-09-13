@@ -19,8 +19,8 @@ class CoreServicesTestCase(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username='alex_monvex',
-            email='alex@example.com',
+            username='alex_monvex_core',
+            email='alex_core@example.com',
             password='Password123!'
         )
         self.user.profile.monthly_income = Decimal('75000.00')

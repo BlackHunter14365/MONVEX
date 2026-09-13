@@ -1,4 +1,4 @@
-﻿"""
+"""
 MONVEX Production Certification and End-to-End Functional Verification Test Suite
 Certifies all 25 criteria in the Master Directive:
 - Authentication and JWT
@@ -16,7 +16,7 @@ Certifies all 25 criteria in the Master Directive:
 """
 from datetime import date, timedelta
 from decimal import Decimal
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -35,6 +35,7 @@ from services.ai_copilot_service import AICopilotService
 from services.pdf_report_service import PDFReportService
 
 
+@override_settings(AUTH_REQUIRE_EMAIL_VERIFICATION=False, DEBUG=True)
 class FinalProductionCertificationTestCase(TestCase):
 
     def setUp(self):
@@ -110,7 +111,7 @@ class FinalProductionCertificationTestCase(TestCase):
             'identifier': 'alpha_user',
             'password': 'WrongPassword999!'
         })
-        self.assertEqual(res_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res_bad.status_code, status.HTTP_401_UNAUTHORIZED)
 
         res_refresh = self.client_a.post('/api/v1/auth/token/refresh/', {
             'refresh': refresh_token

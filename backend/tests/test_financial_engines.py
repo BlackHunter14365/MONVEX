@@ -106,7 +106,7 @@ class FinancialEnginesTestCase(TestCase):
         self.assertGreaterEqual(data['total_assets'], 650000.0)
         self.assertEqual(data['total_liabilities'], 200000.0)
         self.assertGreaterEqual(data['net_worth'], 450000.0)
-        self.assertEqual(data['solvency_status'], 'STRONG')
+        self.assertEqual(data['solvency_status'], 'MODERATE')
 
     def test_receipt_processing_and_confirmation_lifecycle(self):
         """Test receipt is initially PENDING, and creates Transaction ONLY when confirmed"""

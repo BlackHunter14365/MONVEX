@@ -23,13 +23,14 @@ class ConsoleVerificationProvider(VerificationProvider):
         logger.warning("[SECURITY NOTICE] Running ConsoleVerificationProvider in DEBUG mode. Do not use in production.")
 
     def send_code(self, destination: str, channel: str = "email", metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        otp = str(random.randint(100000, 999999))
+        meta = metadata or {}
+        otp = meta.get('raw_otp') or str(random.randint(100000, 999999))
         self._dev_store[destination.strip().lower()] = otp
         vid = f"console_vid_{random.randint(1000, 9999)}"
 
         logger.info(f"[DEV DISPATCH] Verification code for {destination}: [ {otp} ]")
 
-        otp_hash = hashlib.sha256(otp.encode('utf-8')).hexdigest()
+        otp_hash = meta.get('otp_hash') or hashlib.sha256(otp.encode('utf-8')).hexdigest()
         return {
             "provider_verification_id": vid,
             "status": "pending",

@@ -260,22 +260,12 @@ CSRF_TRUSTED_ORIGINS = list(
 # Gemini API Config
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
-# Email & OTP Delivery Architecture
-EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', os.getenv('OTP_PROVIDER', 'resend')).strip().lower()
-if EMAIL_PROVIDER == 'email':
-    EMAIL_PROVIDER = 'resend'
+# Email & OTP Delivery Architecture — SMTP-First Engine
+EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'smtp').strip().lower()
 OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER).strip().lower()
-if OTP_PROVIDER == 'email':
-    OTP_PROVIDER = 'resend'
 
-# Resend HTTPS Email API Configuration (Production Default)
-RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip().strip('\'"')
-RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', 'MONVEX <onboarding@resend.dev>').strip()
-RESEND_API_URL = os.getenv('RESEND_API_URL', 'https://api.resend.com/emails').strip()
-RESEND_TIMEOUT = int(os.getenv('RESEND_TIMEOUT', 10))
-
-# Secondary / Local Development SMTP Configuration
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+# Primary Production SMTP Configuration
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
 
 # Automatic SSL/TLS protocol resolution with mutual exclusivity enforcement
@@ -306,37 +296,27 @@ _raw_email_pwd = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
 EMAIL_HOST_PASSWORD = _raw_email_pwd.replace(' ', '') if _raw_email_pwd else ''
 
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 10))
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', RESEND_FROM_EMAIL)
-SERVER_EMAIL = os.getenv('SERVER_EMAIL', os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com'))
-EMAIL_BACKEND = os.getenv(
-    'EMAIL_BACKEND',
-    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST_PASSWORD else 'django.core.mail.backends.console.EmailBackend'
-)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'MONVEX <security@monvex.ai>').strip()
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER or 'MONVEX <security@monvex.ai>').strip()
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 
 # Startup Configuration Validation for Production (DEBUG=False)
 if not DEBUG:
     import logging
     _config_logger = logging.getLogger('monvex.startup')
-    if OTP_PROVIDER == 'resend':
-        if not RESEND_API_KEY:
-            _config_logger.warning(
-                "CRITICAL CONFIGURATION NOTICE: RESEND_API_KEY is not set in Render environment. "
-                "Production OTP dispatches via HTTPS Resend API will fail until RESEND_API_KEY is configured."
-            )
-        else:
-            _config_logger.info(
-                f"Production Resend HTTPS Email API configured (sender: {RESEND_FROM_EMAIL})."
-            )
-    elif OTP_PROVIDER in ['smtp', 'email']:
-        if not EMAIL_HOST_PASSWORD:
-            _config_logger.warning(
-                "CRITICAL CONFIGURATION NOTICE: EMAIL_HOST_PASSWORD is not set in Render environment. "
-                "OTP dispatches will fail until EMAIL_HOST_PASSWORD is set."
-            )
-        else:
-            _config_logger.info(
-                f"Production SMTP configured with user: monvexfinance@gmail.com (port={EMAIL_PORT}, ssl={EMAIL_USE_SSL}, tls={EMAIL_USE_TLS})"
-            )
+    if not EMAIL_HOST:
+        _config_logger.error("CRITICAL CONFIGURATION ERROR: EMAIL_HOST is missing in production.")
+    if not EMAIL_HOST_USER:
+        _config_logger.error("CRITICAL CONFIGURATION ERROR: EMAIL_HOST_USER is missing in production.")
+    if not EMAIL_HOST_PASSWORD:
+        _config_logger.error("CRITICAL CONFIGURATION ERROR: EMAIL_HOST_PASSWORD is missing in production. OTP dispatches will fail.")
+    if EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+        _config_logger.error("CRITICAL SECURITY ERROR: console.EmailBackend is configured with DEBUG=False. Forbidden in production.")
+    else:
+        _masked_user = (EMAIL_HOST_USER[:2] + "***@" + EMAIL_HOST_USER.split('@')[-1]) if '@' in EMAIL_HOST_USER else (EMAIL_HOST_USER[:2] + "***" if EMAIL_HOST_USER else "NONE")
+        _config_logger.info(
+            f"Production SMTP configured: host={EMAIL_HOST}:{EMAIL_PORT}, user={_masked_user}, ssl={EMAIL_USE_SSL}, tls={EMAIL_USE_TLS}, timeout={EMAIL_TIMEOUT}s"
+        )
 
 # Managed OTP Verification Policies
 OTP_CHANNEL = os.getenv('OTP_CHANNEL', 'email')

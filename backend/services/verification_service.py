@@ -1,7 +1,8 @@
 """
-MONVEX Verification Service
-Authoritative business logic for OTP session lifecycle, rate limiting, attempt throttling,
-request correlation tracking, atomic account activation, and 2-stage login verification.
+MONVEX Verification Service & OTP Engine
+Centralized, provider-independent OTP engine that owns the complete verification lifecycle:
+generation, SHA-256 hashing, session management, timing-safe verification, attempt locking,
+resend cooldowns, account activation, and 2-stage login token issuance.
 """
 import os
 import secrets
@@ -23,7 +24,12 @@ from services.user_init_service import UserInitService
 
 logger = logging.getLogger('monvex.security.verification')
 
+
 class VerificationService:
+    """
+    Centralized MONVEX Custom OTP Engine.
+    Provider-independent verification lifecycle management.
+    """
 
     EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 600))
     COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', 60))
@@ -32,6 +38,9 @@ class VerificationService:
 
     @staticmethod
     def mask_email(email: str) -> str:
+        """
+        Safely masks email for logs and UI: ab***z@domain.com
+        """
         if not email or '@' not in email:
             return ""
         user_part, domain = email.strip().lower().split('@', 1)
@@ -43,9 +52,65 @@ class VerificationService:
 
     @staticmethod
     def hash_value(value: Optional[str]) -> str:
+        """
+        Computes SHA-256 digest for metadata and context hashes.
+        """
         if not value:
             return ""
         return hashlib.sha256(value.strip().encode('utf-8')).hexdigest()
+
+    @classmethod
+    def generate_secure_otp(cls) -> str:
+        """
+        Generates a cryptographically secure 6-digit numeric OTP code.
+        Guaranteed to be within [100000, 999999].
+        """
+        return f"{secrets.randbelow(900000) + 100000}"
+
+    @classmethod
+    def hash_otp(cls, code: str) -> str:
+        """
+        Computes SHA-256 hash of plaintext OTP for secure database storage.
+        """
+        return hashlib.sha256(code.strip().encode('utf-8')).hexdigest()
+
+    @classmethod
+    def invalidate_previous_codes(cls, destination: str, purpose: str) -> int:
+        """
+        Invalidates all previously active pending sessions for this destination & purpose.
+        """
+        clean_dest = destination.strip().lower()
+        now = timezone.now()
+        count = VerificationSession.objects.filter(
+            destination__iexact=clean_dest,
+            purpose=purpose,
+            status='PENDING'
+        ).update(status='CANCELLED', invalidated_at=now)
+        return count
+
+    @classmethod
+    def enforce_attempt_limits(cls, session: VerificationSession) -> bool:
+        """
+        Checks and enforces attempt limits. Locks session if maximum attempts reached.
+        Returns True if within limit, False if locked.
+        """
+        if session.status == 'LOCKED' or session.attempt_count >= session.max_attempts:
+            if session.status != 'LOCKED':
+                session.status = 'LOCKED'
+                session.save(update_fields=['status', 'updated_at'])
+            return False
+        return True
+
+    @classmethod
+    def cleanup_expired_sessions(cls) -> int:
+        """
+        Marks stale pending sessions as EXPIRED.
+        """
+        now = timezone.now()
+        return VerificationSession.objects.filter(
+            status='PENDING',
+            expires_at__lt=now
+        ).update(status='EXPIRED', updated_at=now)
 
     @classmethod
     def start_email_verification(
@@ -56,13 +121,16 @@ class VerificationService:
         channel: str = "EMAIL",
         request_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
+        """
+        Orchestrates session creation, OTP generation, hash storage, and email delivery.
+        """
         clean_email = email.strip().lower()
         context = request_context or {}
         req_id = f"otp_{secrets.token_hex(4)}"
 
         logger.info(f"[{req_id}] OTP_SEND_REQUESTED: destination={cls.mask_email(clean_email)} purpose={purpose}")
 
-        # If user is already active and verified, reject duplicate REGISTRATION verification session
+        # Check if user is already active and verified
         if purpose in ['REGISTRATION', 'EMAIL_SIGNUP']:
             if user and getattr(user, 'profile', None) and user.profile.email_verified and user.profile.status == 'ACTIVE':
                 logger.warning(f"[{req_id}] User {user.username} is already verified. Aborting registration OTP.")
@@ -72,41 +140,24 @@ class VerificationService:
                     "message": "This email account is already verified."
                 }
 
-        # Cancel previous pending sessions for this destination & purpose
-        now = timezone.now()
-        VerificationSession.objects.filter(
-            destination__iexact=clean_email,
-            purpose=purpose,
-            status='PENDING'
-        ).update(status='CANCELLED', invalidated_at=now)
+        # Invalidate older pending codes
+        cls.invalidate_previous_codes(destination=clean_email, purpose=purpose)
 
-        provider = get_verification_provider()
+        # Generate cryptographically secure OTP & SHA-256 hash
+        raw_otp = cls.generate_secure_otp()
+        otp_hash = cls.hash_otp(raw_otp)
+
+        now = timezone.now()
+        expires_at = now + timedelta(seconds=cls.EXPIRY_SECONDS)
         provider_identifier = getattr(settings, 'OTP_PROVIDER', os.getenv('OTP_PROVIDER', 'smtp')).lower()
 
-        # Dispatch code via managed provider
-        try:
-            dispatch_result = provider.send_code(
-                destination=clean_email,
-                channel=channel.lower(),
-                metadata={"purpose": purpose, "username": user.username if user else "", "request_id": req_id}
-            )
-        except ProviderError as pe:
-            logger.error(f"[{req_id}] OTP_SEND_FAILED: Provider error ({pe.code}): {pe.message}")
-            raise pe
-        except Exception as e:
-            logger.error(f"[{req_id}] OTP_SEND_FAILED: Unexpected provider failure: {e}")
-            raise ProviderError(code="OTP_PROVIDER_ERROR", message=f"Verification provider error: {str(e)}")
-
-        expires_at = now + timedelta(seconds=cls.EXPIRY_SECONDS)
-        otp_hash = dispatch_result.get('otp_hash', '')
-
+        # Create VerificationSession record in database (storing strictly hash, never plaintext)
         session = VerificationSession.objects.create(
             user=user,
             purpose=purpose,
             channel=channel.upper(),
             destination=clean_email,
             provider=provider_identifier,
-            provider_verification_id=dispatch_result.get('provider_verification_id', ''),
             otp_hash=otp_hash,
             status='PENDING',
             attempt_count=0,
@@ -119,19 +170,47 @@ class VerificationService:
             metadata={"source": "api", "request_id": req_id}
         )
 
-        logger.info(f"[{req_id}] OTP_SEND_SUCCESS: Created VerificationSession {session.id} (purpose={purpose}, expires in {cls.EXPIRY_SECONDS}s)")
+        # Dispatch code through the configured verification provider (SMTP transport)
+        provider = get_verification_provider()
+        try:
+            dispatch_result = provider.send_code(
+                destination=clean_email,
+                channel=channel.lower(),
+                metadata={
+                    "purpose": purpose,
+                    "username": user.username if user else "",
+                    "request_id": req_id,
+                    "raw_otp": raw_otp,
+                    "otp_hash": otp_hash,
+                }
+            )
+            if dispatch_result.get('provider_verification_id'):
+                session.provider_verification_id = dispatch_result['provider_verification_id']
+                session.save(update_fields=['provider_verification_id', 'updated_at'])
+        except ProviderError as pe:
+            logger.error(f"[{req_id}] OTP_SEND_FAILED: Provider error ({pe.code}): {pe.message}")
+            # Mark session as cancelled since delivery failed
+            session.status = 'CANCELLED'
+            session.save(update_fields=['status', 'updated_at'])
+            raise pe
+        except Exception as e:
+            logger.error(f"[{req_id}] OTP_SEND_FAILED: Unexpected provider failure: {e}")
+            session.status = 'CANCELLED'
+            session.save(update_fields=['status', 'updated_at'])
+            raise ProviderError(code="OTP_DELIVERY_FAILED", message="We couldn't send the verification code right now. Please try again shortly.")
+
+        logger.info(f"[{req_id}] OTP_SEND_SUCCESS: Session {session.id} created and dispatched (purpose={purpose}, expires in {cls.EXPIRY_SECONDS}s)")
 
         return {
             "success": True,
             "requires_otp": True,
             "verification_purpose": purpose,
-            "message": "Verification code requested. Check your inbox.",
+            "message": "Verification code sent to your email. Please check your inbox.",
             "verification_id": str(session.id),
             "email_masked": cls.mask_email(clean_email),
             "expires_in": cls.EXPIRY_SECONDS,
             "resend_after": cls.COOLDOWN_SECONDS
         }
-
 
     @classmethod
     def check_email_verification(
@@ -141,6 +220,10 @@ class VerificationService:
         purpose: Optional[str] = None,
         request_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
+        """
+        Timing-safe OTP verification, attempt limit enforcement, one-time invalidation,
+        and atomic user activation / JWT token issuance.
+        """
         clean_code = str(code).strip()
         session = VerificationSession.objects.filter(id=verification_id).first()
         req_id = f"otp_chk_{secrets.token_hex(4)}"
@@ -161,7 +244,7 @@ class VerificationService:
                 "message": "Invalid verification session."
             }
 
-        # Prevent replay attacks
+        # Prevent replay attacks: check if already used or verified
         if session.status == 'VERIFIED' or session.used_at is not None:
             return {
                 "success": False,
@@ -169,7 +252,7 @@ class VerificationService:
                 "message": "This verification code has already been used."
             }
 
-        # Check if invalidated / superseded by newer code
+        # Check if superseded / cancelled by newer code
         if session.status in ['CANCELLED', 'INVALIDATED'] or session.invalidated_at is not None:
             return {
                 "success": False,
@@ -177,8 +260,8 @@ class VerificationService:
                 "message": "This verification code was superseded by a newer code."
             }
 
-        # Check maximum attempt limit
-        if session.status == 'LOCKED' or session.attempt_count >= session.max_attempts:
+        # Check maximum attempt limits & lockout
+        if not cls.enforce_attempt_limits(session):
             logger.warning(f"[{req_id}] Verification check rejected: Session {session.id} is LOCKED.")
             return {
                 "success": False,
@@ -197,13 +280,13 @@ class VerificationService:
                 "message": "The verification code has expired. Please request a new code."
             }
 
-        # Verify Code
+        # Timing-safe cryptographic comparison using SHA-256 hash
         is_approved = False
         if session.otp_hash:
-            submitted_hash = cls.hash_value(clean_code)
+            submitted_hash = cls.hash_otp(clean_code)
             is_approved = secrets.compare_digest(session.otp_hash, submitted_hash)
         else:
-            # Fallback to provider check (e.g., Twilio or console)
+            # Fallback to provider check if no hash stored
             provider = get_verification_provider()
             try:
                 check_result = provider.check_code(
@@ -220,7 +303,7 @@ class VerificationService:
                 raise ProviderError(code="OTP_PROVIDER_ERROR", message="Verification service is temporarily unavailable. Please try again.")
 
         if is_approved:
-            # Authoritative Success -> Atomic Session & Account State Update
+            # Atomic state transition: mark session VERIFIED and activate user
             now = timezone.now()
             with transaction.atomic():
                 session.status = 'VERIFIED'
@@ -230,7 +313,7 @@ class VerificationService:
 
                 user = session.user
 
-                # 1. Registration / Email Signup flow: activate user, init accounts, issue tokens
+                # 1. Registration flow: activate user, initialize account, issue JWT
                 if session.purpose in ['REGISTRATION', 'EMAIL_SIGNUP']:
                     if user:
                         user.is_active = True
@@ -242,7 +325,7 @@ class VerificationService:
                         profile.is_verified = True
                         profile.save(update_fields=['status', 'email_verified', 'is_verified', 'updated_at'])
 
-                        # Seed isolated categories and starting transactions
+                        # Seed starting transactions and isolate accounts
                         UserInitService.initialize_fresh_user_account(user)
 
                         refresh = RefreshToken.for_user(user)
@@ -264,13 +347,13 @@ class VerificationService:
                             "message": "Verification code verified successfully."
                         }
 
-                # 2. Login Flow: issue production JWT tokens for authenticated user
+                # 2. Login Flow: issue JWT tokens for authenticated user
                 elif session.purpose == 'LOGIN':
                     if user:
                         refresh = RefreshToken.for_user(user)
                         user_data = UserSerializer(user).data
 
-                        logger.info(f"[{req_id}] LOGIN_VERIFY_SUCCESS: Session {session.id} VERIFIED. User {user.username} logged in.")
+                        logger.info(f"[{req_id}] LOGIN_VERIFY_SUCCESS: Session {session.id} VERIFIED. User {user.username} authenticated.")
                         return {
                             "success": True,
                             "message": "Login successful.",
@@ -293,7 +376,7 @@ class VerificationService:
                         "message": "Verification code verified successfully."
                     }
         else:
-            # Code rejected
+            # Code rejected -> increment attempt counter
             session.attempt_count += 1
             session.last_attempt_at = timezone.now()
 
@@ -325,6 +408,10 @@ class VerificationService:
         purpose: Optional[str] = None,
         request_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
+        """
+        Enforces 60-second cooldown, max 5 resends limit, generates a new secure OTP,
+        and dispatches via SMTP transport.
+        """
         session = VerificationSession.objects.filter(id=verification_id).first()
         req_id = f"otp_rsd_{secrets.token_hex(4)}"
 
@@ -356,7 +443,7 @@ class VerificationService:
                 "message": "This session is locked due to too many failed attempts. Please restart authentication."
             }
 
-        # Check Resend Cooldown
+        # Enforce 60-second resend cooldown
         seconds_left = session.seconds_until_resend(cls.COOLDOWN_SECONDS)
         if seconds_left > 0:
             logger.info(f"[{req_id}] Resend rejected: Cooldown active ({seconds_left}s remaining) for session {session.id}")
@@ -367,7 +454,7 @@ class VerificationService:
                 "retry_after": seconds_left
             }
 
-        # Check Resend Limits
+        # Enforce maximum resends limit (5)
         if session.resend_count >= cls.MAX_RESENDS:
             logger.warning(f"[{req_id}] Resend rejected: Limit ({cls.MAX_RESENDS}) reached for session {session.id}")
             return {
@@ -376,20 +463,29 @@ class VerificationService:
                 "message": "Maximum resend attempts reached for this session."
             }
 
-        provider = get_verification_provider()
+        # Generate fresh secure OTP and update hash
+        raw_otp = cls.generate_secure_otp()
+        otp_hash = cls.hash_otp(raw_otp)
 
+        provider = get_verification_provider()
         try:
             dispatch_result = provider.send_code(
                 destination=session.destination,
                 channel=session.channel.lower(),
-                metadata={"purpose": session.purpose, "username": session.user.username if session.user else "", "request_id": req_id}
+                metadata={
+                    "purpose": session.purpose,
+                    "username": session.user.username if session.user else "",
+                    "request_id": req_id,
+                    "raw_otp": raw_otp,
+                    "otp_hash": otp_hash,
+                }
             )
         except ProviderError as pe:
             logger.error(f"[{req_id}] Resend provider error for session {session.id}: {pe.code} {pe.message}")
             raise pe
         except Exception as e:
             logger.error(f"[{req_id}] Unexpected error during resend: {e}")
-            raise ProviderError(code="OTP_PROVIDER_ERROR", message=f"Verification provider error: {str(e)}")
+            raise ProviderError(code="OTP_DELIVERY_FAILED", message="We couldn't send the verification code right now. Please try again shortly.")
 
         now = timezone.now()
         session.resend_count += 1
@@ -397,8 +493,7 @@ class VerificationService:
         session.expires_at = now + timedelta(seconds=cls.EXPIRY_SECONDS)
         session.status = 'PENDING'
         session.attempt_count = 0  # reset attempts for the freshly issued OTP
-        if dispatch_result.get('otp_hash'):
-            session.otp_hash = dispatch_result['otp_hash']
+        session.otp_hash = otp_hash
         if dispatch_result.get('provider_verification_id'):
             session.provider_verification_id = dispatch_result['provider_verification_id']
         session.save(update_fields=['resend_count', 'last_sent_at', 'expires_at', 'status', 'attempt_count', 'otp_hash', 'provider_verification_id', 'updated_at'])
@@ -412,3 +507,8 @@ class VerificationService:
             "resend_after": cls.COOLDOWN_SECONDS,
             "expires_in": cls.EXPIRY_SECONDS
         }
+
+    # Centralized architecture aliases
+    create_verification = start_email_verification
+    verify_otp = check_email_verification
+    resend_otp = resend_email_verification

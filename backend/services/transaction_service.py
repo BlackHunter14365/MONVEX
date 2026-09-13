@@ -42,10 +42,14 @@ class TransactionService:
         if not merchant_name:
             return None
         normalized = TransactionService.normalize_merchant_name(merchant_name)
-        merchant, created = Merchant.objects.get_or_create(
-            normalized_name=normalized,
-            defaults={'name': merchant_name, 'default_category': default_category}
-        )
+        merchant = Merchant.objects.filter(normalized_name=normalized).first()
+        if not merchant:
+            merchant = Merchant.objects.filter(name__iexact=merchant_name).first()
+        if not merchant:
+            merchant, _ = Merchant.objects.get_or_create(
+                name=merchant_name,
+                defaults={'normalized_name': normalized, 'default_category': default_category}
+            )
         if default_category and not merchant.default_category:
             merchant.default_category = default_category
             merchant.save(update_fields=['default_category'])

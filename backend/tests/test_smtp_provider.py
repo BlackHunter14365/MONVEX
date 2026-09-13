@@ -83,7 +83,7 @@ class SmtpCustomOtpEngineTestCase(TestCase):
             raw_otp='654321',
             username='alex_trader',
             expiry_minutes=10,
-            sender_email='security@monvex.ai'
+            sender_email='monvexfinance@gmail.com'
         )
         self.assertIn('Verify your MONVEX account', content['subject'])
         self.assertIn('654321', content['plain_text'])

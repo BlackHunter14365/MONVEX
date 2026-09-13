@@ -45,7 +45,7 @@ services:
     environment:
       DEBUG: "False"
       SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,api.monvex.ai}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,.onrender.com}
       DB_ENGINE: "postgres"
       DB_NAME: ${DB_NAME:-monvex_db}
       DB_USER: ${DB_USER:-postgres}

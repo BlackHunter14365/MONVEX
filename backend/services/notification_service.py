@@ -45,7 +45,7 @@ class NotificationService:
             f"Your MONVEX account verification passcode is: {otp}\n\n"
             f"This code will expire in 15 minutes. For your security, do not share this passcode with anyone.\n\n"
             f"— The MONVEX Security Team\n"
-            f"https://monvex.ai"
+            f"https://monvex-web.onrender.com"
         )
         html_message = f"""
         <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #090D16; color: #FFFFFF; padding: 40px 20px; border-radius: 16px; max-width: 500px; margin: auto;">
@@ -82,7 +82,7 @@ class NotificationService:
             send_mail(
                 subject=subject,
                 message=plain_message,
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'MONVEX Security <no-reply@monvex.ai>'),
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'MONVEX <monvexfinance@gmail.com>'),
                 recipient_list=[email],
                 html_message=html_message,
                 fail_silently=True

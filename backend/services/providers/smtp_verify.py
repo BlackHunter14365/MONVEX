@@ -46,7 +46,7 @@ class SmtpVerifyProvider(VerificationProvider):
             otp_hash = self._hash_code(raw_otp)
 
         config = SmtpTransport.get_smtp_config()
-        sender_email = config.get('from_email') or 'MONVEX <security@monvex.ai>'
+        sender_email = config.get('from_email') or 'MONVEX <monvexfinance@gmail.com>'
 
         # Render template
         email_content = EmailTemplateService.render_otp_email(

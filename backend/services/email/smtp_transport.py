@@ -84,7 +84,11 @@ class SmtpTransport:
             timeout = 10
 
         from_email = cls.sanitize_credential(
-            getattr(settings, 'DEFAULT_FROM_EMAIL', os.getenv('DEFAULT_FROM_EMAIL', user or 'MONVEX <security@monvex.ai>'))
+            getattr(
+                settings,
+                'DEFAULT_FROM_EMAIL',
+                os.getenv('DEFAULT_FROM_EMAIL', f'MONVEX <{user}>' if user else 'MONVEX <monvexfinance@gmail.com>')
+            )
         )
 
         return {

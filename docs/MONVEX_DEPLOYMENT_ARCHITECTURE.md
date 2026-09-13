@@ -57,10 +57,10 @@ graph TD
 $$\text{Web Browser} \xrightarrow{\text{HTTPS / JSON}} \text{Next.js / Rewrite Proxy} \xrightarrow{\text{Private / Public HTTPS}} \text{Django Backend} \xrightarrow{\text{SQL}} \text{PostgreSQL 16}$$
 
 ### 3.2 Windows Desktop Flow
-$$\text{Tauri Desktop App} \xrightarrow{\text{Direct HTTPS REST}} \text{https://api.monvex.app/api/v1/} \xrightarrow{} \text{Django Backend} \xrightarrow{} \text{PostgreSQL 16}$$
+$$\text{Tauri Desktop App} \xrightarrow{\text{Direct HTTPS REST}} \text{https://monvex-backend.onrender.com/api/v1/} \xrightarrow{} \text{Django Backend} \xrightarrow{} \text{PostgreSQL 16}$$
 
 ### 3.3 Android Mobile Flow
-$$\text{Flutter Mobile APK} \xrightarrow{\text{Direct HTTPS REST}} \text{https://api.monvex.app/api/v1/} \xrightarrow{} \text{Django Backend} \xrightarrow{} \text{PostgreSQL 16}$$
+$$\text{Flutter Mobile APK} \xrightarrow{\text{Direct HTTPS REST}} \text{https://monvex-backend.onrender.com/api/v1/} \xrightarrow{} \text{Django Backend} \xrightarrow{} \text{PostgreSQL 16}$$
 
 ### 3.4 AI Copilot & Financial Intelligence Flow
 ```mermaid
@@ -88,7 +88,7 @@ sequenceDiagram
 ## 4. Security & CORS Architecture
 
 ### 4.1 CORS Enforcement
-- **Allowed Web Origins:** `https://monvex-web.onrender.com`, `https://app.monvex.ai`, `http://localhost:3000`, `tauri://localhost`
+- **Allowed Web Origins:** `https://monvex-web.onrender.com`, `http://localhost:3000`, `tauri://localhost`
 - **Native Clients:** Windows Tauri and Android Flutter utilize native HTTP sockets and do not enforce browser CORS restrictions.
 - **Production Headers:** `X-Frame-Options: DENY`, `Strict-Transport-Security (HSTS)`, `X-Content-Type-Options: nosniff`.
 
@@ -104,7 +104,6 @@ sequenceDiagram
 - **Web Client ID:** `1068232450695-drbp5fk2066qtl9j83s69kkgk1gbc984.apps.googleusercontent.com`
 - **Authorized JavaScript Origins:**
   - `https://monvex-web.onrender.com`
-  - `https://app.monvex.ai`
   - `http://localhost:3000`
 - **Authorized Redirect URIs:**
   - `https://monvex-web.onrender.com/login`

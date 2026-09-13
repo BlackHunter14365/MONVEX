@@ -296,8 +296,11 @@ _raw_email_pwd = os.getenv('EMAIL_HOST_PASSWORD', '').strip().strip('\'"')
 EMAIL_HOST_PASSWORD = _raw_email_pwd.replace(' ', '') if _raw_email_pwd else ''
 
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 10))
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'MONVEX <security@monvex.ai>').strip()
-SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER or 'MONVEX <security@monvex.ai>').strip()
+DEFAULT_FROM_EMAIL = os.getenv(
+    'DEFAULT_FROM_EMAIL',
+    f'MONVEX <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'MONVEX <monvexfinance@gmail.com>'
+).strip()
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER or 'monvexfinance@gmail.com').strip()
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 
 # Startup Configuration Validation for Production (DEBUG=False)

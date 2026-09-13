@@ -19,7 +19,7 @@ class EmailTemplateService:
         raw_otp: str,
         username: str = "",
         expiry_minutes: int = 10,
-        sender_email: str = "security@monvex.ai",
+        sender_email: str = "monvexfinance@gmail.com",
     ) -> Dict[str, str]:
         """
         Renders an OTP verification email for the specified purpose.
@@ -201,7 +201,7 @@ class EmailTemplateService:
     </div>
 
     <div class="footer">
-      This is an automated security transmission from <strong>MONVEX</strong>.<br>
+      This is an automated security transmission from <strong><a href="https://monvex-web.onrender.com" target="_blank" rel="noopener">MONVEX</a></strong>.<br>
       Sent from <a href="mailto:{sender_email}">{sender_email}</a> &bull; Please do not reply directly to this email.
     </div>
   </div>
@@ -217,6 +217,7 @@ class EmailTemplateService:
             f"For your protection, never share this code with anyone.\n"
             f"MONVEX staff will never ask for your verification code.\n\n"
             f"MONVEX Security Team\n"
+            f"https://monvex-web.onrender.com\n"
             f"Sent from: {sender_email}\n"
         )
 

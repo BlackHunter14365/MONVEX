@@ -87,7 +87,7 @@ class ContactService:
         Attempts to deliver an email notification to the site administrator/creator.
         Gracefully falls back to database persistence if provider is not configured.
         """
-        receiver_email = os.getenv('CONTACT_RECEIVER_EMAIL', getattr(settings, 'CONTACT_RECEIVER_EMAIL', 'danish@monvex.local'))
+        receiver_email = os.getenv('CONTACT_RECEIVER_EMAIL', getattr(settings, 'CONTACT_RECEIVER_EMAIL', 'monvexfinance@gmail.com'))
         provider = os.getenv('CONTACT_EMAIL_PROVIDER', getattr(settings, 'CONTACT_EMAIL_PROVIDER', 'LOCAL')).upper()
         api_key = os.getenv('CONTACT_EMAIL_API_KEY', getattr(settings, 'CONTACT_EMAIL_API_KEY', None))
 
@@ -102,7 +102,7 @@ class ContactService:
                 headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
                 payload = {
                     "personalizations": [{"to": [{"email": receiver_email}]}],
-                    "from": {"email": "notifications@monvex.app", "name": "MONVEX Contact Desk"},
+                    "from": {"email": os.getenv("EMAIL_HOST_USER", "monvexfinance@gmail.com"), "name": "MONVEX Contact Desk"},
                     "subject": f"New Contact Inquiry: {submission.name}",
                     "content": [{
                         "type": "text/plain",

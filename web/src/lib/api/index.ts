@@ -36,18 +36,9 @@ export class UnifiedApiClient {
 
   // Auth proxies
   login = (c: any) => this.auth.login(c);
-  verifyLoginOTP = (p: { verification_id: string; code: string }) => this.auth.verifyLoginOTP(p);
-  resendLoginOTP = (id: string) => this.auth.resendLoginOTP(id);
-  verifyRegisterOTP = (p: { verification_id: string; code: string }) => this.auth.verifyRegisterOTP(p);
-  resendRegisterOTP = (id: string) => this.auth.resendRegisterOTP(id);
   googleLogin = (c: string) => this.auth.googleLogin(c);
   linkGoogleAccount = (p: any) => this.auth.linkGoogleAccount(p);
   register = (u: any) => this.auth.register(u);
-  checkVerification = (p: any) => this.auth.checkVerification(p);
-  resendVerification = (id: string) => this.auth.resendVerification(id);
-  sendVerification = (email: string) => this.auth.sendVerification(email);
-  verifyOTP = (p: any) => this.auth.verifyOTP(p);
-  resendOTP = (id: string) => this.auth.resendOTP(id);
   getProfile = () => this.auth.getProfile();
   updateProfile = (p: any) => this.auth.updateProfile(p);
   uploadAvatar = (file: File | Blob) => this.auth.uploadAvatar(file);

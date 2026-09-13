@@ -81,7 +81,6 @@ export default function SettingsPage() {
 
   // 5. Security & Session State
   const [sessionTimeout, setSessionTimeout] = useState('60');
-  const [requireOtpLogin, setRequireOtpLogin] = useState(true);
 
   // Form saving status
   const [isSaving, setIsSaving] = useState(false);
@@ -121,7 +120,6 @@ export default function SettingsPage() {
     if (p.voiceLang) setVoiceLang(p.voiceLang);
     if (p.aiAutoCategorize !== undefined) setAiAutoCategorize(p.aiAutoCategorize);
     if (p.sessionTimeout) setSessionTimeout(p.sessionTimeout);
-    if (p.requireOtpLogin !== undefined) setRequireOtpLogin(p.requireOtpLogin);
   };
 
   useEffect(() => {
@@ -192,7 +190,6 @@ export default function SettingsPage() {
         voiceLang,
         aiAutoCategorize,
         sessionTimeout,
-        requireOtpLogin,
       };
 
       // 3. Update Backend Profile & Preferences (Database Single Source of Truth)
@@ -885,19 +882,6 @@ export default function SettingsPage() {
                       <option value="720">12 Hours</option>
                       <option value="10080">7 Days (Trusted Workstation)</option>
                     </select>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
-                    <div>
-                      <span className="text-xs font-bold text-[#191522] block">6-Digit OTP Security Challenge</span>
-                      <span className="text-[11px] text-[#625D69]">Require email OTP on new device sign-ins.</span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={requireOtpLogin}
-                      onChange={(e) => setRequireOtpLogin(e.target.checked)}
-                      className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
-                    />
                   </div>
                 </div>
 

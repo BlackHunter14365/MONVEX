@@ -12,7 +12,6 @@ import logging
 from typing import Dict, Any, Optional, Tuple
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
-from services.providers.base import ProviderError
 
 logger = logging.getLogger('monvex.security.smtp')
 

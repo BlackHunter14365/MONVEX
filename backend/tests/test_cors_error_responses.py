@@ -4,15 +4,12 @@ Verifies that Access-Control-Allow-Origin: https://monvex-web.onrender.com and
 Access-Control-Allow-Credentials: true are strictly present on all HTTP responses,
 specifically covering 400, 401, 403, 404, 429, 500, and 503 status codes.
 """
-from datetime import timedelta
 from unittest.mock import patch
-from django.utils import timezone
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
+from rest_framework.response import Response
 from rest_framework import status
-from apps.authentication.models import VerificationSession
-from services.providers.base import ProviderUnavailableError
 
 
 @override_settings(
@@ -20,7 +17,6 @@ from services.providers.base import ProviderUnavailableError
     CORS_ALLOWED_ORIGINS=['https://monvex-web.onrender.com', 'tauri://localhost'],
     CORS_ALLOWED_ORIGIN_REGEXES=[],
     ALLOWED_HOSTS=['testserver', 'localhost', '127.0.0.1', 'monvex-backend.onrender.com', '.onrender.com'],
-    AUTH_REQUIRE_EMAIL_VERIFICATION=True,
 )
 class CorsSecurityHardeningTestCase(TestCase):
     ORIGIN = 'https://monvex-web.onrender.com'
@@ -84,47 +80,44 @@ class CorsSecurityHardeningTestCase(TestCase):
         user.is_active = False
         user.save()
 
-        with override_settings(AUTH_REQUIRE_EMAIL_VERIFICATION=False):
-            resp = self.client.post(
-                '/api/v1/auth/login/',
-                {'identifier': 'disabled_user', 'password': 'Password123!'},
-                format='json',
-                HTTP_ORIGIN=self.ORIGIN
-            )
-            self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
-            self._assert_cors_headers(resp)
+        resp = self.client.post(
+            '/api/v1/auth/login/',
+            {'identifier': 'disabled_user', 'password': 'Password123!'},
+            format='json',
+            HTTP_ORIGIN=self.ORIGIN
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+        self._assert_cors_headers(resp)
 
     def test_06_http_404_not_found_includes_cors(self):
         resp = self.client.get(
-            '/api/v1/auth/verification/status/?verification_id=00000000-0000-0000-0000-000000000000',
+            '/api/v1/auth/nonexistent-route/',
             HTTP_ORIGIN=self.ORIGIN
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         self._assert_cors_headers(resp)
 
     def test_07_http_429_rate_limit_includes_cors(self):
-        user = User.objects.create_user(username='rate_user', email='rate@example.com', password='Password123!')
-        now = timezone.now()
-        session = VerificationSession.objects.create(
-            user=user,
-            destination='rate@example.com',
-            purpose='REGISTRATION',
-            otp_hash='a' * 64,
-            expires_at=now + timedelta(minutes=10),
-            last_sent_at=now
-        )
-        resp = self.client.post(
-            '/api/v1/auth/register/resend-otp/',
-            {'verification_id': str(session.id)},
-            format='json',
-            HTTP_ORIGIN=self.ORIGIN
-        )
-        self.assertEqual(resp.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-        self._assert_cors_headers(resp)
+        with patch('apps.authentication.views.CustomLoginView.post') as mock_post:
+            mock_post.return_value = Response(
+                {"error": "Request was throttled."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+            resp = self.client.post(
+                '/api/v1/auth/login/',
+                {'identifier': 'rate_user', 'password': 'Password123!'},
+                format='json',
+                HTTP_ORIGIN=self.ORIGIN
+            )
+            self.assertEqual(resp.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self._assert_cors_headers(resp)
 
     def test_08_http_503_service_unavailable_includes_cors(self):
-        with patch('services.verification_service.VerificationService.start_email_verification') as mock_start:
-            mock_start.side_effect = ProviderUnavailableError('SMTP host down')
+        with patch('apps.authentication.views.RegisterView.post') as mock_post:
+            mock_post.return_value = Response(
+                {"error": "Database maintenance in progress"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
             resp = self.client.post(
                 '/api/v1/auth/register/',
                 {

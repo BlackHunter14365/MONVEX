@@ -6,11 +6,6 @@ export class AuthEndpoints {
   async login(credentials: { username?: string; identifier?: string; email?: string; password: string }) {
     const data = await this.client.request<{
       success: boolean;
-      requires_otp?: boolean;
-      verification_id?: string;
-      email_masked?: string;
-      expires_in?: number;
-      resend_after?: number;
       message?: string;
       access?: string;
       refresh?: string;
@@ -23,80 +18,6 @@ export class AuthEndpoints {
       this.client.setTokens(data.access, data.refresh);
     }
     return data;
-  }
-
-  async verifyLoginOTP(payload: { verification_id: string; code: string }) {
-    const data = await this.client.request<{
-      success: boolean;
-      message: string;
-      access?: string;
-      refresh?: string;
-      user?: any;
-      data?: { access: string; refresh: string; user: any };
-      code?: string;
-      attempts_remaining?: number;
-    }>('/auth/login/verify-otp/', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    const access = data.access || data.data?.access;
-    const refresh = data.refresh || data.data?.refresh;
-    if (access && refresh) {
-      this.client.setTokens(access, refresh);
-    }
-    return data;
-  }
-
-  async resendLoginOTP(verification_id: string) {
-    return this.client.request<{
-      success: boolean;
-      message: string;
-      verification_id?: string;
-      resend_after?: number;
-      expires_in?: number;
-      code?: string;
-      retry_after?: number;
-    }>('/auth/login/resend-otp/', {
-      method: 'POST',
-      body: JSON.stringify({ verification_id }),
-    });
-  }
-
-  async verifyRegisterOTP(payload: { verification_id: string; code: string }) {
-    const data = await this.client.request<{
-      success: boolean;
-      message: string;
-      access?: string;
-      refresh?: string;
-      user?: any;
-      data?: { access: string; refresh: string; user: any };
-      code?: string;
-      attempts_remaining?: number;
-    }>('/auth/register/verify-otp/', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    const access = data.access || data.data?.access;
-    const refresh = data.refresh || data.data?.refresh;
-    if (access && refresh) {
-      this.client.setTokens(access, refresh);
-    }
-    return data;
-  }
-
-  async resendRegisterOTP(verification_id: string) {
-    return this.client.request<{
-      success: boolean;
-      message: string;
-      verification_id?: string;
-      resend_after?: number;
-      expires_in?: number;
-      code?: string;
-      retry_after?: number;
-    }>('/auth/register/resend-otp/', {
-      method: 'POST',
-      body: JSON.stringify({ verification_id }),
-    });
   }
 
   async googleLogin(credential: string) {
@@ -141,14 +62,10 @@ export class AuthEndpoints {
   async register(userData: any) {
     const data = await this.client.request<{
       success: boolean;
-      message: string;
+      message?: string;
       access?: string;
       refresh?: string;
       user?: any;
-      verification_id?: string;
-      email_masked?: string;
-      expires_in?: number;
-      resend_after?: number;
     }>('/auth/register/', {
       method: 'POST',
       body: JSON.stringify(userData),
@@ -157,60 +74,6 @@ export class AuthEndpoints {
       this.client.setTokens(data.access, data.refresh);
     }
     return data;
-  }
-
-  async checkVerification(payload: { verification_id: string; code: string }) {
-    const data = await this.client.request<{
-      success: boolean;
-      message: string;
-      data?: { access: string; refresh: string; user: any };
-      code?: string;
-      attempts_remaining?: number;
-    }>('/auth/verification/check/', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    if (data.data?.access && data.data?.refresh) {
-      this.client.setTokens(data.data.access, data.data.refresh);
-    }
-    return data;
-  }
-
-  async resendVerification(verification_id: string) {
-    return this.client.request<{
-      success: boolean;
-      message: string;
-      resend_after?: number;
-      code?: string;
-      retry_after?: number;
-    }>('/auth/verification/resend/', {
-      method: 'POST',
-      body: JSON.stringify({ verification_id }),
-    });
-  }
-
-  async sendVerification(email: string) {
-    return this.client.request<{
-      success: boolean;
-      message: string;
-      verification_id: string;
-      email_masked: string;
-      expires_in: number;
-      resend_after: number;
-    }>('/auth/verification/send/', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  async verifyOTP(payload: { email_or_username?: string; verification_id?: string; otp?: string; code?: string }) {
-    const vid = payload.verification_id || '';
-    const code = payload.code || payload.otp || '';
-    return this.checkVerification({ verification_id: vid, code });
-  }
-
-  async resendOTP(identifier: string) {
-    return this.resendVerification(identifier);
   }
 
   async getProfile() {

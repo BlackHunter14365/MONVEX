@@ -271,9 +271,8 @@ else:
 # Gemini API Config
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
-# Email & OTP Delivery Architecture — SMTP-First Engine
+# Transactional Email Architecture — SMTP Engine
 EMAIL_PROVIDER = os.getenv('EMAIL_PROVIDER', 'smtp').strip().lower()
-OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER).strip().lower()
 
 # Primary Production SMTP Configuration
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
@@ -322,7 +321,7 @@ if not DEBUG:
     if not EMAIL_HOST_USER:
         _config_logger.error("CRITICAL CONFIGURATION ERROR: EMAIL_HOST_USER is missing in production.")
     if not EMAIL_HOST_PASSWORD:
-        _config_logger.error("CRITICAL CONFIGURATION ERROR: EMAIL_HOST_PASSWORD is missing in production. OTP dispatches will fail.")
+        _config_logger.warning("CONFIGURATION NOTICE: EMAIL_HOST_PASSWORD is not set. Outgoing emails may fail.")
     if EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
         _config_logger.error("CRITICAL SECURITY ERROR: console.EmailBackend is configured with DEBUG=False. Forbidden in production.")
     else:
@@ -330,23 +329,6 @@ if not DEBUG:
         _config_logger.info(
             f"Production SMTP configured: host={EMAIL_HOST}:{EMAIL_PORT}, user={_masked_user}, ssl={EMAIL_USE_SSL}, tls={EMAIL_USE_TLS}, timeout={EMAIL_TIMEOUT}s"
         )
-
-# Managed OTP Verification Policies
-OTP_CHANNEL = os.getenv('OTP_CHANNEL', 'email')
-OTP_EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 600))
-OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', 60))
-OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', 5))
-OTP_MAX_RESENDS = int(os.getenv('OTP_MAX_RESENDS', 5))
-
-
-# Authentication & Verification Policy Flags
-AUTH_REQUIRE_EMAIL_VERIFICATION = os.getenv('AUTH_REQUIRE_EMAIL_VERIFICATION', 'true').lower() in ('true', '1', 'yes')
-
-# Twilio Verify Settings
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')
-TWILIO_API_KEY = os.getenv('TWILIO_API_KEY', '')
-TWILIO_API_SECRET = os.getenv('TWILIO_API_SECRET', '')
-TWILIO_VERIFY_SERVICE_SID = os.getenv('TWILIO_VERIFY_SERVICE_SID', '')
 
 # Google OAuth 2.0 / Identity Services Configuration
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')

@@ -26,15 +26,10 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     ProfileSerializer,
-    VerificationCheckSerializer,
-    VerificationResendSerializer,
-    VerificationSendSerializer,
     GoogleAuthSerializer,
     GoogleLinkAccountSerializer
 )
-from .models import Profile, VerificationSession
-from services.verification_service import VerificationService
-from services.providers.base import ProviderError
+from .models import Profile
 
 def get_client_context(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -45,20 +40,6 @@ def get_client_context(request):
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     return {'ip': ip, 'user_agent': user_agent}
 
-def provider_error_response(pe: ProviderError) -> Response:
-    """
-    Maps verification provider failures to appropriate HTTP status codes:
-    - 503 Service Unavailable for transport/infrastructure failures (delivery failed, provider unavailable, provider error)
-    - 400 Bad Request for client-side semantic issues (invalid recipient format, etc.)
-    """
-    service_down_codes = {'PROVIDER_UNAVAILABLE', 'OTP_DELIVERY_FAILED', 'OTP_PROVIDER_ERROR'}
-    status_code = status.HTTP_503_SERVICE_UNAVAILABLE if pe.code in service_down_codes else status.HTTP_400_BAD_REQUEST
-    return Response({
-        "success": False,
-        "code": pe.code,
-        "message": pe.message
-    }, status=status_code)
-
 class RegisterView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
@@ -67,31 +48,17 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
-        ctx = get_client_context(request)
-
         try:
             with transaction.atomic():
                 user = serializer.save()
-
-                if not require_otp:
-                    refresh = RefreshToken.for_user(user)
-                    return Response({
-                        "success": True,
-                        "message": "Account created successfully.",
-                        "access": str(refresh.access_token),
-                        "refresh": str(refresh),
-                        "user": UserSerializer(user).data
-                    }, status=status.HTTP_201_CREATED)
-
-                verification_resp = VerificationService.start_email_verification(
-                    user=user,
-                    email=user.email,
-                    purpose="REGISTRATION",
-                    channel="EMAIL",
-                    request_context=ctx
-                )
-                return Response(verification_resp, status=status.HTTP_201_CREATED)
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    "success": True,
+                    "message": "Account created successfully.",
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "user": UserSerializer(user).data
+                }, status=status.HTTP_201_CREATED)
 
         except IntegrityError as ie:
             logger.warning(f"Registration integrity conflict for {request.data.get('username')}: {ie}")
@@ -100,9 +67,6 @@ class RegisterView(APIView):
                 "code": "USER_ALREADY_EXISTS",
                 "message": "An account with this username or email already exists. Please sign in or use different credentials."
             }, status=status.HTTP_400_BAD_REQUEST)
-        except ProviderError as pe:
-            logger.error(f"Registration OTP dispatch failed: {pe.code} - {pe.message}")
-            return provider_error_response(pe)
         except Exception as exc:
             logger.error(f"Unexpected registration exception: {str(exc)}", exc_info=True)
             return Response({
@@ -111,246 +75,11 @@ class RegisterView(APIView):
                 "message": "Unable to complete registration right now. Please try again or contact support."
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-class RegisterVerifyOTPView(APIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = VerificationCheckSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        vid = str(serializer.validated_data['verification_id'])
-        code = str(serializer.validated_data['code'])
-        ctx = get_client_context(request)
-
-        try:
-            result = VerificationService.check_email_verification(
-                verification_id=vid,
-                code=code,
-                purpose="REGISTRATION",
-                request_context=ctx
-            )
-        except ProviderError as pe:
-            return provider_error_response(pe)
-
-        if not result.get('success', False):
-            code_type = result.get('code')
-            if code_type in ['TOO_MANY_ATTEMPTS', 'RESEND_LIMIT']:
-                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            elif code_type == 'VERIFICATION_NOT_FOUND':
-                return Response(result, status=status.HTTP_404_NOT_FOUND)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        # Flatten token fields for direct client access
-        data_payload = result.get('data', {})
-        response_data = {
-            "success": True,
-            "message": result.get("message", "Email verified successfully."),
-            "access": data_payload.get("access"),
-            "refresh": data_payload.get("refresh"),
-            "user": data_payload.get("user"),
-            "data": data_payload
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-
-class RegisterResendOTPView(APIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = VerificationResendSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        vid = str(serializer.validated_data['verification_id'])
-        ctx = get_client_context(request)
-
-        try:
-            result = VerificationService.resend_email_verification(
-                verification_id=vid,
-                purpose="REGISTRATION",
-                request_context=ctx
-            )
-        except ProviderError as pe:
-            return provider_error_response(pe)
-
-        if not result.get('success', False):
-            if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:
-                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            elif result.get('code') == 'VERIFICATION_NOT_FOUND':
-                return Response(result, status=status.HTTP_404_NOT_FOUND)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(result, status=status.HTTP_200_OK)
-
-class VerificationCheckView(APIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        # Support both new verification_id schema and legacy payload
-        data = request.data.copy()
-        if 'email_or_username' in data and 'verification_id' not in data:
-            identifier = data.get('email_or_username', '').strip()
-            user = User.objects.filter(Q(email__iexact=identifier) | Q(username__iexact=identifier)).first()
-            if user:
-                session = VerificationSession.objects.filter(user=user, status='PENDING').order_by('-created_at').first()
-                if session:
-                    data['verification_id'] = str(session.id)
-            if 'otp' in data and 'code' not in data:
-                data['code'] = data['otp']
-
-        serializer = VerificationCheckSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-
-        vid = str(serializer.validated_data['verification_id'])
-        code = str(serializer.validated_data['code'])
-        ctx = get_client_context(request)
-
-        try:
-            result = VerificationService.check_email_verification(
-                verification_id=vid,
-                code=code,
-                request_context=ctx
-            )
-        except ProviderError as pe:
-            return provider_error_response(pe)
-
-        if not result.get('success', False):
-            code_type = result.get('code')
-            if code_type in ['TOO_MANY_ATTEMPTS', 'RESEND_LIMIT']:
-                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            elif code_type == 'VERIFICATION_NOT_FOUND':
-                return Response(result, status=status.HTTP_404_NOT_FOUND)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        data_payload = result.get('data', {})
-        response_data = {
-            "success": True,
-            "message": result.get("message", "Verification successful."),
-            "access": data_payload.get("access"),
-            "refresh": data_payload.get("refresh"),
-            "user": data_payload.get("user"),
-            "data": data_payload
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-
-class VerificationResendView(APIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        data = request.data.copy()
-        if 'email_or_username' in data and 'verification_id' not in data:
-            identifier = data.get('email_or_username', '').strip()
-            user = User.objects.filter(Q(email__iexact=identifier) | Q(username__iexact=identifier)).first()
-            if user:
-                session = VerificationSession.objects.filter(user=user, status='PENDING').order_by('-created_at').first()
-                if session:
-                    data['verification_id'] = str(session.id)
-
-        serializer = VerificationResendSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-
-        vid = str(serializer.validated_data['verification_id'])
-        ctx = get_client_context(request)
-
-        try:
-            result = VerificationService.resend_email_verification(
-                verification_id=vid,
-                request_context=ctx
-            )
-        except ProviderError as pe:
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
-
-        if not result.get('success', False):
-            if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:
-                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            elif result.get('code') == 'VERIFICATION_NOT_FOUND':
-                return Response(result, status=status.HTTP_404_NOT_FOUND)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(result, status=status.HTTP_200_OK)
-
-class VerificationSendView(APIView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = VerificationSendSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email = serializer.validated_data['email'].strip().lower()
-        user = User.objects.filter(email__iexact=email).first()
-        ctx = get_client_context(request)
-
-        try:
-            result = VerificationService.start_email_verification(
-                user=user,
-                email=email,
-                purpose="REGISTRATION",
-                channel="EMAIL",
-                request_context=ctx
-            )
-            return Response(result, status=status.HTTP_200_OK)
-        except ProviderError as pe:
-            return Response({
-                "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
-
-class VerificationStatusView(APIView):
-    """
-    Returns session metadata for safe route refresh recovery without leaking sensitive data.
-    """
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        vid = request.query_params.get('verification_id') or request.query_params.get('id')
-        if not vid:
-            return Response({
-                "success": False,
-                "code": "MISSING_VERIFICATION_ID",
-                "message": "verification_id parameter is required."
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        session = VerificationSession.objects.filter(id=vid).first()
-        if not session:
-            return Response({
-                "success": False,
-                "code": "VERIFICATION_NOT_FOUND",
-                "message": "Verification session not found or expired."
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        now = timezone.now()
-        seconds_left = max(0, int((session.expires_at - now).total_seconds())) if session.expires_at else 0
-        resend_cooldown_left = session.seconds_until_resend(60)
-
-        return Response({
-            "success": True,
-            "verification_id": str(session.id),
-            "status": session.status,
-            "purpose": session.purpose,
-            "email_masked": VerificationService.mask_email(session.destination),
-            "expires_in": seconds_left,
-            "resend_after": resend_cooldown_left,
-            "is_expired": session.is_expired(),
-            "attempts_remaining": max(0, session.max_attempts - session.attempt_count)
-        }, status=status.HTTP_200_OK)
-
 class CustomLoginView(APIView):
     """
-    Two-Stage Login View:
-    Stage 1: Validates credentials.
-    - If AUTH_REQUIRE_EMAIL_VERIFICATION is enabled:
-      Dispatches a 6-digit LOGIN OTP to user's registered email address and returns { requires_otp: true, verification_id: ... }.
-    - If disabled: Issues JWT tokens directly.
+    Standard Login View:
+    Validates credentials, checks password hash, verifies account active status,
+    and issues SimpleJWT access and refresh tokens directly.
     """
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
@@ -374,159 +103,20 @@ class CustomLoginView(APIView):
                 "message": "Invalid username/email or password."
             }, status=status.HTTP_401_UNAUTHORIZED)
 
-        profile = getattr(user, 'profile', None)
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
-
-        if require_otp:
-            # Check if user account was never verified at registration
-            if not user.is_active or (profile and not profile.email_verified and profile.status == 'PENDING_VERIFICATION'):
-                ctx = get_client_context(request)
-                try:
-                    otp_resp = VerificationService.start_email_verification(
-                        user=user,
-                        email=user.email,
-                        purpose="REGISTRATION",
-                        channel="EMAIL",
-                        request_context=ctx
-                    )
-                    return Response({
-                        "success": True,
-                        "requires_otp": True,
-                        "verification_purpose": "REGISTRATION",
-                        "verification_id": otp_resp["verification_id"],
-                        "email_masked": otp_resp["email_masked"],
-                        "expires_in": otp_resp["expires_in"],
-                        "resend_after": otp_resp["resend_after"],
-                        "message": "Your account requires email verification before signing in. We've sent a 6-digit code to your email."
-                    }, status=status.HTTP_200_OK)
-                except ProviderError as pe:
-                    return provider_error_response(pe)
-
-            # Stage 1: Send LOGIN OTP
-            ctx = get_client_context(request)
-            try:
-                otp_resp = VerificationService.start_email_verification(
-                    user=user,
-                    email=user.email,
-                    purpose="LOGIN",
-                    channel="EMAIL",
-                    request_context=ctx
-                )
-                return Response({
-                    "success": True,
-                    "requires_otp": True,
-                    "verification_purpose": "LOGIN",
-                    "verification_id": otp_resp["verification_id"],
-                    "email_masked": otp_resp["email_masked"],
-                    "expires_in": otp_resp["expires_in"],
-                    "resend_after": otp_resp["resend_after"],
-                    "message": "Verification code sent to your email."
-                }, status=status.HTTP_200_OK)
-            except ProviderError as pe:
-                return provider_error_response(pe)
-        else:
-            if not user.is_active:
-                return Response({
-                    "success": False,
-                    "code": "ACCOUNT_DISABLED",
-                    "message": "This account is disabled. Please contact support."
-                }, status=status.HTTP_403_FORBIDDEN)
-
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                "success": True,
-                "requires_otp": False,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-                "user": UserSerializer(user).data
-            }, status=status.HTTP_200_OK)
-
-class LoginVerifyOTPView(APIView):
-    """
-    Two-Stage Login View:
-    Stage 2: Verifies LOGIN OTP and issues JWT access and refresh tokens.
-    """
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = VerificationCheckSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        vid = str(serializer.validated_data['verification_id'])
-        code = str(serializer.validated_data['code'])
-        ctx = get_client_context(request)
-
-        session = VerificationSession.objects.filter(id=vid).first()
-        target_purpose = session.purpose if (session and session.purpose in ['LOGIN', 'REGISTRATION', 'EMAIL_SIGNUP']) else "LOGIN"
-
-        try:
-            result = VerificationService.check_email_verification(
-                verification_id=vid,
-                code=code,
-                purpose=target_purpose,
-                request_context=ctx
-            )
-        except ProviderError as pe:
+        if not user.is_active:
             return Response({
                 "success": False,
-                "code": pe.code,
-                "message": pe.message
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE if pe.code == "PROVIDER_UNAVAILABLE" else status.HTTP_400_BAD_REQUEST)
+                "code": "ACCOUNT_DISABLED",
+                "message": "This account is disabled. Please contact support."
+            }, status=status.HTTP_403_FORBIDDEN)
 
-        if not result.get('success', False):
-            code_type = result.get('code')
-            if code_type in ['TOO_MANY_ATTEMPTS', 'RESEND_LIMIT']:
-                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            elif code_type == 'VERIFICATION_NOT_FOUND':
-                return Response(result, status=status.HTTP_404_NOT_FOUND)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        data_payload = result.get('data', {})
-        response_data = {
+        refresh = RefreshToken.for_user(user)
+        return Response({
             "success": True,
-            "message": result.get("message", "Login successful."),
-            "access": data_payload.get("access"),
-            "refresh": data_payload.get("refresh"),
-            "user": data_payload.get("user"),
-            "data": data_payload
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-
-class LoginResendOTPView(APIView):
-    """
-    Two-Stage Login: Resends LOGIN OTP with cooldown enforcement.
-    """
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = VerificationResendSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        vid = str(serializer.validated_data['verification_id'])
-        ctx = get_client_context(request)
-
-        session = VerificationSession.objects.filter(id=vid).first()
-        target_purpose = session.purpose if (session and session.purpose in ['LOGIN', 'REGISTRATION', 'EMAIL_SIGNUP']) else "LOGIN"
-
-        try:
-            result = VerificationService.resend_email_verification(
-                verification_id=vid,
-                purpose=target_purpose,
-                request_context=ctx
-            )
-        except ProviderError as pe:
-            return provider_error_response(pe)
-
-        if not result.get('success', False):
-            if result.get('code') in ['RESEND_COOLDOWN', 'RESEND_LIMIT']:
-                return Response(result, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            elif result.get('code') == 'VERIFICATION_NOT_FOUND':
-                return Response(result, status=status.HTTP_404_NOT_FOUND)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(result, status=status.HTTP_200_OK)
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": UserSerializer(user).data
+        }, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):
     authentication_classes = []

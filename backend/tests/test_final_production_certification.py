@@ -21,7 +21,7 @@ from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from apps.authentication.models import Profile, VerificationSession
+from apps.authentication.models import Profile
 from apps.transactions.models import (
     Transaction, Category, Merchant, Asset, Liability, RecurringPayment, Notification
 )

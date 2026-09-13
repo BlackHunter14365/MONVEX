@@ -2,7 +2,7 @@
 
 /**
  * [P] PRESENTER: Authentication Feature ViewModel
- * Encapsulates Login, Registration, OTP verification, and Google OAuth.
+ * Encapsulates Login, Registration, and Google OAuth.
  */
 
 import { useState, useCallback } from 'react';
@@ -12,9 +12,6 @@ import { LoginPayload, RegisterPayload } from '@/models';
 export interface AuthPresenterState {
   isLoading: boolean;
   error: string | null;
-  requiresOtp: boolean;
-  otpSessionId: string | null;
-  otpCooldownSeconds: number;
 }
 
 export function useAuthPresenter() {
@@ -22,9 +19,6 @@ export function useAuthPresenter() {
   const [state, setState] = useState<AuthPresenterState>({
     isLoading: false,
     error: null,
-    requiresOtp: false,
-    otpSessionId: null,
-    otpCooldownSeconds: 0,
   });
 
   const performLogin = useCallback(async (payload: LoginPayload) => {

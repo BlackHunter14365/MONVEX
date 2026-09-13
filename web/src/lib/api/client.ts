@@ -147,9 +147,6 @@ export class HttpClient {
       cleanEndpoint.startsWith('/auth/register') ||
       cleanEndpoint.startsWith('/auth/google') ||
       cleanEndpoint.startsWith('/auth/token/refresh') ||
-      cleanEndpoint.startsWith('/auth/verification') ||
-      cleanEndpoint.startsWith('/auth/verify-otp') ||
-      cleanEndpoint.startsWith('/auth/resend-otp') ||
       cleanEndpoint.startsWith('/contact') ||
       cleanEndpoint.startsWith('/security/contact');
 

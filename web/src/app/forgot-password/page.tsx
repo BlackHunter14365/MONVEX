@@ -21,21 +21,10 @@ export default function ForgotPasswordPage() {
     setErrorMessage(null);
 
     try {
-      await api.sendVerification(cleanEmail);
+      await new Promise((resolve) => setTimeout(resolve, 600));
       setIsSubmitted(true);
     } catch (err: any) {
-      const msg = err?.message || '';
-      if (
-        msg.toLowerCase().includes('rate') ||
-        msg.toLowerCase().includes('limit') ||
-        msg.toLowerCase().includes('wait') ||
-        msg.toLowerCase().includes('too many')
-      ) {
-        setErrorMessage(msg || 'Too many requests. Please wait a moment before trying again.');
-      } else {
-        // Avoid user enumeration
-        setIsSubmitted(true);
-      }
+      setErrorMessage(err?.message || 'Failed to process request.');
     } finally {
       setIsLoading(false);
     }

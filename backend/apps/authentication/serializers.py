@@ -4,7 +4,7 @@ Authentication & Verification Serializers
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Profile, VerificationSession
+from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', required=False)
@@ -140,39 +140,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_username(self, value):
-        from django.conf import settings
         clean_user = value.strip()
         if not clean_user:
             raise serializers.ValidationError("Valid username is required.")
         
-        user = User.objects.filter(username__iexact=clean_user).first()
-        if user:
-            prof = getattr(user, 'profile', None)
-            is_verified = bool(prof and prof.email_verified)
-            is_active_acc = bool(user.is_active or user.is_staff or user.is_superuser or is_verified)
-            if is_active_acc:
-                raise serializers.ValidationError("This username is already taken. Please choose another.")
+        if User.objects.filter(username__iexact=clean_user).exists():
+            raise serializers.ValidationError("This username is already taken. Please choose another.")
         return clean_user
 
     def validate_email(self, value):
-        from django.conf import settings
         clean_email = value.strip().lower()
         if not clean_email:
             raise serializers.ValidationError("Valid email address is required.")
         
-        user = User.objects.filter(email__iexact=clean_email).first()
-        if user:
-            prof = getattr(user, 'profile', None)
-            is_verified = bool(prof and prof.email_verified)
-            is_active_acc = bool(user.is_active or user.is_staff or user.is_superuser or is_verified)
-            if is_active_acc:
-                raise serializers.ValidationError("An account with this email is already registered. Please sign in instead.")
+        if User.objects.filter(email__iexact=clean_email).exists():
+            raise serializers.ValidationError("An account with this email is already registered. Please sign in instead.")
         return clean_email
 
     def create(self, validated_data):
-        from django.conf import settings
-        require_otp = getattr(settings, 'AUTH_REQUIRE_EMAIL_VERIFICATION', True)
-
         validated_data.pop('confirm_password', None)
         currency = validated_data.pop('currency', 'INR')
         monthly_income = validated_data.pop('monthly_income', 75000.00)
@@ -181,55 +166,28 @@ class RegisterSerializer(serializers.ModelSerializer):
         username = validated_data['username'].strip()
         email = validated_data.get('email', '').strip().lower()
 
-        if require_otp:
-            # Clean up abandoned, unverified user instances for this username or email
-            stale_users = User.objects.filter(
-                (Q(username__iexact=username) | Q(email__iexact=email)),
-                is_staff=False,
-                is_superuser=False
-            )
-            for u in stale_users:
-                prof = getattr(u, 'profile', None)
-                if prof and prof.email_verified:
-                    continue
-                if u.is_active and (prof is None or prof.email_verified):
-                    continue
-                u.verification_sessions.all().delete()
-                u.delete()
-
         user = User.objects.create_user(
             username=username,
             email=email,
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
             password=password,
-            is_active=not require_otp
+            is_active=True
         )
 
         profile, _ = Profile.objects.get_or_create(user=user)
         profile.currency = currency
         profile.monthly_income = monthly_income
         profile.phone_number = phone_number
-        profile.status = 'PENDING_VERIFICATION' if require_otp else 'ACTIVE'
-        profile.email_verified = not require_otp
-        profile.is_verified = not require_otp
+        profile.status = 'ACTIVE'
+        profile.email_verified = True
+        profile.is_verified = True
         profile.save()
 
-        if not require_otp:
-            from services.user_init_service import UserInitService
-            UserInitService.initialize_fresh_user_account(user)
+        from services.user_init_service import UserInitService
+        UserInitService.initialize_fresh_user_account(user)
 
         return user
-
-class VerificationCheckSerializer(serializers.Serializer):
-    verification_id = serializers.UUIDField(required=True)
-    code = serializers.CharField(required=True, min_length=4, max_length=10)
-
-class VerificationResendSerializer(serializers.Serializer):
-    verification_id = serializers.UUIDField(required=True)
-
-class VerificationSendSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
 
 class GoogleAuthSerializer(serializers.Serializer):
     credential = serializers.CharField(required=True, allow_blank=False)

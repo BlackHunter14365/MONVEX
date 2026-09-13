@@ -201,33 +201,41 @@ if not DEBUG:
 
 from corsheaders.defaults import default_headers
 
-# CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# CORS Configuration — Hardened Production Isolation
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
 def _clean_origin_url(url_str: str) -> str:
     return url_str.strip().strip('"\'').rstrip('/')
 
-_raw_cors = os.getenv(
-    'CORS_ALLOWED_ORIGINS',
-    'https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost'
-)
-_base_cors_origins = {
+_prod_cors_origins = {
     'https://monvex-web.onrender.com',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
     'tauri://localhost',
 }
-CORS_ALLOWED_ORIGINS = list(
-    _base_cors_origins | {_clean_origin_url(orig) for orig in _raw_cors.split(',') if _clean_origin_url(orig)}
-)
+_dev_cors_origins = {
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+}
+_base_cors = _prod_cors_origins | _dev_cors_origins if DEBUG else _prod_cors_origins
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https:\/\/.*\.onrender\.com$",
-    r"^http:\/\/localhost(:\d+)?$",
-    r"^http:\/\/127\.0\.0\.1(:\d+)?$",
-    r"^tauri:\/\/localhost$",
-]
+_raw_cors = os.getenv('CORS_ALLOWED_ORIGINS', '')
+if _raw_cors:
+    _custom_cors = {_clean_origin_url(orig) for orig in _raw_cors.split(',') if _clean_origin_url(orig)}
+    CORS_ALLOWED_ORIGINS = list(_base_cors | _custom_cors)
+else:
+    CORS_ALLOWED_ORIGINS = list(_base_cors)
+
+# Development-only port flexibility regexes. Strictly NO wildcard .onrender.com in production.
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http:\/\/localhost(:\d+)?$",
+        r"^http:\/\/127\.0\.0\.1(:\d+)?$",
+        r"^tauri:\/\/localhost$",
+    ]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = []
 
 CORS_ALLOW_HEADERS = (
     *default_headers,
@@ -242,20 +250,23 @@ CORS_EXPOSE_HEADERS = (
 )
 
 # CSRF Trusted Origins for Secure Production Web Requests
-_raw_csrf = os.getenv(
-    'CSRF_TRUSTED_ORIGINS',
-    'https://*.onrender.com,https://monvex-web.onrender.com,http://localhost:3000,http://127.0.0.1:3000,tauri://localhost'
-)
-_base_csrf_origins = {
-    'https://*.onrender.com',
+_prod_csrf_origins = {
     'https://monvex-web.onrender.com',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    'https://monvex-backend.onrender.com',
     'tauri://localhost',
 }
-CSRF_TRUSTED_ORIGINS = list(
-    _base_csrf_origins | {_clean_origin_url(orig) for orig in _raw_csrf.split(',') if _clean_origin_url(orig)}
-)
+_dev_csrf_origins = {
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+}
+_base_csrf = _prod_csrf_origins | _dev_csrf_origins if DEBUG else _prod_csrf_origins
+
+_raw_csrf = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if _raw_csrf:
+    _custom_csrf = {_clean_origin_url(orig) for orig in _raw_csrf.split(',') if _clean_origin_url(orig)}
+    CSRF_TRUSTED_ORIGINS = list(_base_csrf | _custom_csrf)
+else:
+    CSRF_TRUSTED_ORIGINS = list(_base_csrf)
 
 # Gemini API Config
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
@@ -268,27 +279,26 @@ OTP_PROVIDER = os.getenv('OTP_PROVIDER', EMAIL_PROVIDER).strip().lower()
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
 
-# Automatic SSL/TLS protocol resolution with mutual exclusivity enforcement
+# Strict mutual exclusivity: Port 465 is SMTPS (SSL); Port 587 is STARTTLS (TLS)
 _raw_ssl = os.getenv('EMAIL_USE_SSL')
 _raw_tls = os.getenv('EMAIL_USE_TLS')
 
-if _raw_ssl is not None:
-    EMAIL_USE_SSL = _raw_ssl.lower() in ('true', '1', 'yes')
-    EMAIL_USE_TLS = False if EMAIL_USE_SSL else (_raw_tls.lower() in ('true', '1', 'yes') if _raw_tls is not None else False)
-elif _raw_tls is not None:
-    EMAIL_USE_TLS = _raw_tls.lower() in ('true', '1', 'yes')
-    EMAIL_USE_SSL = False if EMAIL_USE_TLS else False
+if EMAIL_PORT == 465:
+    EMAIL_USE_SSL = True if _raw_ssl is None else (_raw_ssl.lower() in ('true', '1', 'yes'))
+    EMAIL_USE_TLS = False
+elif EMAIL_PORT == 587:
+    EMAIL_USE_TLS = True if _raw_tls is None else (_raw_tls.lower() in ('true', '1', 'yes'))
+    EMAIL_USE_SSL = False
 else:
-    # Port 465 is SMTPS (SSL); Port 587 is STARTTLS (TLS)
-    EMAIL_USE_SSL = (EMAIL_PORT == 465)
-    EMAIL_USE_TLS = (EMAIL_PORT == 587)
-
-# Strictly ensure mutual exclusivity to avoid Django backend ValueError
-if EMAIL_USE_SSL and EMAIL_USE_TLS:
-    if EMAIL_PORT == 465:
+    if _raw_ssl is not None and _raw_ssl.lower() in ('true', '1', 'yes'):
+        EMAIL_USE_SSL = True
         EMAIL_USE_TLS = False
+    elif _raw_tls is not None and _raw_tls.lower() in ('true', '1', 'yes'):
+        EMAIL_USE_SSL = False
+        EMAIL_USE_TLS = True
     else:
         EMAIL_USE_SSL = False
+        EMAIL_USE_TLS = False
 
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'monvexfinance@gmail.com').strip().strip('\'"')
 # Sanitize Google App Password: strip quotes, leading/trailing whitespace, and internal spaces

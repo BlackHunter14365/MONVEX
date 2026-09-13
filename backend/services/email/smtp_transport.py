@@ -70,12 +70,15 @@ class SmtpTransport:
         use_ssl = bool(getattr(settings, 'EMAIL_USE_SSL', False))
         use_tls = bool(getattr(settings, 'EMAIL_USE_TLS', False))
 
-        # Enforce mutual exclusivity
-        if use_ssl and use_tls:
-            if port == 465:
-                use_tls = False
-            else:
-                use_ssl = False
+        # Enforce mutual exclusivity strictly based on port
+        if port == 465:
+            use_ssl = True
+            use_tls = False
+        elif port == 587:
+            use_ssl = False
+            use_tls = True
+        elif use_ssl and use_tls:
+            use_tls = False
 
         raw_timeout = getattr(settings, 'EMAIL_TIMEOUT', os.getenv('EMAIL_TIMEOUT', 10))
         try:

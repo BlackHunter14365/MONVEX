@@ -300,7 +300,7 @@ export default function SettingsPage() {
         />
 
         {/* Navigation Tabs Pill Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#E4E2DC] scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#E4E2DC] scrollbar-none" role="tablist" aria-label="Settings categories">
           {navTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -308,9 +308,11 @@ export default function SettingsPage() {
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all touch-target shrink-0',
+                  'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all min-h-[44px] shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
                   isActive
                     ? 'bg-[#2A1F3D] text-white shadow-sm'
                     : 'bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] hover:bg-[#EAE8E1]'
@@ -463,8 +465,9 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">First Name</label>
+                    <label htmlFor="settings-first-name" className="text-xs font-semibold text-[#625D69] mb-1.5 block">First Name</label>
                     <input
+                      id="settings-first-name"
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
@@ -473,8 +476,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Last Name</label>
+                    <label htmlFor="settings-last-name" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Last Name</label>
                     <input
+                      id="settings-last-name"
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
@@ -483,8 +487,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Primary Phone Number</label>
+                    <label htmlFor="settings-phone" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Primary Phone Number</label>
                     <input
+                      id="settings-phone"
                       type="text"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -494,7 +499,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Account Level & Tier</label>
-                    <div className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] flex items-center justify-between touch-target">
+                    <div className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2 text-xs font-bold text-[#191522] flex items-center justify-between min-h-[48px]">
                       <span>MONVEX Institutional / Individual</span>
                       <Badge variant="neutral" size="sm">Tier 1 Sovereign</Badge>
                     </div>
@@ -505,12 +510,13 @@ export default function SettingsPage() {
               {/* Device Stored Bio */}
               <div className="space-y-1.5 pt-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#625D69] block">Personal Status Tagline</label>
+                  <label htmlFor="settings-bio" className="text-xs font-semibold text-[#625D69] block">Personal Status Tagline</label>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
                     Stored on this device
                   </span>
                 </div>
                 <input
+                  id="settings-bio"
                   type="text"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
@@ -555,8 +561,9 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Reporting Currency</label>
+                  <label htmlFor="settings-currency" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Reporting Currency</label>
                   <select
+                    id="settings-currency"
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
@@ -571,15 +578,16 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Monthly Inflow Baseline</label>
+                  <label htmlFor="settings-monthly-income" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Monthly Inflow Baseline</label>
                   <div className="relative">
                     <input
+                      id="settings-monthly-income"
                       type="number"
                       value={monthlyIncome}
                       onChange={(e) => setMonthlyIncome(e.target.value)}
                       className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] pl-8 pr-3.5 py-2.5 min-h-[48px] text-base sm:text-xs font-mono font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
                     />
-                    <span className="absolute left-3 top-3 text-xs font-bold text-[#898390]">
+                    <span className="absolute left-3 top-3 text-xs font-bold text-[#898390]" aria-hidden="true">
                       {currency === 'INR' ? '₹' : '$'}
                     </span>
                   </div>
@@ -587,7 +595,7 @@ export default function SettingsPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-semibold text-[#625D69]">
+                    <label htmlFor="settings-savings-target" className="text-xs font-semibold text-[#625D69]">
                       Target Monthly Savings Rate: {savingsTarget}%
                     </label>
                     <span className="text-[10px] font-mono text-[#059669] font-bold">
@@ -595,15 +603,20 @@ export default function SettingsPage() {
                     </span>
                   </div>
                   <input
+                    id="settings-savings-target"
                     type="range"
                     min="5"
                     max="60"
                     step="1"
                     value={savingsTarget}
+                    aria-label="Target monthly savings rate percentage"
+                    aria-valuemin={5}
+                    aria-valuemax={60}
+                    aria-valuenow={Number(savingsTarget)}
                     onChange={(e) => setSavingsTarget(e.target.value)}
-                    className="w-full accent-[#059669] cursor-pointer h-2 bg-[#E4E2DC] rounded-lg"
+                    className="w-full accent-[#059669] cursor-pointer h-2 bg-[#E4E2DC] rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#059669] focus-visible:ring-offset-2"
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390] mt-1">
+                  <div className="flex justify-between text-[10px] font-mono text-[#898390] mt-1" aria-hidden="true">
                     <span>5% (Lean)</span>
                     <span>25% (Recommended)</span>
                     <span>60% (Aggressive FIRE)</span>
@@ -612,12 +625,13 @@ export default function SettingsPage() {
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-[#625D69]">Fiscal Cycle Start Day</label>
+                    <label htmlFor="settings-fiscal-day" className="text-xs font-semibold text-[#625D69]">Fiscal Cycle Start Day</label>
                     <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#F6F5F1] text-[#625D69] border border-[#E4E2DC]">
                       Device local
                     </span>
                   </div>
                   <select
+                    id="settings-fiscal-day"
                     value={fiscalStartDay}
                     onChange={(e) => setFiscalStartDay(e.target.value)}
                     className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm"
@@ -666,62 +680,66 @@ export default function SettingsPage() {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
-                  <div>
+                  <label htmlFor="notif-anomaly" className="cursor-pointer flex-1 pr-4">
                     <span className="text-xs font-bold text-[#191522] block">Statistical Outlier Anomaly Detection</span>
                     <span className="text-[11px] text-[#625D69]">
                       Alert when a single expense exceeds 2.5 standard deviations from the 90-day category mean.
                     </span>
-                  </div>
+                  </label>
                   <input
+                    id="notif-anomaly"
                     type="checkbox"
                     checked={notifAnomaly}
                     onChange={(e) => setNotifAnomaly(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
-                  <div>
+                  <label htmlFor="notif-budget80" className="cursor-pointer flex-1 pr-4">
                     <span className="text-xs font-bold text-[#191522] block">80% Budget Velocity Warning</span>
                     <span className="text-[11px] text-[#625D69]">
                       Send alert when category spending reaches 80% with more than 10 days remaining in the billing cycle.
                     </span>
-                  </div>
+                  </label>
                   <input
+                    id="notif-budget80"
                     type="checkbox"
                     checked={notifBudget80}
                     onChange={(e) => setNotifBudget80(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
-                  <div>
+                  <label htmlFor="notif-goal-milestone" className="cursor-pointer flex-1 pr-4">
                     <span className="text-xs font-bold text-[#191522] block">Savings Goal Milestone Celebrations</span>
                     <span className="text-[11px] text-[#625D69]">
                       Display milestone confirmations at 25%, 50%, 75%, and 100% savings goal completion.
                     </span>
-                  </div>
+                  </label>
                   <input
+                    id="notif-goal-milestone"
                     type="checkbox"
                     checked={notifGoalMilestone}
                     onChange={(e) => setNotifGoalMilestone(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
-                  <div>
+                  <label htmlFor="notif-weekly-digest" className="cursor-pointer flex-1 pr-4">
                     <span className="text-xs font-bold text-[#191522] block">Weekly Digest Notification</span>
                     <span className="text-[11px] text-[#625D69]">
                       Provide Sunday morning summary of weekly cash velocity and major expenses.
                     </span>
-                  </div>
+                  </label>
                   <input
+                    id="notif-weekly-digest"
                     type="checkbox"
                     checked={notifWeeklyDigest}
                     onChange={(e) => setNotifWeeklyDigest(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
+                    className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                   />
                 </div>
               </div>
@@ -762,11 +780,12 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Affordability Emergency Buffer</label>
+                  <label htmlFor="settings-ai-buffer" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Affordability Emergency Buffer</label>
                   <select
+                    id="settings-ai-buffer"
                     value={aiEmergencyBuffer}
                     onChange={(e) => setAiEmergencyBuffer(e.target.value)}
-                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm min-h-[44px]"
                   >
                     <option value="2.0">2.0x Monthly Expenses (Lean)</option>
                     <option value="2.5">2.5x Monthly Expenses (Standard)</option>
@@ -776,11 +795,12 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Voice Dictation Dialect</label>
+                  <label htmlFor="settings-voice-lang" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Voice Dictation Dialect</label>
                   <select
+                    id="settings-voice-lang"
                     value={voiceLang}
                     onChange={(e) => setVoiceLang(e.target.value)}
-                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                    className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm min-h-[44px]"
                   >
                     <option value="en-IN">English (India - en-IN)</option>
                     <option value="en-US">English (United States - en-US)</option>
@@ -790,17 +810,18 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#E4E2DC]">
-                <div>
+                <label htmlFor="settings-ai-autocat" className="cursor-pointer flex-1 pr-4">
                   <span className="text-xs font-bold text-[#191522] block">Automatic Category Normalization</span>
                   <span className="text-[11px] text-[#625D69]">
                     Allow the AI parser to automatically map unknown merchant names (e.g. Swiggy, Uber) to standard categories.
                   </span>
-                </div>
+                </label>
                 <input
+                  id="settings-ai-autocat"
                   type="checkbox"
                   checked={aiAutoCategorize}
                   onChange={(e) => setAiAutoCategorize(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer"
+                  className="h-4 w-4 rounded border-[#E4E2DC] accent-[#2563EB] cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                 />
               </div>
 
@@ -871,11 +892,12 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="text-xs font-semibold text-[#625D69] mb-1.5 block">Inactivity Auto-Lock Timeout</label>
+                    <label htmlFor="settings-session-timeout" className="text-xs font-semibold text-[#625D69] mb-1.5 block">Inactivity Auto-Lock Timeout</label>
                     <select
+                      id="settings-session-timeout"
                       value={sessionTimeout}
                       onChange={(e) => setSessionTimeout(e.target.value)}
-                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm touch-target"
+                      className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3.5 py-2.5 text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none shadow-sm min-h-[44px]"
                     >
                       <option value="15">15 Minutes (Strict)</option>
                       <option value="60">60 Minutes (Standard)</option>

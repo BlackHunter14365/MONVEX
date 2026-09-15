@@ -466,7 +466,7 @@ export default function SecurityPage() {
               </div>
 
               {/* Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="group" aria-label="Filter audit logs">
                 {[
                   { id: 'ALL', label: 'All Logs' },
                   { id: 'CRITICAL', label: 'Blocked Attacks' },
@@ -477,8 +477,9 @@ export default function SecurityPage() {
                     key={f.id}
                     type="button"
                     onClick={() => setLogFilter(f.id as any)}
+                    aria-pressed={logFilter === f.id}
                     className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all touch-target shrink-0',
+                      'px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all min-h-[36px] shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
                       logFilter === f.id
                         ? 'bg-[#2A1F3D] text-white shadow-xs'
                         : 'bg-[#F6F5F1] text-[#625D69] hover:bg-[#EAE8E1]'
@@ -497,7 +498,7 @@ export default function SecurityPage() {
               />
             ) : (
               <div className="overflow-x-auto rounded-xl border border-[#E4E2DC]">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs" aria-label="Security event audit stream">
                   <thead className="bg-[#F6F5F1] border-b border-[#E4E2DC] font-mono text-[10px] text-[#625D69] uppercase">
                     <tr>
                       <th className="px-4 py-2.5 font-bold">Timestamp</th>

@@ -119,7 +119,12 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden animate-in fade-in duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Navigation drawer"
+      className="fixed inset-0 z-50 lg:hidden animate-in fade-in duration-200"
+    >
       {/* Backdrop overlay */}
       <div
         className="fixed inset-0 bg-[#2A1F3D]/60 backdrop-blur-sm transition-opacity"
@@ -143,15 +148,15 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[#898390] hover:text-[#191522] hover:bg-[#F6F5F1] transition-colors focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[#898390] hover:text-[#191522] hover:bg-[#F6F5F1] transition-colors focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
             aria-label="Close menu"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Scrollable Navigation Body */}
-        <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+        <nav aria-label="Drawer navigation" className="flex-1 overflow-y-auto p-3.5 space-y-4">
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-2 pb-1">
             <button
@@ -161,9 +166,10 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   window.dispatchEvent(new Event('monvex:open-command-center'));
                 }
               }}
-              className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-white border border-[#E4E2DC] text-xs font-bold text-[#191522] shadow-xs active:scale-95 transition-all"
+              className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-white border border-[#E4E2DC] text-xs font-bold text-[#191522] shadow-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+              aria-label="Open search command center"
             >
-              <Search className="h-3.5 w-3.5 text-[#4056A1]" />
+              <Search className="h-3.5 w-3.5 text-[#4056A1]" aria-hidden="true" />
               <span>Search</span>
             </button>
 
@@ -173,9 +179,10 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   onClose();
                   onOpenAddTransaction();
                 }}
-                className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-subtle active:scale-95 transition-all"
+                className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-subtle active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                aria-label="Add transaction record"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Add Record</span>
               </button>
             )}
@@ -202,15 +209,16 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                     key={item.name}
                     href={item.href}
                     onClick={handleNavClick}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'flex items-center justify-between rounded-xl px-3 py-2.5 min-h-[44px] text-xs font-bold transition-all',
+                      'flex items-center justify-between rounded-xl px-3 py-2.5 min-h-[44px] text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
                       isActive
                         ? 'bg-[#EEEAF7] text-[#191522] shadow-xs border border-[#625477]/20'
                         : 'text-[#625D69] hover:text-[#191522] hover:bg-white/60'
                     )}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-[#2A1F3D]' : 'text-[#898390]')} />
+                      <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-[#2A1F3D]' : 'text-[#898390]')} aria-hidden="true" />
                       <span>{item.name}</span>
                     </div>
                     {item.badge && (
@@ -226,7 +234,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
               })}
             </div>
           ))}
-        </div>
+        </nav>
 
         {/* Bottom User & Sign Out Footer */}
         <div className="p-3.5 border-t border-[#E4E2DC] bg-white/90 space-y-2">

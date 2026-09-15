@@ -72,6 +72,7 @@ export const FinancialCommandBar: React.FC<FinancialCommandBarProps> = ({
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
             onKeyDown={handleKeyDown}
+            aria-label="Financial AI copilot command input"
             placeholder={
               isRecording
                 ? 'Listening to your financial command...'
@@ -86,8 +87,8 @@ export const FinancialCommandBar: React.FC<FinancialCommandBarProps> = ({
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-lg text-[#898390] hover:text-[#191522] hover:bg-[#F3F1F8] transition-colors shrink-0 mt-1.5"
-              aria-label="Clear input"
+              className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#191522] hover:bg-[#F3F1F8] transition-colors shrink-0 mt-0.5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+              aria-label="Clear input text"
             >
               <X className="h-4 w-4" />
             </button>
@@ -98,13 +99,13 @@ export const FinancialCommandBar: React.FC<FinancialCommandBarProps> = ({
             type="button"
             onClick={toggleVoiceRecording}
             className={cn(
-              'p-2 rounded-xl border transition-all shrink-0 mt-0.5 cursor-pointer',
+              'p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl border transition-all shrink-0 mt-0.5 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
               isRecording
                 ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
                 : 'bg-white hover:bg-[#F6F5F1] text-[#625D69] border-[#E4E2DC] hover:text-[#191522]'
             )}
             title={isRecording ? 'Stop voice recording' : 'Voice command (Speech Recognition)'}
-            aria-label="Voice input"
+            aria-label={isRecording ? 'Stop voice recording' : 'Voice command input'}
           >
             {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </button>
@@ -115,12 +116,12 @@ export const FinancialCommandBar: React.FC<FinancialCommandBarProps> = ({
             onClick={() => onSend()}
             disabled={!inputQuery.trim() || isLoading}
             className={cn(
-              'inline-flex items-center justify-center p-2 rounded-xl font-bold transition-all shrink-0 mt-0.5 shadow-xs cursor-pointer',
+              'inline-flex items-center justify-center p-2 min-h-[40px] min-w-[40px] rounded-xl font-bold transition-all shrink-0 mt-0.5 shadow-xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
               inputQuery.trim() && !isLoading
                 ? 'bg-[#2A1F3D] hover:bg-[#3B2D54] text-white hover:scale-105 active:scale-95'
                 : 'bg-[#EEEAF7] text-[#898390] cursor-not-allowed opacity-70'
             )}
-            aria-label="Execute command"
+            aria-label="Send financial command"
           >
             <ArrowUp className="h-4 w-4" />
           </button>

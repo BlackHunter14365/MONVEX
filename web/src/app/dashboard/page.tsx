@@ -445,27 +445,33 @@ export default function DashboardPage() {
                       <div className="flex rounded-lg bg-[#F6F5F1] p-0.5 border border-[#E4E2DC]">
                         <button
                           onClick={() => setChartMetric('EXPENSE')}
+                          aria-pressed={chartMetric === 'EXPENSE'}
+                          aria-label="View outflow trajectory"
                           className={cn(
-                            'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer',
-                            chartMetric === 'EXPENSE' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69]'
+                            'px-2.5 py-1 min-h-[32px] rounded-md text-[10px] font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
+                            chartMetric === 'EXPENSE' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69] hover:text-[#191522]'
                           )}
                         >
                           Outflows
                         </button>
                         <button
                           onClick={() => setChartMetric('DUAL')}
+                          aria-pressed={chartMetric === 'DUAL'}
+                          aria-label="View inflows versus outflows trajectory"
                           className={cn(
-                            'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer',
-                            chartMetric === 'DUAL' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69]'
+                            'px-2.5 py-1 min-h-[32px] rounded-md text-[10px] font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
+                            chartMetric === 'DUAL' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69] hover:text-[#191522]'
                           )}
                         >
                           In vs Out
                         </button>
                         <button
                           onClick={() => setChartMetric('NET')}
+                          aria-pressed={chartMetric === 'NET'}
+                          aria-label="View net cash trajectory"
                           className={cn(
-                            'px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer',
-                            chartMetric === 'NET' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69]'
+                            'px-2.5 py-1 min-h-[32px] rounded-md text-[10px] font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
+                            chartMetric === 'NET' ? 'bg-white text-[#191522] shadow-xs' : 'text-[#625D69] hover:text-[#191522]'
                           )}
                         >
                           Net Flow
@@ -652,7 +658,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Desktop Table */}
-                      <table className="ref-table hidden sm:table">
+                      <table aria-label="Recent transactions ledger" className="ref-table hidden sm:table">
                         <thead>
                           <tr>
                             <th className="w-[20%]">Date</th>
@@ -746,10 +752,10 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-[#625D69] leading-relaxed">{item.desc}</p>
                         <Link
                           href={item.actionUrl}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2563EB] hover:underline"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1D4ED8] hover:underline focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none rounded-md px-1 -mx-1"
                         >
                           <span>{item.actionLabel}</span>
-                          <ArrowRight className="h-3 w-3" />
+                          <ArrowRight className="h-3 w-3" aria-hidden="true" />
                         </Link>
                       </div>
                     ))}

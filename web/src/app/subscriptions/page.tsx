@@ -365,14 +365,15 @@ export default function SubscriptionsPage() {
               </div>
 
               {/* Frequency Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto">
+              <div className="flex items-center gap-1.5 overflow-x-auto" role="group" aria-label="Filter subscriptions by frequency">
                 {['ALL', 'MONTHLY', 'YEARLY', 'WEEKLY'].map((freq) => (
                   <button
                     key={freq}
                     type="button"
                     onClick={() => setFilterFrequency(freq)}
+                    aria-pressed={filterFrequency === freq}
                     className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all touch-target',
+                      'px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all touch-target focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
                       filterFrequency === freq
                         ? 'bg-[#2A1F3D] text-white shadow-sm'
                         : 'bg-[#F6F5F1] text-[#625D69] hover:bg-[#EAE8E1]'
@@ -394,9 +395,9 @@ export default function SubscriptionsPage() {
             ) : filteredSubscriptions.length === 0 ? (
               <EmptyState
                 title={
-                  subscriptions.length === 0
-                    ? 'No subscriptions registered'
-                    : `No ${filterFrequency.toLowerCase()} subscriptions found`
+                  filterFrequency !== 'ALL'
+                    ? `No ${filterFrequency.toLowerCase()} subscriptions`
+                    : 'No subscriptions active'
                 }
                 description={
                   subscriptions.length === 0
@@ -426,7 +427,7 @@ export default function SubscriptionsPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-xl bg-[#F6F5F1] text-[#2A1F3D] flex items-center justify-center font-bold border border-[#E4E2DC]">
-                            <Icon className="h-4 w-4 text-[#4056A1]" />
+                            <Icon className="h-4 w-4 text-[#4056A1]" aria-hidden="true" />
                           </div>
                           <div>
                             <span className="text-xs font-bold text-[#191522] block">{sub.name}</span>
@@ -439,10 +440,11 @@ export default function SubscriptionsPage() {
                         <button
                           type="button"
                           onClick={() => handleDelete(sub.id)}
-                          className="text-[#898390] hover:text-[#E11D48] p-1.5 transition-colors touch-target"
+                          className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                          aria-label={`Remove subscription ${sub.name}`}
                           title="Remove subscription"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       </div>
 

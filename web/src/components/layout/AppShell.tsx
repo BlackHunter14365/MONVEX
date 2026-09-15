@@ -70,6 +70,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background text-text-primary flex flex-col lg:flex-row antialiased">
+      {/* Keyboard Accessibility Skip Link (WCAG 2.2 AA) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-[#2A1F3D] focus:text-white focus:rounded-xl focus:shadow-xl focus:font-bold focus:text-xs focus:ring-2 focus:ring-offset-2 focus:ring-[#4056A1]"
+      >
+        Skip to main content
+      </a>
+
       {/* Editorial Sidebar Rail */}
       <Sidebar onOpenAddTransaction={() => setIsAddTxOpen(true)} />
 
@@ -82,8 +90,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         />
 
         <main
+          id="main-content"
+          tabIndex={-1}
           className={cn(
-            'flex-1 w-full max-w-[1720px] mx-auto flex flex-col',
+            'flex-1 w-full max-w-[1720px] mx-auto flex flex-col outline-none',
             isAIPage ? 'p-0 lg:p-8' : 'p-4 sm:p-6 lg:p-8'
           )}
         >

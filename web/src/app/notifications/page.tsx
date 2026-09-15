@@ -191,11 +191,21 @@ export default function NotificationsPage() {
               </div>
 
               {/* Right 5 cols: Severity Counter Strips */}
-              <div className="lg:col-span-5 grid grid-cols-3 gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#E4E2DC] lg:pl-6">
+              <div className="lg:col-span-5 grid grid-cols-3 gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#E4E2DC] lg:pl-6" role="group" aria-label="Filter by severity level">
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={filterSeverity === 'CRITICAL'}
+                  aria-label={`Filter critical notifications (${criticalCount})`}
                   onClick={() => setFilterSeverity(filterSeverity === 'CRITICAL' ? 'ALL' : 'CRITICAL')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFilterSeverity(filterSeverity === 'CRITICAL' ? 'ALL' : 'CRITICAL');
+                    }
+                  }}
                   className={cn(
-                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 touch-target',
+                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#E11D48]',
                     filterSeverity === 'CRITICAL'
                       ? 'bg-[#FFF1F2] border-[#E11D48] ring-1 ring-[#E11D48]'
                       : 'bg-[#F6F5F1] border-[#E4E2DC] hover:border-[#CBD5E1]'
@@ -209,9 +219,19 @@ export default function NotificationsPage() {
                 </div>
 
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={filterSeverity === 'WARNING'}
+                  aria-label={`Filter warning notifications (${warningCount})`}
                   onClick={() => setFilterSeverity(filterSeverity === 'WARNING' ? 'ALL' : 'WARNING')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFilterSeverity(filterSeverity === 'WARNING' ? 'ALL' : 'WARNING');
+                    }
+                  }}
                   className={cn(
-                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 touch-target',
+                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#D97706]',
                     filterSeverity === 'WARNING'
                       ? 'bg-[#FFFBEB] border-[#D97706] ring-1 ring-[#D97706]'
                       : 'bg-[#F6F5F1] border-[#E4E2DC] hover:border-[#CBD5E1]'
@@ -225,9 +245,19 @@ export default function NotificationsPage() {
                 </div>
 
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={filterSeverity === 'INFO'}
+                  aria-label={`Filter info notifications (${notifications.filter((n) => n.severity === 'INFO' && !n.is_read).length})`}
                   onClick={() => setFilterSeverity(filterSeverity === 'INFO' ? 'ALL' : 'INFO')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFilterSeverity(filterSeverity === 'INFO' ? 'ALL' : 'INFO');
+                    }
+                  }}
                   className={cn(
-                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 touch-target',
+                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
                     filterSeverity === 'INFO'
                       ? 'bg-[#EFF6FF] border-[#2563EB] ring-1 ring-[#2563EB]'
                       : 'bg-[#F6F5F1] border-[#E4E2DC] hover:border-[#CBD5E1]'
@@ -247,7 +277,7 @@ export default function NotificationsPage() {
         {/* =========================================================================
             2. FILTER STRIP
             ========================================================================= */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#E4E2DC] scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#E4E2DC] scrollbar-none" role="tablist" aria-label="Filter notifications by category">
           {[
             { id: 'ALL', label: 'All Telemetry' },
             { id: 'BUDGET_WARNING', label: 'Budget Warnings' },
@@ -258,9 +288,11 @@ export default function NotificationsPage() {
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={filterType === tab.id}
               onClick={() => setFilterType(tab.id)}
               className={cn(
-                'px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all whitespace-nowrap touch-target shrink-0',
+                'px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all whitespace-nowrap min-h-[44px] shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
                 filterType === tab.id
                   ? 'bg-[#2A1F3D] text-white shadow-xs'
                   : 'bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] hover:bg-[#EAE8E1]'
@@ -367,8 +399,9 @@ export default function NotificationsPage() {
                           <button
                             type="button"
                             onClick={() => handleMarkRead(notif.id)}
-                            className="p-2 rounded-lg hover:bg-[#F6F5F1] text-[#898390] hover:text-[#059669] transition-colors touch-target"
+                            className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#F6F5F1] text-[#898390] hover:text-[#059669] transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#059669]"
                             title="Mark as read"
+                            aria-label={`Mark notification as read: ${notif.title}`}
                           >
                             <Check className="h-4 w-4" />
                           </button>

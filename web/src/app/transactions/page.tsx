@@ -267,27 +267,29 @@ export default function TransactionsPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             {/* Search Input */}
             <div className="relative w-full md:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search merchant, notes, or category..."
-                className="w-full pl-10 pr-3.5 py-2 min-h-[48px] rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-base sm:text-xs font-semibold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/15 focus:outline-none transition-all"
+                aria-label="Search transactions by merchant, description or category"
+                className="w-full pl-10 pr-3.5 py-2 min-h-[48px] rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-base sm:text-xs font-semibold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/20 focus:outline-none transition-all"
               />
             </div>
 
             {/* Type & Sort Controls */}
             <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end flex-wrap">
               {/* Type Filter Pills */}
-              <div className="flex rounded-xl bg-[#F6F5F1] p-0.5 border border-[#E4E2DC]">
+              <div className="flex rounded-xl bg-[#F6F5F1] p-0.5 border border-[#E4E2DC]" role="group" aria-label="Filter transactions by type">
                 {(['ALL', 'EXPENSE', 'INCOME'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setTypeFilter(t)}
+                    aria-pressed={typeFilter === t}
                     className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer',
-                      typeFilter === t ? 'bg-[#2A1F3D] text-white shadow-xs' : 'text-[#625D69]'
+                      'px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
+                      typeFilter === t ? 'bg-[#2A1F3D] text-white shadow-xs' : 'text-[#625D69] hover:text-[#191522]'
                     )}
                   >
                     {t === 'ALL' ? 'All' : t === 'EXPENSE' ? 'Outflows' : 'Inflows'}
@@ -299,7 +301,8 @@ export default function TransactionsPage() {
               <select
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
-                className="rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[44px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                aria-label="Sort transactions"
+                className="rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[44px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4056A1]/40"
               >
                 <option value="date_desc">Newest First</option>
                 <option value="amount_desc">Highest Amount</option>
@@ -436,7 +439,7 @@ export default function TransactionsPage() {
 
                 {/* Desktop High-Density Table View (hidden sm:block) */}
                 <div className="hidden sm:block overflow-x-auto">
-                  <table className="ref-table">
+                  <table aria-label="Financial transactions ledger" className="ref-table">
                     <thead>
                       <tr>
                         <th className="w-[15%]">Date</th>
@@ -508,20 +511,20 @@ export default function TransactionsPage() {
                               />
                             </td>
                             <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center justify-end gap-1.5">
+                              <div className="flex items-center justify-end gap-1">
                                 <button
                                   onClick={() => setEditingTx(tx)}
-                                  className="text-[#898390] hover:text-[#2563EB] p-1.5 rounded-lg hover:bg-[#EFF6FF] border border-transparent hover:border-[#BFDBFE] transition-all"
-                                  aria-label="Edit transaction"
+                                  className="text-[#898390] hover:text-[#1D4ED8] p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#EFF6FF] border border-transparent hover:border-[#BFDBFE] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                                  aria-label={`Edit transaction ${getTransactionDisplayName(tx)}`}
                                 >
-                                  <Edit2 className="h-3.5 w-3.5" />
+                                  <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
                                 </button>
                                 <button
                                   onClick={() => handleDelete(tx.id)}
-                                  className="text-[#898390] hover:text-[#E11D48] p-1.5 rounded-lg hover:bg-[#FFF1F2] border border-transparent hover:border-[#FECDD3] transition-all"
-                                  aria-label="Delete transaction"
+                                  className="text-[#898390] hover:text-[#DC2626] p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                                  aria-label={`Delete transaction ${getTransactionDisplayName(tx)}`}
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                                 </button>
                               </div>
                             </td>

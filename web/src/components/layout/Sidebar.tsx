@@ -95,8 +95,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
           <Link
             key={item.name}
             href={item.href}
+            aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150',
+              'flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-bold transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1',
               isActive
                 ? 'bg-[#EEEAF7] text-[#191522] shadow-2xs border border-[#625477]/20 scale-[1.01]'
                 : 'text-[#625D69] hover:text-[#191522] hover:bg-white/70'
@@ -108,6 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                   'h-4 w-4 shrink-0 transition-colors',
                   isActive ? 'text-[#2A1F3D]' : 'text-[#898390]'
                 )}
+                aria-hidden="true"
               />
               <span>{item.name}</span>
             </div>
@@ -117,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
               </span>
             )}
             {isActive && !item.badge && (
-              <span className="h-1.5 w-1.5 rounded-full bg-[#2A1F3D]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2A1F3D]" aria-hidden="true" />
             )}
           </Link>
         );
@@ -127,22 +129,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 liquid-glass-sidebar select-none z-30 justify-between">
+      <aside aria-label="Application sidebar" className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 liquid-glass-sidebar select-none z-30 justify-between">
         {/* Top Header & Navigation */}
         <div className="flex flex-col min-h-0 flex-1">
           {/* USER PROFILE HEADER CAPSULE */}
           <div className="p-3 border-b border-[#E4E2DC]/80 bg-white/40">
             <button
               onClick={() => setIsProfileModalOpen(true)}
-              className="w-full flex items-center justify-between p-2 rounded-2xl hover:bg-white/80 transition-all text-left group border border-transparent hover:border-[#E4E2DC] hover:shadow-sm"
+              className="w-full flex items-center justify-between p-2 rounded-2xl hover:bg-white/80 transition-all text-left group border border-transparent hover:border-[#E4E2DC] hover:shadow-sm focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
               title="Click to open Profile Setup & Customization"
+              aria-label={`User profile settings for ${fullName}`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 {/* User Avatar with Online Dot */}
                 <div className="relative shrink-0">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-md ring-2 ring-white/90 bg-[#2A1F3D] text-white text-xs font-black">
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                      <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
                     ) : avatarPreset ? (
                       <div className={cn('h-full w-full flex items-center justify-center text-lg bg-gradient-to-br', avatarPreset.bg)}>
                         {avatarPreset.emoji}
@@ -151,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                       <span>{fullName.slice(0, 2).toUpperCase()}</span>
                     )}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#10B981] ring-2 ring-white" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#10B981] ring-2 ring-white" aria-hidden="true" />
                 </div>
 
                 {/* Name & Low-Opacity Username */}
@@ -166,14 +169,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
               </div>
 
               {/* Action Chevron */}
-              <div className="p-1 rounded-lg text-[#898390] group-hover:text-[#191522] group-hover:bg-white transition-all shrink-0">
+              <div className="p-1 rounded-lg text-[#898390] group-hover:text-[#191522] group-hover:bg-white transition-all shrink-0" aria-hidden="true">
                 <Sliders className="h-3.5 w-3.5" />
               </div>
             </button>
           </div>
 
           {/* Navigation Groups */}
-          <div className="flex-1 px-3.5 py-4 space-y-4 overflow-y-auto">
+          <nav aria-label="Main sidebar navigation" className="flex-1 px-3.5 py-4 space-y-4 overflow-y-auto">
             {/* Quick Command Center Trigger */}
             <button
               onClick={() => {
@@ -181,10 +184,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
                   window.dispatchEvent(new Event('monvex:open-command-center'));
                 }
               }}
-              className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold bg-[#FAF9F6] text-[#625D69] hover:text-[#191522] hover:bg-[#EEEAF7]/50 border border-[#E4E2DC] transition-all shadow-2xs group mb-2"
+              className="w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-bold bg-[#FAF9F6] text-[#625D69] hover:text-[#191522] hover:bg-[#EEEAF7]/50 border border-[#E4E2DC] transition-all shadow-2xs group mb-2 focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+              aria-label="Open Command Center (Ctrl+K)"
             >
               <div className="flex items-center gap-2">
-                <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522]" />
+                <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522]" aria-hidden="true" />
                 <span className="text-[11px]">Command Center</span>
               </div>
               <kbd className="px-1.5 py-0.5 rounded-sm bg-white border border-[#E4E2DC] text-[9px] font-mono text-[#898390] font-bold">
@@ -198,7 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenAddTransaction }) => {
             {renderNavGroup('Financial Intelligence', intelligenceNav)}
             {renderNavGroup('Documents & Reports', documentsNav)}
             {renderNavGroup('System & Security', systemNav)}
-          </div>
+          </nav>
         </div>
 
         {/* Bottom Status Card */}

@@ -114,13 +114,15 @@ export default function ForecastPage() {
           title="Predictive Cash Flow & Runway Forecast"
           description="Probabilistic time-series forward trajectory modeling. Projects end-of-period liquidity with empirical confidence intervals and scenario sensitivity levers."
           actionSlot={
-            <div className="flex items-center p-1 rounded-2xl bg-white border border-[#E2DFD7] shadow-2xs">
+            <div className="flex items-center p-1 rounded-2xl bg-white border border-[#E2DFD7] shadow-2xs" role="group" aria-label="Forecast timeframe">
               {[30, 60, 90].map((d) => (
                 <button
                   key={d}
                   onClick={() => setDays(d)}
+                  aria-pressed={days === d}
+                  aria-label={`${d} days forecast window`}
                   className={cn(
-                    'rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all min-h-[44px]',
+                    'rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
                     days === d
                       ? 'bg-[#2A1F3D] text-white shadow-xs'
                       : 'text-[#625D69] hover:text-[#191522]'
@@ -341,7 +343,7 @@ export default function ForecastPage() {
                   {/* Income Adjustment Lever */}
                   <div className="space-y-2 p-4 rounded-2xl bg-white border border-[#E4E2DC] shadow-2xs">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-[#191522]">Monthly Inflow Adjustment</span>
+                      <span className="font-bold text-[#191522]" id="income-adjust-label">Monthly Inflow Adjustment</span>
                       <span className={cn('font-mono font-bold', incomeDelta >= 0 ? 'text-[#059669]' : 'text-[#E11D48]')}>
                         {incomeDelta >= 0 ? '+' : ''}{formatCurrency(incomeDelta, user?.currency)}/mo
                       </span>
@@ -352,10 +354,15 @@ export default function ForecastPage() {
                       max="50000"
                       step="2500"
                       value={incomeDelta}
+                      aria-labelledby="income-adjust-label"
+                      aria-label="Monthly inflow adjustment"
+                      aria-valuemin={-25000}
+                      aria-valuemax={50000}
+                      aria-valuenow={incomeDelta}
                       onChange={(e) => setIncomeDelta(parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2563EB]"
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2563EB] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                     />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                       <span>-₹25k (Paycut)</span>
                       <span>Baseline (₹0)</span>
                       <span>+₹50k (Raise)</span>
@@ -365,7 +372,7 @@ export default function ForecastPage() {
                   {/* Expense Reduction Lever */}
                   <div className="space-y-2 p-4 rounded-2xl bg-white border border-[#E4E2DC] shadow-2xs">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-[#191522]">Monthly Spending Reduction</span>
+                      <span className="font-bold text-[#191522]" id="expense-adjust-label">Monthly Spending Reduction</span>
                       <span className={cn('font-mono font-bold', expenseDelta >= 0 ? 'text-[#059669]' : 'text-[#E11D48]')}>
                         {expenseDelta >= 0 ? '-' : '+'}{formatCurrency(Math.abs(expenseDelta), user?.currency)}/mo
                       </span>
@@ -376,10 +383,15 @@ export default function ForecastPage() {
                       max="30000"
                       step="1500"
                       value={expenseDelta}
+                      aria-labelledby="expense-adjust-label"
+                      aria-label="Monthly spending reduction"
+                      aria-valuemin={-15000}
+                      aria-valuemax={30000}
+                      aria-valuenow={expenseDelta}
                       onChange={(e) => setExpenseDelta(parseInt(e.target.value))}
-                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2563EB]"
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#2563EB] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                     />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                       <span>+₹15k (Extra Burn)</span>
                       <span>Baseline (₹0)</span>
                       <span>-₹30k (Frugal)</span>

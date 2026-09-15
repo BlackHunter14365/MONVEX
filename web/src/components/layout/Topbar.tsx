@@ -128,17 +128,17 @@ export const Topbar: React.FC<TopbarProps> = ({
               window.dispatchEvent(new Event('monvex:open-mobile-drawer'));
             }
           }}
-          className="lg:hidden h-11 w-11 flex items-center justify-center rounded-xl text-[#191522] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+          className="lg:hidden h-11 w-11 flex items-center justify-center rounded-xl text-[#191522] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
           aria-label="Open navigation menu"
         >
-          <Menu className="h-4 w-4" />
+          <Menu className="h-4 w-4" aria-hidden="true" />
         </button>
 
         <h1 className="text-sm sm:text-lg font-bold text-[#191522] tracking-tight truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
           {getPageTitle()}
         </h1>
         <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E8F7F1] text-[#059669] border border-[#A7F3D0] text-[10px] font-bold shrink-0">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" aria-hidden="true" />
           Live
         </span>
       </div>
@@ -150,11 +150,11 @@ export const Topbar: React.FC<TopbarProps> = ({
             window.dispatchEvent(new Event('monvex:open-command-center'));
           }
         }}
-        className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-white/90 hover:bg-white border border-[#E4E2DC] hover:border-[#7184C4]/40 text-xs text-[#625D69] hover:text-[#191522] transition-all shadow-2xs group max-w-[140px] sm:max-w-xs sm:w-64 focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+        className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 min-h-[44px] rounded-xl bg-white/90 hover:bg-white border border-[#E4E2DC] hover:border-[#7184C4]/40 text-xs text-[#625D69] hover:text-[#191522] transition-all shadow-2xs group max-w-[140px] sm:max-w-xs sm:w-64 focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
         title="Open Universal Command Center (Ctrl+K / Cmd+K)"
         aria-label="Search MONVEX (Ctrl+K)"
       >
-        <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522] shrink-0" />
+        <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522] shrink-0" aria-hidden="true" />
         <span className="hidden sm:inline font-medium">Search MONVEX...</span>
         <span className="sm:hidden font-medium text-[11px] truncate">Search...</span>
         <kbd className="ml-auto hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-sm bg-[#F6F5F1] border border-[#E4E2DC] text-[10px] font-mono font-bold text-[#625D69]">
@@ -178,11 +178,11 @@ export const Topbar: React.FC<TopbarProps> = ({
             }}
             aria-expanded={isNotificationsOpen}
             aria-haspopup="true"
-            className="relative h-11 w-11 flex items-center justify-center rounded-lg text-[#625D69] hover:text-[#191522] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+            className="relative h-11 w-11 flex items-center justify-center rounded-xl text-[#625D69] hover:text-[#191522] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
             aria-label="Notifications"
           >
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#E11D48] text-white text-[9px] font-black">
+            <Bell className="h-4 w-4" aria-hidden="true" />
+            <span className="absolute top-1.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#E11D48] text-white text-[9px] font-black">
               2
             </span>
           </button>
@@ -201,7 +201,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               <div className="space-y-2">
                 <div className="p-2.5 rounded-lg bg-[#E8F7F1]/80 border border-[#A7F3D0] text-xs">
                   <div className="flex items-center gap-1.5 text-[#059669] font-bold">
-                    <TrendingUp className="h-3.5 w-3.5" />
+                    <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>Monthly Surplus on Track</span>
                   </div>
                   <p className="text-[11px] text-[#065F46] mt-1 font-medium leading-relaxed">
@@ -210,7 +210,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#E9EDFA]/80 border border-[#7184C4]/30 text-xs">
                   <div className="flex items-center gap-1.5 text-[#26335F] font-bold">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#4056A1]" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#4056A1]" aria-hidden="true" />
                     <span>Security Engine Active</span>
                   </div>
                   <p className="text-[11px] text-[#334155] mt-1 font-medium leading-relaxed">
@@ -227,9 +227,9 @@ export const Topbar: React.FC<TopbarProps> = ({
           <button
             onClick={onOpenAddTransaction}
             aria-label="Add transaction"
-            className="hidden sm:flex items-center gap-1.5 rounded-lg bg-[#2A1F3D] hover:bg-[#3B2D54] active:bg-[#21182F] py-2 px-3.5 min-h-[40px] text-xs font-bold text-white transition-all shadow-subtle active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
+            className="hidden sm:flex items-center gap-1.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] active:bg-[#21182F] py-2 px-3.5 min-h-[44px] text-xs font-bold text-white transition-all shadow-subtle active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Add transaction</span>
           </button>
         )}

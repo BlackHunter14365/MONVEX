@@ -260,7 +260,14 @@ export default function GoalsPage() {
                           </span>
                         </div>
 
-                        <div className="w-full h-2 bg-[#F1F0EC] rounded-full overflow-hidden">
+                        <div
+                          role="progressbar"
+                          aria-valuenow={pct}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`${g.title || g.name} milestone progress`}
+                          className="w-full h-2 bg-[#F1F0EC] rounded-full overflow-hidden"
+                        >
                           <div
                             className={cn(
                               'h-full rounded-full transition-all',
@@ -308,10 +315,10 @@ export default function GoalsPage() {
 
                       <button
                         onClick={() => handleDeleteGoal(g.id)}
-                        className="p-1.5 rounded-lg text-[#898390] hover:text-[#E11D48] hover:bg-[#FFF1F2] transition-all"
-                        aria-label="Delete goal"
+                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                        aria-label={`Delete savings goal ${g.title || g.name}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </div>
                   </div>

@@ -134,7 +134,7 @@ export default function ReportsPage() {
                   size="sm"
                   onClick={handleExportCSV}
                   leftIcon={<FileSpreadsheet className="h-3.5 w-3.5" />}
-                  className="text-xs font-bold touch-target"
+                  className="text-xs font-bold min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                 >
                   Export CSV
                 </Button>
@@ -143,7 +143,7 @@ export default function ReportsPage() {
                   size="sm"
                   onClick={handleExportJSON}
                   leftIcon={<FileCode className="h-3.5 w-3.5" />}
-                  className="text-xs font-bold touch-target"
+                  className="text-xs font-bold min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                 >
                   Export JSON
                 </Button>
@@ -152,7 +152,7 @@ export default function ReportsPage() {
                   size="sm"
                   onClick={() => window.print()}
                   leftIcon={<Printer className="h-3.5 w-3.5" />}
-                  className="text-xs font-bold touch-target"
+                  className="text-xs font-bold min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                 >
                   Print
                 </Button>
@@ -162,7 +162,7 @@ export default function ReportsPage() {
                   onClick={handleDownloadPDF}
                   isLoading={isGeneratingPDF}
                   leftIcon={<Download className="h-3.5 w-3.5" />}
-                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm touch-target"
+                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
                 >
                   Download PDF
                 </Button>
@@ -296,7 +296,7 @@ export default function ReportsPage() {
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-[#E4E2DC]">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs" aria-label="Category expenditure and outflow concentration">
                   <thead className="bg-[#F6F5F1] border-b border-[#E4E2DC] font-mono text-[10px] text-[#625D69] uppercase">
                     <tr>
                       <th className="px-4 py-2.5 font-bold">Category</th>

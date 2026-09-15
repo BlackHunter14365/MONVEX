@@ -107,8 +107,8 @@ export default function AnalyticsPage() {
           </div>
 
           <Link href="/forecast">
-            <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-[#F6F5F1] text-[#191522] border border-[#E4E2DC] text-xs font-bold shadow-2xs transition-all cursor-pointer">
-              <TrendingUp className="h-3.5 w-3.5 text-[#2563EB]" />
+            <button className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-xl bg-white hover:bg-[#F6F5F1] text-[#191522] border border-[#E4E2DC] text-xs font-bold shadow-2xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1">
+              <TrendingUp className="h-3.5 w-3.5 text-[#2563EB]" aria-hidden="true" />
               <span>90-Day Forecast Runway &rarr;</span>
             </button>
           </Link>

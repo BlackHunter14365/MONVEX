@@ -392,10 +392,11 @@ export default function NetWorthPage() {
                             <button
                               type="button"
                               onClick={() => handleDeleteAsset(a.id)}
-                              className="text-[#898390] hover:text-[#E11D48] p-1 transition-colors"
+                              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                              aria-label={`Delete asset position ${a.name}`}
                               title="Delete position"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
                           </div>
                         </div>
@@ -414,7 +415,7 @@ export default function NetWorthPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-[#E4E2DC]">
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FFF1F2] text-[#E11D48]">
-                      <CreditCard className="h-4 w-4" />
+                      <CreditCard className="h-4 w-4" aria-hidden="true" />
                     </div>
                     <div>
                       <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
@@ -427,7 +428,7 @@ export default function NetWorthPage() {
                   <button
                     type="button"
                     onClick={() => setIsAddLiabOpen(true)}
-                    className="text-xs font-bold text-[#E11D48] hover:underline"
+                    className="text-xs font-bold text-[#DC2626] hover:underline"
                   >
                     + Add Debt
                   </button>
@@ -456,7 +457,7 @@ export default function NetWorthPage() {
                         >
                           <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF1F2] text-[#E11D48]">
-                              <CreditCard className="h-4 w-4" />
+                              <CreditCard className="h-4 w-4" aria-hidden="true" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -476,10 +477,11 @@ export default function NetWorthPage() {
                             <button
                               type="button"
                               onClick={() => handleDeleteLiability(l.id)}
-                              className="text-[#898390] hover:text-[#E11D48] p-1 transition-colors"
+                              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                              aria-label={`Delete liability ${l.name}`}
                               title="Delete liability"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                             </button>
                           </div>
                         </div>

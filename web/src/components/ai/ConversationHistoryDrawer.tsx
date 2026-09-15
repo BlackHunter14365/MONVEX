@@ -37,6 +37,16 @@ export const ConversationHistoryDrawer: React.FC<ConversationHistoryDrawerProps>
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const filteredHistory = chatHistory.filter((c) =>
@@ -55,22 +65,31 @@ export const ConversationHistoryDrawer: React.FC<ConversationHistoryDrawerProps>
         <span className="font-mono text-[10px] font-bold text-[#898390] uppercase tracking-wider block px-2">
           {groupTitle}
         </span>
-        <div className="space-y-1">
+        <div className="space-y-1" role="list">
           {sessions.map((session) => {
             const isActive = session.id === currentConversationId;
             return (
               <div
                 key={session.id}
+                role="listitem"
                 onClick={() => {
                   onSelectConversation(session.id);
                   onClose();
                 }}
                 className={cn(
-                  'group flex items-center justify-between gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer select-none',
+                  'group flex items-center justify-between gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer select-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
                   isActive
                     ? 'bg-[#EEEAF7] text-[#191522] border-[#625477]/30 shadow-2xs'
                     : 'bg-white hover:bg-[#FAF9FD] text-[#625D69] hover:text-[#191522] border-[#E4E2DC]'
                 )}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectConversation(session.id);
+                    onClose();
+                  }
+                }}
               >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div
@@ -78,16 +97,18 @@ export const ConversationHistoryDrawer: React.FC<ConversationHistoryDrawerProps>
                       'h-2 w-2 rounded-full shrink-0',
                       isActive ? 'bg-[#2A1F3D]' : 'bg-[#C9C4D4]'
                     )}
+                    aria-hidden="true"
                   />
                   <span className="truncate">{session.title}</span>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                   <button
                     type="button"
                     onClick={(e) => onDeleteConversation(e, session.id)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    className="p-1 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose-500"
                     title="Delete session"
+                    aria-label={`Delete session: ${session.title}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -101,11 +122,12 @@ export const ConversationHistoryDrawer: React.FC<ConversationHistoryDrawerProps>
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Intelligence session history">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/30 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Slide-over Drawer Panel */}
@@ -128,7 +150,7 @@ export const ConversationHistoryDrawer: React.FC<ConversationHistoryDrawerProps>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-[#898390] hover:text-[#191522] hover:bg-[#EEEAF7] transition-colors"
+              className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#898390] hover:text-[#191522] hover:bg-[#EEEAF7] transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
               aria-label="Close history drawer"
             >
               <X className="h-4 w-4" />
@@ -142,7 +164,7 @@ export const ConversationHistoryDrawer: React.FC<ConversationHistoryDrawerProps>
               onNewChat();
               onClose();
             }}
-            className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+            className="w-full min-h-[44px] flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
           >
             <Plus className="h-4 w-4" />
             <span>Start Fresh Session</span>

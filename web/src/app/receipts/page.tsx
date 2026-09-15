@@ -419,7 +419,16 @@ export default function ReceiptsPage() {
           <div className="lg:col-span-7 space-y-5">
             {/* DROPZONE */}
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Upload receipt image or document"
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
               onDragOver={(e) => {
                 e.preventDefault();
                 setIsDragOver(true);
@@ -435,7 +444,7 @@ export default function ReceiptsPage() {
                 if (file) handleFileUpload(file);
               }}
               className={cn(
-                'double-bezel cursor-pointer transition-all',
+                'double-bezel cursor-pointer transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 rounded-2xl',
                 isDragOver ? 'ring-2 ring-[#2563EB]' : ''
               )}
             >
@@ -446,7 +455,7 @@ export default function ReceiptsPage() {
                 )}
               >
                 <div className="h-14 w-14 rounded-2xl bg-[#F6F5F1] text-[#2A1F3D] flex items-center justify-center mx-auto transition-all shadow-sm border border-[#E4E2DC]">
-                  {isUploading ? <RefreshCw className="h-6 w-6 animate-spin text-[#2563EB]" /> : <Upload className="h-6 w-6" />}
+                  {isUploading ? <RefreshCw className="h-6 w-6 animate-spin text-[#2563EB]" aria-hidden="true" /> : <Upload className="h-6 w-6" aria-hidden="true" />}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[#191522]">
@@ -502,8 +511,9 @@ export default function ReceiptsPage() {
                   {/* Editable Fields */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-xs font-semibold text-[#625D69] mb-1 block">Merchant</label>
+                      <label htmlFor="edit-merchant" className="text-xs font-semibold text-[#625D69] mb-1 block">Merchant</label>
                       <input
+                        id="edit-merchant"
                         type="text"
                         value={editMerchant}
                         onChange={(e) => setEditMerchant(e.target.value)}
@@ -512,8 +522,9 @@ export default function ReceiptsPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-[#625D69] mb-1 block">Total Amount</label>
+                      <label htmlFor="edit-amount" className="text-xs font-semibold text-[#625D69] mb-1 block">Total Amount</label>
                       <input
+                        id="edit-amount"
                         type="number"
                         step="0.01"
                         value={editAmount}
@@ -523,8 +534,9 @@ export default function ReceiptsPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-[#625D69] mb-1 block">Category</label>
+                      <label htmlFor="edit-category" className="text-xs font-semibold text-[#625D69] mb-1 block">Category</label>
                       <select
+                        id="edit-category"
                         value={editCategory}
                         onChange={(e) => setEditCategory(e.target.value)}
                         className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:outline-none focus:border-[#4056A1]"
@@ -614,14 +626,15 @@ export default function ReceiptsPage() {
                 </div>
 
                 {/* Filter Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filter receipts by status">
                   {['ALL', 'PENDING_REVIEW', 'CONFIRMED'].map((st) => (
                     <button
                       key={st}
                       type="button"
                       onClick={() => setFilterStatus(st)}
+                      aria-pressed={filterStatus === st}
                       className={cn(
-                        'px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all touch-target',
+                        'px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all min-h-[36px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
                         filterStatus === st
                           ? 'bg-[#2A1F3D] text-white shadow-xs'
                           : 'bg-[#F6F5F1] text-[#625D69] hover:bg-[#EAE8E1]'
@@ -646,21 +659,32 @@ export default function ReceiptsPage() {
                     onAction={() => fileInputRef.current?.click()}
                   />
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5" role="list">
                     {filteredReceipts.map((rec) => {
                       const isSelected = activeReceipt?.id === rec.id;
 
                       return (
                         <div
                           key={rec.id}
+                          role="listitem"
+                          tabIndex={0}
                           onClick={() => {
                             setActiveReceipt(rec);
                             setEditMerchant(rec.merchant_name || '');
                             setEditAmount(String(rec.total_amount || ''));
                             setEditCategory(rec.predicted_category || 'Groceries');
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setActiveReceipt(rec);
+                              setEditMerchant(rec.merchant_name || '');
+                              setEditAmount(String(rec.total_amount || ''));
+                              setEditCategory(rec.predicted_category || 'Groceries');
+                            }
+                          }}
                           className={cn(
-                            'p-3.5 rounded-xl border transition-all cursor-pointer space-y-2',
+                            'p-3.5 rounded-xl border transition-all cursor-pointer space-y-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
                             isSelected
                               ? 'border-[#2563EB] bg-white shadow-sm ring-1 ring-[#2563EB]/20'
                               : 'border-[#E4E2DC] bg-[#F6F5F1] hover:bg-white'

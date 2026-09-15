@@ -32,6 +32,36 @@ interface GoogleSignInButtonProps {
   theme?: 'outline' | 'filled_blue' | 'filled_black';
 }
 
+/** Official Google 4-color 'G' Logo SVG */
+const GoogleGLogo: React.FC<{ className?: string }> = ({ className = 'w-[18px] h-[18px]' }) => (
+  <svg
+    className={cn('shrink-0', className)}
+    viewBox="0 0 48 48"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <g>
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
+      <path fill="none" d="M0 0h48v48H0z" />
+    </g>
+  </svg>
+);
+
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onSuccess,
   onError,
@@ -68,6 +98,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   );
 
   const computeButtonWidth = useCallback(() => {
+    if (width) return typeof width === 'number' ? width : parseInt(String(width), 10) || 270;
     if (shape === 'pill') {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 420;
       return isMobile ? 250 : 270;
@@ -77,14 +108,22 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     const directWidth = googleBtnContainerRef.current.offsetWidth || 0;
     const availableWidth = directWidth || parentWidth || 380;
     return Math.min(400, Math.max(240, Math.floor(availableWidth)));
-  }, [shape]);
+  }, [shape, width]);
+
+  const [targetWidth, setTargetWidth] = useState<number>(270);
+
+  // Initialize and track target width on mount/resize
+  useEffect(() => {
+    setTargetWidth(computeButtonWidth());
+  }, [computeButtonWidth]);
 
   const renderGoogleButton = useCallback(() => {
     if (!googleBtnContainerRef.current) return;
 
     try {
       googleBtnContainerRef.current.innerHTML = '';
-      const targetWidth = computeButtonWidth();
+      const w = computeButtonWidth();
+      setTargetWidth(w);
 
       googleAuthCoordinator.renderButton(googleBtnContainerRef.current, {
         type: shape === 'circle' ? 'icon' : 'standard',
@@ -93,7 +132,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         text,
         shape: shape === 'circle' ? 'circle' : shape === 'pill' ? 'pill' : 'rectangular',
         logo_alignment: 'left',
-        width: targetWidth,
+        width: w,
       });
     } catch (err) {
       console.warn('[MONVEX-GOOGLE] Error rendering button:', err);
@@ -169,7 +208,6 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [gisState, renderGoogleButton]);
 
-
   const buttonTextLabel =
     text === 'signup_with'
       ? 'Sign up with Google'
@@ -177,99 +215,111 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       ? 'Sign in with Google'
       : 'Continue with Google';
 
-  const targetWidth = computeButtonWidth();
+  const isPill = shape === 'pill';
+  const borderRadiusClass = isPill ? 'rounded-full' : 'rounded-md';
 
   return (
     <div className={cn('relative w-full flex flex-col items-center justify-center', className)}>
-      {/* Precision Frame for Google SSO Token (Unique Capsule Design) */}
+      {/*
+        STRICT FIXED GEOMETRY CONTAINER:
+        Guarantees 100% identical bounding rectangle before, during, and after authentication.
+        Zero width stretching, zero leftward movement, zero double-border artifacts.
+      */}
       <div
         className={cn(
-          'relative inline-flex items-center justify-center transition-all duration-200',
-          shape === 'pill'
-            ? 'p-0.5 rounded-full bg-white/70 border border-[#E4E2DC] shadow-2xs hover:shadow-xs hover:border-[#D6D4CD]'
-            : 'w-full'
+          'relative overflow-hidden select-none shadow-2xs hover:shadow-xs transition-shadow duration-150',
+          borderRadiusClass
         )}
+        style={{ width: `${targetWidth}px`, height: '40px' }}
       >
-        {/* Official Google GSI Rendered Button Container (ALWAYS MOUNTED IN DOM) */}
+        {/* Official Google GSI Rendered Button (ALWAYS MOUNTED IN DOM TO PRESERVE GIS LIFECYCLE) */}
         <div
           ref={googleBtnContainerRef}
           id={containerDomId}
-          className={cn(
-            'flex justify-center items-center transition-all duration-200',
-            gisState === 'READY' && !isLoading && !disabled
-              ? 'opacity-100 min-h-[40px]'
-              : 'opacity-0 h-0 overflow-hidden pointer-events-none'
-          )}
+          className="w-full h-full flex justify-center items-center"
+          style={{ width: `${targetWidth}px`, height: '40px' }}
         />
 
-        {/* Loading State Pill */}
+        {/* Initial GIS Script Load Placeholder (Exact Matching Geometry & Icon Anchor) */}
         {gisState === 'LOADING' && (
           <div
             aria-label="Connecting to Google"
-            className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full border border-[#E4E2DC] bg-white text-[#625D69] text-xs font-medium shadow-2xs min-h-[40px] select-none"
-            style={{ width: `${targetWidth}px` }}
+            aria-live="polite"
+            className={cn(
+              'absolute inset-0 z-10 flex items-center bg-white border border-[#dadce0] pointer-events-auto select-none',
+              borderRadiusClass
+            )}
+            style={{ width: `${targetWidth}px`, height: '40px', boxSizing: 'border-box' }}
           >
-            <svg className="h-4 w-4 shrink-0 animate-pulse" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-              />
-            </svg>
-            <span>Connecting to Google...</span>
-            <Loader2 className="h-3 w-3 animate-spin text-[#898390] ml-1" />
+            {/* Stable Google G Icon Anchor: Exact 12px Left, 11px Top Offset */}
+            <div className="absolute left-[12px] top-[11px] w-[18px] h-[18px] flex items-center justify-center shrink-0">
+              <GoogleGLogo className="w-[18px] h-[18px] animate-pulse" />
+            </div>
+
+            {/* Stable Text Alignment: Exact 38px Left Offset */}
+            <span className="absolute left-[38px] text-[14px] font-medium text-[#5f6368] leading-none select-none tracking-normal truncate max-w-[170px]">
+              Connecting...
+            </span>
+
+            {/* Trailing Activity Indicator: Anchored on the Right */}
+            <div className="absolute right-[14px] top-[12px] w-4 h-4 flex items-center justify-center shrink-0">
+              <Loader2 className="h-4 w-4 animate-spin text-[#70757a]" />
+            </div>
           </div>
         )}
 
-        {/* Internal In-Flight Auth State Pill */}
+        {/*
+          IN-FLIGHT ACTIVE/LOADING OVERLAY:
+          Mounts as an absolute overlay directly on top of the button frame.
+          Prevents duplicate clicks, maintains EXACT 1:1 pixel alignment of the G icon,
+          text start position, and button boundaries. Zero left/right expansion.
+        */}
         {gisState === 'READY' && isLoading && (
           <div
-            aria-label="Signing you in with Google"
-            className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full border border-[#E4E2DC] bg-[#FBFBFA] text-[#191522] text-xs font-medium shadow-2xs min-h-[40px] select-none"
-            style={{ width: `${targetWidth}px` }}
+            aria-label="Signing in with Google"
+            aria-live="polite"
+            className={cn(
+              'absolute inset-0 z-10 flex items-center bg-white border border-[#dadce0] pointer-events-auto cursor-wait select-none',
+              borderRadiusClass
+            )}
+            style={{ width: `${targetWidth}px`, height: '40px', boxSizing: 'border-box' }}
           >
-            <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
-            <span>Signing in...</span>
+            {/* Stable Google G Icon Anchor: Exact 12px Left, 11px Top Offset */}
+            <div className="absolute left-[12px] top-[11px] w-[18px] h-[18px] flex items-center justify-center shrink-0">
+              <GoogleGLogo className="w-[18px] h-[18px]" />
+            </div>
+
+            {/* Stable Text Alignment: Exact 38px Left Offset */}
+            <span className="absolute left-[38px] text-[14px] font-medium text-[#3c4043] leading-none select-none tracking-normal truncate max-w-[170px]">
+              Signing in...
+            </span>
+
+            {/* Trailing Activity Indicator: Anchored on the Right */}
+            <div className="absolute right-[14px] top-[12px] w-4 h-4 flex items-center justify-center shrink-0">
+              <Loader2 className="h-4 w-4 animate-spin text-[#1a73e8]" />
+            </div>
           </div>
         )}
 
-        {/* Disabled State Pill */}
+        {/* Disabled Overlay */}
         {gisState === 'READY' && disabled && !isLoading && (
           <div
             aria-label="Google Sign-In disabled"
-            className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-full border border-[#E4E2DC] bg-[#F6F5F1] opacity-50 text-[#898390] text-xs font-medium shadow-2xs min-h-[40px] cursor-not-allowed select-none"
-            style={{ width: `${targetWidth}px` }}
+            className={cn(
+              'absolute inset-0 z-10 flex items-center bg-[#F8F9FA] border border-[#dadce0] opacity-60 cursor-not-allowed select-none',
+              borderRadiusClass
+            )}
+            style={{ width: `${targetWidth}px`, height: '40px', boxSizing: 'border-box' }}
           >
-            <svg className="h-4 w-4 shrink-0 grayscale opacity-60" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-              />
-            </svg>
-            <span>{buttonTextLabel}</span>
+            {/* Stable Google G Icon Anchor: Exact 12px Left, 11px Top Offset */}
+            <div className="absolute left-[12px] top-[11px] w-[18px] h-[18px] flex items-center justify-center shrink-0 grayscale opacity-60">
+              <GoogleGLogo className="w-[18px] h-[18px]" />
+            </div>
+
+            {/* Stable Text Alignment: Exact 38px Left Offset */}
+            <span className="absolute left-[38px] text-[14px] font-medium text-[#70757a] leading-none select-none tracking-normal truncate max-w-[210px]">
+              {buttonTextLabel}
+            </span>
           </div>
         )}
       </div>

@@ -400,18 +400,23 @@ export default function DebtPage() {
                       step="500"
                       value={extraPayment}
                       onChange={(e) => setExtraPayment(Number(e.target.value))}
+                      aria-label="Extra monthly principal prepayment"
+                      aria-valuemin={500}
+                      aria-valuemax={25000}
+                      aria-valuenow={extraPayment}
                       className="w-full accent-[#059669] cursor-pointer h-2 bg-[#E4E2DC] rounded-lg"
                     />
 
                     {/* Quick Preset Buttons */}
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center gap-2 pt-1" role="group" aria-label="Prepayment preset options">
                       {[1000, 2500, 5000, 10000].map((preset) => (
                         <button
                           key={preset}
                           type="button"
                           onClick={() => setExtraPayment(preset)}
+                          aria-pressed={extraPayment === preset}
                           className={cn(
-                            'flex-1 py-1.5 rounded-lg text-[10px] font-mono font-bold border transition-all touch-target',
+                            'flex-1 py-1.5 rounded-lg text-[10px] font-mono font-bold border transition-all touch-target focus-visible:ring-2 focus-visible:ring-[#059669]/40 focus-visible:outline-none',
                             extraPayment === preset
                               ? 'bg-[#059669] text-white border-[#059669]'
                               : 'bg-white text-[#625D69] border-[#E4E2DC] hover:border-[#CBD5E1]'
@@ -596,7 +601,14 @@ export default function DebtPage() {
                                 <span>Paid: {loan.progress_pct}%</span>
                                 <span>Monthly EMI: {formatCurrency(loan.monthly_emi, user?.currency)}</span>
                               </div>
-                              <div className="h-2 rounded-full bg-[#F6F5F1] overflow-hidden border border-[#E4E2DC]">
+                              <div
+                                role="progressbar"
+                                aria-valuenow={loan.progress_pct}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                aria-label={`${loan.name} payoff progress`}
+                                className="h-2 rounded-full bg-[#F6F5F1] overflow-hidden border border-[#E4E2DC]"
+                              >
                                 <div
                                   className="h-full bg-[#059669] rounded-full transition-all"
                                   style={{ width: `${Math.min(100, Math.max(4, loan.progress_pct))}%` }}
@@ -614,7 +626,7 @@ export default function DebtPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleSelectLoan(loan.id)}
-                                  className="text-[11px] font-bold text-[#2563EB] hover:underline touch-target"
+                                  className="text-[11px] font-bold text-[#1D4ED8] hover:underline touch-target focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none rounded px-1"
                                 >
                                   Simulate
                                 </button>
@@ -622,10 +634,11 @@ export default function DebtPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteLoan(loan.id)}
-                                  className="text-[11px] font-bold text-[#898390] hover:text-[#E11D48] transition-colors p-1 touch-target"
+                                  className="text-[11px] font-bold text-[#898390] hover:text-[#DC2626] transition-colors p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                                  aria-label={`Remove debt obligation ${loan.name}`}
                                   title="Remove debt obligation"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                                 </button>
                               </div>
                             </div>

@@ -144,33 +144,33 @@ export default function SimulatorPage() {
         />
 
         {/* PRESET QUICK-SCENARIOS STRIP */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1" role="region" aria-label="Quick scenarios presets">
           <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-[#2563EB]" />
+            <Sparkles className="h-3 w-3 text-[#2563EB]" aria-hidden="true" />
             Quick Scenarios:
           </span>
           <button
             type="button"
             onClick={() => applyPreset('balanced')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95"
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
             Balanced Boost (+₹2.5k, 15% cuts)
           </button>
           <button
             type="button"
             onClick={() => applyPreset('aggressive')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95"
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
             Aggressive Frugal (30% cuts, ₹10k surplus)
           </button>
           <button
             type="button"
             onClick={() => applyPreset('promotion')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95"
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" aria-hidden="true" />
             Career Raise (+₹25k income, 24M)
           </button>
         </div>
@@ -303,14 +303,16 @@ export default function SimulatorPage() {
                       {timeframeMonths} Months ({Math.round((timeframeMonths / 12) * 10) / 10} yrs)
                     </span>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-2" role="group" aria-label="Projection horizon duration">
                     {[6, 12, 24, 36].map((m) => (
                       <button
                         key={m}
                         type="button"
                         onClick={() => setTimeframeMonths(m)}
+                        aria-pressed={timeframeMonths === m}
+                        aria-label={`${m} months projection horizon`}
                         className={cn(
-                          'py-2.5 rounded-xl text-xs font-bold transition-all border min-h-[44px]',
+                          'py-2.5 rounded-xl text-xs font-bold transition-all border min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
                           timeframeMonths === m
                             ? 'bg-[#2A1F3D] text-white border-[#2A1F3D] shadow-xs'
                             : 'bg-white text-[#625D69] border-[#E4E2DC] hover:bg-[#F6F5F1] hover:text-[#191522]'
@@ -325,7 +327,7 @@ export default function SimulatorPage() {
                 {/* 2. Monthly Income Shift Lever */}
                 <div className="space-y-2 pt-4 border-t border-[#E4E2DC]">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#191522]">Monthly Inflow Delta</span>
+                    <span className="font-black text-[#191522]" id="income-delta-label">Monthly Inflow Delta</span>
                     <span className={cn('font-mono font-bold', incomeDelta >= 0 ? 'text-[#059669]' : 'text-[#E11D48]')}>
                       {incomeDelta >= 0 ? `+${formatCurrency(incomeDelta)}` : formatCurrency(incomeDelta)}/mo
                     </span>
@@ -336,10 +338,15 @@ export default function SimulatorPage() {
                     max="50000"
                     step="2500"
                     value={incomeDelta}
+                    aria-labelledby="income-delta-label"
+                    aria-label="Monthly inflow delta"
+                    aria-valuemin={-20000}
+                    aria-valuemax={50000}
+                    aria-valuenow={incomeDelta}
                     onChange={(e) => setIncomeDelta(Number(e.target.value))}
-                    className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg"
+                    className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                  <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                     <span>-₹20k (Cut)</span>
                     <span>Baseline (₹0)</span>
                     <span>+₹50k (Raise)</span>
@@ -360,7 +367,7 @@ export default function SimulatorPage() {
                   {/* Food Cut */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#191522]">Food & Dining Optimization</span>
+                      <span className="font-bold text-[#191522]" id="food-cut-label">Food & Dining Optimization</span>
                       <span className="font-mono font-bold text-[#E11D48]">-{foodCut}%</span>
                     </div>
                     <input
@@ -369,10 +376,15 @@ export default function SimulatorPage() {
                       max="60"
                       step="5"
                       value={foodCut}
+                      aria-labelledby="food-cut-label"
+                      aria-label="Food and dining expense reduction percentage"
+                      aria-valuemin={0}
+                      aria-valuemax={60}
+                      aria-valuenow={foodCut}
                       onChange={(e) => setFoodCut(Number(e.target.value))}
-                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg"
+                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                     />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                       <span>0% (As-is)</span>
                       <span>30%</span>
                       <span>60% (Strict)</span>
@@ -382,7 +394,7 @@ export default function SimulatorPage() {
                   {/* Shopping Cut */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#191522]">Shopping & Lifestyle Optimization</span>
+                      <span className="font-bold text-[#191522]" id="shopping-cut-label">Shopping & Lifestyle Optimization</span>
                       <span className="font-mono font-bold text-[#E11D48]">-{shoppingCut}%</span>
                     </div>
                     <input
@@ -391,10 +403,15 @@ export default function SimulatorPage() {
                       max="60"
                       step="5"
                       value={shoppingCut}
+                      aria-labelledby="shopping-cut-label"
+                      aria-label="Shopping and lifestyle expense reduction percentage"
+                      aria-valuemin={0}
+                      aria-valuemax={60}
+                      aria-valuenow={shoppingCut}
                       onChange={(e) => setShoppingCut(Number(e.target.value))}
-                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg"
+                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                     />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                       <span>0% (As-is)</span>
                       <span>30%</span>
                       <span>60% (Strict)</span>
@@ -404,7 +421,7 @@ export default function SimulatorPage() {
                   {/* Transport Cut */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#191522]">Transport / Cabs Optimization</span>
+                      <span className="font-bold text-[#191522]" id="transport-cut-label">Transport / Cabs Optimization</span>
                       <span className="font-mono font-bold text-[#E11D48]">-{transportCut}%</span>
                     </div>
                     <input
@@ -413,10 +430,15 @@ export default function SimulatorPage() {
                       max="50"
                       step="5"
                       value={transportCut}
+                      aria-labelledby="transport-cut-label"
+                      aria-label="Transport and cabs expense reduction percentage"
+                      aria-valuemin={0}
+                      aria-valuemax={50}
+                      aria-valuenow={transportCut}
                       onChange={(e) => setTransportCut(Number(e.target.value))}
-                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg"
+                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                     />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                       <span>0%</span>
                       <span>25%</span>
                       <span>50%</span>
@@ -427,7 +449,7 @@ export default function SimulatorPage() {
                 {/* 4. Direct Additional Monthly SIP Investment */}
                 <div className="space-y-2 pt-4 border-t border-[#E4E2DC]">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#191522]">Additional Monthly SIP</span>
+                    <span className="font-black text-[#191522]" id="extra-sip-label">Additional Monthly SIP</span>
                     <span className="font-mono font-bold text-[#2563EB]">
                       +{formatCurrency(extraSavings)}/mo
                     </span>
@@ -438,10 +460,15 @@ export default function SimulatorPage() {
                     max="30000"
                     step="1000"
                     value={extraSavings}
+                    aria-labelledby="extra-sip-label"
+                    aria-label="Additional monthly SIP investment amount"
+                    aria-valuemin={0}
+                    aria-valuemax={30000}
+                    aria-valuenow={extraSavings}
                     onChange={(e) => setExtraSavings(Number(e.target.value))}
-                    className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg"
+                    className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                  <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                     <span>₹0</span>
                     <span>₹15,000</span>
                     <span>₹30,000/mo</span>
@@ -451,7 +478,7 @@ export default function SimulatorPage() {
                 {/* 5. Additional Accelerated Debt Paydown */}
                 <div className="space-y-2 pt-4 border-t border-[#E4E2DC]">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#191522]">Extra Debt Principal Paydown</span>
+                    <span className="font-black text-[#191522]" id="extra-debt-label">Extra Debt Principal Paydown</span>
                     <span className="font-mono font-bold text-[#D97706]">
                       +{formatCurrency(extraDebt)}/mo
                     </span>
@@ -462,10 +489,15 @@ export default function SimulatorPage() {
                     max="25000"
                     step="1000"
                     value={extraDebt}
+                    aria-labelledby="extra-debt-label"
+                    aria-label="Additional monthly debt principal paydown amount"
+                    aria-valuemin={0}
+                    aria-valuemax={25000}
+                    aria-valuenow={extraDebt}
                     onChange={(e) => setExtraDebt(Number(e.target.value))}
-                    className="w-full accent-[#D97706] cursor-pointer h-2 bg-slate-200 rounded-lg"
+                    className="w-full accent-[#D97706] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#D97706] focus-visible:ring-offset-2"
                   />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390]">
+                  <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
                     <span>₹0</span>
                     <span>₹12,500</span>
                     <span>₹25,000/mo</span>

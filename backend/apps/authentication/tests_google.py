@@ -1,4 +1,4 @@
-﻿from django.test import TestCase
+from django.test import TestCase
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from apps.authentication.models import GoogleIdentity, Profile
@@ -72,3 +72,33 @@ class GoogleAuthenticationTests(TestCase):
         res = GoogleAuthService.resolve_or_create_user(claims)
         self.assertFalse(res['success'])
         self.assertEqual(res['code'], 'ACCOUNT_LINKING_REQUIRED')
+
+    def test_resolve_user_with_null_claims(self):
+        """Ensure claims with None for family_name and picture do not cause IntegrityError."""
+        claims = {
+            'sub': 'google_sub_404_nulls',
+            'email': 'null_claims@monvex.com',
+            'email_verified': True,
+            'name': 'Cher',
+            'given_name': None,
+            'family_name': None,
+            'picture': None,
+        }
+        res = GoogleAuthService.resolve_or_create_user(claims)
+        self.assertTrue(res['success'])
+        self.assertTrue(res['is_new_user'])
+        user = User.objects.get(email='null_claims@monvex.com')
+        self.assertEqual(user.first_name, 'Cher')
+        self.assertEqual(user.last_name, '')
+        identity = GoogleIdentity.objects.get(provider_subject='google_sub_404_nulls')
+        self.assertEqual(identity.picture_url, '')
+
+    def test_google_login_database_error_handling(self):
+        """Ensure database errors during Google login return 503 instead of masking as 400."""
+        from unittest.mock import patch
+        from django.db import OperationalError
+        with patch('services.google_auth_service.GoogleAuthService.verify_google_token', return_value={'sub': '1', 'email': 'a@b.com', 'email_verified': True}):
+            with patch('services.google_auth_service.GoogleAuthService.resolve_or_create_user', side_effect=OperationalError('DB unreachable')):
+                res = self.client.post('/api/v1/auth/google/', {'credential': 'valid.token.string'}, format='json')
+                self.assertEqual(res.status_code, 503)
+                self.assertEqual(res.data['code'], 'DATABASE_ERROR')

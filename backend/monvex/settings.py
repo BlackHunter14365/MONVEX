@@ -84,10 +84,19 @@ WSGI_APPLICATION = 'monvex.wsgi.application'
 ASGI_APPLICATION = 'monvex.asgi.application'
 
 # Database configuration: Automatic DATABASE_URL detection for Render PostgreSQL, fallback to SQLite
+import re
 import dj_database_url
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:
+    # Render internal short hostnames (dpg-xxxx-a) fail DNS resolution if domain is omitted
+    if '@dpg-' in DATABASE_URL and '.render.com' not in DATABASE_URL:
+        region = os.getenv('RENDER_REGION', 'oregon')
+        DATABASE_URL = re.sub(
+            r'@(dpg-[a-z0-9]+-[a-z0-9]+)([:/?#]|$)',
+            rf'@\1.{region}-postgres.render.com\2',
+            DATABASE_URL
+        )
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,

@@ -65,10 +65,10 @@ class GoogleAuthService:
                 'sub': str(sub),
                 'email': email,
                 'email_verified': bool(email_verified),
-                'name': id_info.get('name', ''),
-                'given_name': id_info.get('given_name', ''),
-                'family_name': id_info.get('family_name', ''),
-                'picture': id_info.get('picture', ''),
+                'name': (id_info.get('name') or '').strip(),
+                'given_name': (id_info.get('given_name') or '').strip(),
+                'family_name': (id_info.get('family_name') or '').strip(),
+                'picture': (id_info.get('picture') or '').strip(),
             }
 
         except ValueError as ve:
@@ -110,11 +110,18 @@ class GoogleAuthService:
         2. If User with email exists but no GoogleIdentity -> Return ACCOUNT_LINKING_REQUIRED.
         3. If no user exists -> Create new user with clean financial categories.
         """
-        sub = claims['sub']
-        email = claims['email']
-        given_name = claims.get('given_name', '')
-        family_name = claims.get('family_name', '')
-        picture = claims.get('picture', '')
+        sub = str(claims.get('sub', '')).strip()
+        email = str(claims.get('email', '')).strip().lower()
+        given_name = str(claims.get('given_name') or '').strip()
+        family_name = str(claims.get('family_name') or '').strip()
+        picture = str(claims.get('picture') or '').strip()
+        name = str(claims.get('name') or '').strip()
+
+        if not given_name and name:
+            parts = name.split(' ', 1)
+            given_name = parts[0]
+            if len(parts) > 1 and not family_name:
+                family_name = parts[1]
 
         # -------------------------------------------------------------
         # BRANCH 1: Existing Google Identity
@@ -134,7 +141,18 @@ class GoogleAuthService:
             existing_identity.last_login_at = timezone.now()
             if picture and existing_identity.picture_url != picture:
                 existing_identity.picture_url = picture
-            existing_identity.save(update_fields=['last_login_at', 'picture_url', 'updated_at'])
+                existing_identity.save(update_fields=['last_login_at', 'picture_url', 'updated_at'])
+            else:
+                existing_identity.save(update_fields=['last_login_at', 'updated_at'])
+
+            # Sync avatar with profile if not already set
+            try:
+                profile = getattr(user, 'profile', None)
+                if profile and picture and not profile.avatar_url:
+                    profile.avatar_url = picture
+                    profile.save(update_fields=['avatar_url', 'updated_at'])
+            except Exception:
+                pass
 
             refresh = RefreshToken.for_user(user)
             return {
@@ -167,7 +185,7 @@ class GoogleAuthService:
         # BRANCH 3: New User Registration
         # -------------------------------------------------------------
         with transaction.atomic():
-            username = cls.generate_unique_username(email=email, name=claims.get('name', ''))
+            username = cls.generate_unique_username(email=email, name=name)
             user = User.objects.create(
                 username=username,
                 email=email,
@@ -183,6 +201,8 @@ class GoogleAuthService:
             profile.email_verified = True
             profile.is_verified = True
             profile.status = 'ACTIVE'
+            if picture and not profile.avatar_url:
+                profile.avatar_url = picture
             profile.save()
 
             # Bind Google Identity

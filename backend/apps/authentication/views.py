@@ -15,9 +15,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.conf import settings
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, DatabaseError, OperationalError
 from django.db.models import Q
 from django.core.files.base import ContentFile
+from services.google_auth_service import GoogleAuthService, GoogleAuthError
 
 logger = logging.getLogger('monvex.auth')
 
@@ -166,7 +167,6 @@ class GoogleLoginView(APIView):
         ctx = get_client_context(request)
 
         try:
-            from services.google_auth_service import GoogleAuthService, GoogleAuthError
             claims = GoogleAuthService.verify_google_token(credential)
             res = GoogleAuthService.resolve_or_create_user(claims, request_context=ctx)
 
@@ -186,12 +186,21 @@ class GoogleLoginView(APIView):
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
         except GoogleAuthError as ge:
+            logger.warning(f"Google authentication rejected: [{ge.code}] {ge.message}")
             return Response({
                 "success": False,
                 "code": ge.code,
                 "message": ge.message
             }, status=status.HTTP_400_BAD_REQUEST)
+        except (OperationalError, DatabaseError) as de:
+            logger.exception(f"Database error during Google login: {de}")
+            return Response({
+                "success": False,
+                "code": "DATABASE_ERROR",
+                "message": "Database service is temporarily unavailable. Please retry in a moment."
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
+            logger.exception(f"Unhandled Google authentication failure: {e}")
             return Response({
                 "success": False,
                 "code": "GOOGLE_AUTH_FAILED",
@@ -215,7 +224,6 @@ class GoogleLinkAccountView(APIView):
         ctx = get_client_context(request)
 
         try:
-            from services.google_auth_service import GoogleAuthService, GoogleAuthError
             claims = GoogleAuthService.verify_google_token(credential)
             res = GoogleAuthService.link_google_account(claims, password, request_context=ctx)
 
@@ -231,12 +239,21 @@ class GoogleLinkAccountView(APIView):
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
         except GoogleAuthError as ge:
+            logger.warning(f"Google link rejected: [{ge.code}] {ge.message}")
             return Response({
                 "success": False,
                 "code": ge.code,
                 "message": ge.message
             }, status=status.HTTP_400_BAD_REQUEST)
+        except (OperationalError, DatabaseError) as de:
+            logger.exception(f"Database error during Google link: {de}")
+            return Response({
+                "success": False,
+                "code": "DATABASE_ERROR",
+                "message": "Database service is temporarily unavailable. Please retry in a moment."
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
+            logger.exception(f"Unhandled Google link failure: {e}")
             return Response({
                 "success": False,
                 "code": "LINK_FAILED",

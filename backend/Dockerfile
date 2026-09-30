@@ -32,6 +32,9 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy application source code
 COPY . .
 
+# Ensure entrypoint is executable
+RUN chmod +x entrypoint.sh
+
 # Create unprivileged user for security
 RUN useradd -m -u 1000 monvex && chown -R monvex:monvex /app
 USER monvex
@@ -41,4 +44,4 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=monvex.settings
 
-CMD ["gunicorn", "monvex.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
+ENTRYPOINT ["./entrypoint.sh"]

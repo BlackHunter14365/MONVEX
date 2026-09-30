@@ -16,10 +16,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'monvex-insecure-dev-key-super-secret-12345
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-_raw_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com,monvex-backend.onrender.com')
+_raw_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com,monvex-backend.onrender.com,.koyeb.app')
 ALLOWED_HOSTS = list({
     host.strip().strip('"\'').rstrip('/') for host in _raw_hosts.split(',') if host.strip()
-} | {'localhost', '127.0.0.1', 'testserver', '.onrender.com', 'monvex-backend.onrender.com'})
+} | {'localhost', '127.0.0.1', 'testserver', '.onrender.com', 'monvex-backend.onrender.com', '.koyeb.app'})
 
 
 # Application definition
@@ -83,7 +83,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'monvex.wsgi.application'
 ASGI_APPLICATION = 'monvex.asgi.application'
 
-# Database configuration: Automatic DATABASE_URL detection for Render PostgreSQL, fallback to SQLite
+# Database configuration: Automatic DATABASE_URL detection for Neon / Render PostgreSQL, fallback to SQLite
 import dj_database_url
 
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -205,7 +205,10 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
 def _clean_origin_url(url_str: str) -> str:
-    return url_str.strip().strip('"\'').rstrip('/')
+    cleaned = url_str.strip().strip('"\'').rstrip('/')
+    if cleaned and not cleaned.startswith(('http://', 'https://', 'tauri://')):
+        return f"https://{cleaned}"
+    return cleaned
 
 _prod_cors_origins = {
     'https://monvex-web.onrender.com',

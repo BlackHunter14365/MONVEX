@@ -13,8 +13,8 @@ export function resolveApiBaseUrl(): string {
   // Strip quotes and trailing slashes
   raw = raw.replace(/^["']|["']$/g, '').replace(/\/+$/, '');
 
-  // Prevent mixed content: ensure HTTPS if onrender.com
-  if (raw.includes('.onrender.com') && raw.startsWith('http://')) {
+  // Prevent mixed content: ensure HTTPS if onrender.com or koyeb.app
+  if ((raw.includes('.onrender.com') || raw.includes('.koyeb.app')) && raw.startsWith('http://')) {
     raw = raw.replace('http://', 'https://');
   }
 

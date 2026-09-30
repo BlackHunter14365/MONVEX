@@ -1,0 +1,4 @@
+# Ensure shell scripts always use Linux LF line endings
+*.sh text eol=lf
+Dockerfile* text eol=lf
+.dockerignore text eol=lf

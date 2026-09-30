@@ -1,11 +1,14 @@
 """
 Production Health Check, Readiness, & Internal Observability Endpoints
 """
+import logging
 import time
 from django.db import connection
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+
+logger = logging.getLogger(__name__)
 
 START_TIME = time.time()
 
@@ -26,7 +29,8 @@ def health_check(request):
 @permission_classes([AllowAny])
 def readiness_check(request):
     """
-    Readiness probe verifying DB connectivity and vital subsystems
+    Readiness probe verifying DB connectivity and vital subsystems.
+    Guarantees zero internal host or credential leakage in responses.
     """
     checks = {
         'database': False,
@@ -40,9 +44,11 @@ def readiness_check(request):
             if row and row[0] == 1:
                 checks['database'] = True
     except Exception as e:
-        checks['database_error'] = str(e)
+        logger.warning("Readiness probe database check failed: %s", e)
+        checks['database'] = False
+        checks['database_status'] = 'unavailable'
 
-    all_ready = all(v is True for k, v in checks.items() if not k.endswith('_error'))
+    all_ready = all(v is True for k, v in checks.items() if not k.endswith('_status'))
     status_code = 200 if all_ready else 503
 
     return JsonResponse({
@@ -95,7 +101,6 @@ def _attach_cors_headers(request, response):
         getattr(settings, 'CORS_ALLOW_ALL_ORIGINS', False)
         or clean_origin in allowed_origins
         or any(re.match(pattern, origin) for pattern in allowed_regexes)
-        or origin.endswith('.onrender.com')
     )
 
     if is_allowed:

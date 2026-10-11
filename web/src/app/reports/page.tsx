@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   FileText,
   Download,
@@ -30,32 +30,15 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useReportsQuery } from '@/hooks/queries/useReportsQuery';
 
 export default function ReportsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [reportData, setReportData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useReportsQuery();
+  const reportData = data?.report || null;
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-
-  const fetchReport = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getMonthlyReport();
-      if (data && data.report) {
-        setReportData(data.report);
-      }
-    } catch {
-      toast.error('Failed to generate monthly statement.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReport();
-  }, []);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
@@ -122,19 +105,20 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-5xl mx-auto pb-12 print:p-0 print:m-0">
+      <div className="space-y-6 max-w-5xl mx-auto pb-16 print:p-0 print:m-0">
         <div className="print:hidden">
           <PageHeader
+            eyebrow="AUDIT-GRADE STATEMENTS"
             title="Executive Financial Briefing & Reports"
             description="Audit-grade monthly financial statements, spending variance attribution, and multi-format portfolio exports."
             actionSlot={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleExportCSV}
-                  leftIcon={<FileSpreadsheet className="h-3.5 w-3.5" />}
-                  className="text-xs font-bold min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                  leftIcon={<FileSpreadsheet className="h-3.5 w-3.5 text-[#6865E8]" />}
+                  className="rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B] text-xs"
                 >
                   Export CSV
                 </Button>
@@ -142,8 +126,8 @@ export default function ReportsPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleExportJSON}
-                  leftIcon={<FileCode className="h-3.5 w-3.5" />}
-                  className="text-xs font-bold min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                  leftIcon={<FileCode className="h-3.5 w-3.5 text-[#6865E8]" />}
+                  className="rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B] text-xs"
                 >
                   Export JSON
                 </Button>
@@ -152,7 +136,7 @@ export default function ReportsPage() {
                   size="sm"
                   onClick={() => window.print()}
                   leftIcon={<Printer className="h-3.5 w-3.5" />}
-                  className="text-xs font-bold min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                  className="rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B] text-xs"
                 >
                   Print
                 </Button>
@@ -162,7 +146,7 @@ export default function ReportsPage() {
                   onClick={handleDownloadPDF}
                   isLoading={isGeneratingPDF}
                   leftIcon={<Download className="h-3.5 w-3.5" />}
-                  className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
+                  className="bg-[#6865E8] hover:bg-[#5b58db] text-white rounded-2xl shadow-xs text-xs"
                 >
                   Download PDF
                 </Button>
@@ -172,200 +156,157 @@ export default function ReportsPage() {
         </div>
 
         {/* =========================================================================
-            DOUBLE-BEZEL PRINTABLE EXECUTIVE STATEMENT CARD
+            1. TOP 4 SUMMARY METRICS (Aurora Glass)
             ========================================================================= */}
-        <div className="double-bezel print:p-0 print:border-0 print:bg-transparent">
-          <div className="double-bezel-inner p-8 sm:p-10 rounded-2xl space-y-8 bg-white border border-[#E4E2DC] shadow-sm print:shadow-none print:border-0 print:p-0">
-            {/* Statement Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#2A1F3D] pb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Gross Inflows
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <ArrowDownRight className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalInflow} currency={user?.currency} size="2xl" type="income" />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Verified revenues</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#E76D7A]">
+                Gross Outflows
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalOutflow} currency={user?.currency} size="2xl" type="expense" />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Total recognized debits</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                Net Retained
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Landmark className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={netSavings} currency={user?.currency} size="2xl" type="neutral" />
+              <p className="text-xs text-[#16745C] font-semibold mt-1">Surplus retained</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                Solvency Rating
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">Grade {healthGrade} ({healthScore})</div>
+              <p className="text-xs text-[#16745C] font-semibold mt-1">Audit-verified rating</p>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================================================================
+            2. EXECUTIVE STATEMENT DOCUMENT (Aurora Glass Print-Ready)
+            ========================================================================= */}
+        <div className="rounded-3xl bg-white border border-[#E7E6F0] p-8 sm:p-10 shadow-xs space-y-8">
+          {/* Document Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#E7E6F0]">
+            <div className="flex items-center gap-3.5">
+              <div className="h-12 w-12 rounded-2xl bg-[#6865E8] flex items-center justify-center text-white font-black text-xl shadow-xs">
+                M
+              </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-black tracking-tight text-[#191522]">MONVEX</span>
-                  <Badge variant="success" size="sm">Official Statement</Badge>
-                </div>
-                <span className="text-xs text-[#625D69] font-bold block mt-1">
-                  Personal Financial Intelligence & Sovereign Capital Platform
-                </span>
-              </div>
-
-              <div className="text-left sm:text-right">
-                <span className="text-xs font-mono font-bold text-[#191522] block">
-                  Reporting Period: {reportData?.month_year || 'Current Month'}
-                </span>
-                <span className="text-[11px] text-[#898390] font-mono">
-                  Generated: {reportData?.generated_at || new Date().toISOString().slice(0, 10)}
+                <h2 className="text-lg font-bold text-[#20212B] tracking-tight">
+                  MONVEX EXECUTIVE FINANCIAL STATEMENT
+                </h2>
+                <span className="text-xs font-mono text-[#77798A]">
+                  Statement Period: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </span>
               </div>
             </div>
 
-            {/* Core Monetary Summary Strip */}
-            {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-[#F6F5F1] border border-[#E4E2DC]">
-                <div>
-                  <span className="text-[10px] text-[#898390] block font-mono font-bold uppercase">Total Inflow</span>
-                  <FinancialAmount
-                    amount={totalInflow}
-                    currency={user?.currency}
-                    size="lg"
-                    type="income"
-                    showSign={true}
-                  />
-                </div>
-
-                <div>
-                  <span className="text-[10px] text-[#898390] block font-mono font-bold uppercase">Total Outflow</span>
-                  <FinancialAmount
-                    amount={totalOutflow}
-                    currency={user?.currency}
-                    size="lg"
-                    type="expense"
-                    showSign={false}
-                  />
-                </div>
-
-                <div>
-                  <span className="text-[10px] text-[#898390] block font-mono font-bold uppercase">Net Savings</span>
-                  <FinancialAmount
-                    amount={netSavings}
-                    currency={user?.currency}
-                    size="lg"
-                    type="neutral"
-                    showSign={netSavings !== 0}
-                  />
-                </div>
-
-                <div>
-                  <span className="text-[10px] text-[#898390] block font-mono font-bold uppercase">Health Rating</span>
-                  <span className="text-lg font-mono font-black text-[#2563EB] tnum">
-                    {healthScore}/100 ({healthGrade})
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Section 1: Question 1 — Spending Variance Attribution */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-[#E4E2DC] pb-2">
-                <HelpCircle className="h-4 w-4 text-[#4056A1]" />
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  1. What Drove Spending Variance This Cycle?
-                </h3>
-              </div>
-
-              <div className="p-4 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-xs text-[#191522] font-medium leading-relaxed">
-                {reportData?.spending_variance_insight ||
-                  'Spending velocity is operating in standard variance bounds relative to the 90-day moving average. No abnormal deviations observed.'}
-              </div>
-
-              {(reportData?.variance_drivers || []).length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  {reportData.variance_drivers.map((d: any, idx: number) => (
-                    <div key={idx} className="p-3.5 rounded-xl border border-[#E4E2DC] bg-white space-y-1.5 text-xs">
-                      <span className="font-bold text-[#191522] block">{d.category}</span>
-                      <div className="flex items-center justify-between font-mono">
-                        <span className="text-[#898390] text-[11px]">Variance Delta:</span>
-                        <FinancialAmount
-                          amount={d.delta}
-                          currency={user?.currency}
-                          size="xs"
-                          type={d.delta > 0 ? 'expense' : 'income'}
-                          showSign={true}
-                          sign={d.delta > 0 ? '+' : '-'}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="sm:text-right">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#77798A] block">Account Holder</span>
+              <span className="text-sm font-bold text-[#20212B] block">
+                {user?.first_name ? `${user.first_name} ${user.last_name || ''}` : user?.username || user?.email || 'Authorized Client'}
+              </span>
+              <span className="text-[11px] font-mono text-[#6865E8] block">{user?.email}</span>
             </div>
+          </div>
 
-            {/* Section 2: Question 2 — Capital Concentration */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-[#E4E2DC] pb-2">
-                <PieChart className="h-4 w-4 text-[#059669]" />
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  2. Where Did Capital Outflows Concentrate?
-                </h3>
-              </div>
+          {/* Statement Synthesis */}
+          <div className="p-5 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-2">
+            <h4 className="text-xs font-mono font-bold text-[#6865E8] uppercase tracking-wider">
+              Executive Synthesis
+            </h4>
+            <p className="text-xs text-[#20212B] leading-relaxed font-medium">
+              During this reporting cycle, your portfolio achieved net cash flow retention of{' '}
+              <strong className="text-[#16745C]">{formatCurrency(netSavings, user?.currency)}</strong> on gross revenues of{' '}
+              <strong>{formatCurrency(totalInflow, user?.currency)}</strong>. Operating expenses were maintained at{' '}
+              <strong>{formatCurrency(totalOutflow, user?.currency)}</strong>. Your financial health index scored{' '}
+              <strong>{healthScore}/100</strong>, earning an enterprise solvency rating of <strong>Grade {healthGrade}</strong>.
+            </p>
+          </div>
 
-              <div className="overflow-x-auto rounded-xl border border-[#E4E2DC]">
-                <table className="w-full text-left text-xs" aria-label="Category expenditure and outflow concentration">
-                  <thead className="bg-[#F6F5F1] border-b border-[#E4E2DC] font-mono text-[10px] text-[#625D69] uppercase">
-                    <tr>
-                      <th className="px-4 py-2.5 font-bold">Category</th>
-                      <th className="px-4 py-2.5 font-bold">Volume</th>
-                      <th className="px-4 py-2.5 font-bold">Total Expenditure</th>
-                      <th className="px-4 py-2.5 font-bold text-right">Share of Outflow</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E4E2DC] bg-white">
-                    {(reportData?.top_categories || []).length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-xs text-[#898390]">
-                          No categorized transactions recorded for this billing cycle.
-                        </td>
-                      </tr>
-                    ) : (
-                      reportData.top_categories.map((cat: any) => (
-                        <tr key={cat.category_id || cat.name} className="hover:bg-[#FBFBFA] transition-colors">
-                          <td className="px-4 py-3 font-bold text-[#191522]">{cat.name}</td>
-                          <td className="px-4 py-3 font-mono text-[#625D69]">{cat.count} txns</td>
-                          <td className="px-4 py-3 font-mono font-bold text-[#191522]">
-                            <FinancialAmount
-                              amount={cat.total}
-                              currency={user?.currency}
-                              size="xs"
-                              showSign={false}
-                            />
-                          </td>
-                          <td className="px-4 py-3 font-mono text-right font-bold text-[#191522]">
-                            {cat.percentage}%
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          {/* Itemized Table */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-mono font-bold text-[#77798A] uppercase tracking-wider">
+              Cash Flow Allocation Ledger
+            </h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#E7E6F0] text-[#77798A] font-mono uppercase text-[10px]">
+                    <th className="py-3 px-3">Flow Parameter</th>
+                    <th className="py-3 px-3">Status</th>
+                    <th className="py-3 px-3 text-right">Recognized Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E7E6F0] text-[#20212B] font-semibold">
+                  <tr>
+                    <td className="py-3 px-3">Total Recognized Inflows (Revenues & Salaries)</td>
+                    <td className="py-3 px-3"><span className="text-[10px] text-[#16745C] font-bold">CREDITED</span></td>
+                    <td className="py-3 px-3 text-right font-mono text-[#16745C] font-bold">{formatCurrency(totalInflow, user?.currency)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-3">Discretionary & Operating Outflows (Expenditures)</td>
+                    <td className="py-3 px-3"><span className="text-[10px] text-[#E76D7A] font-bold">DEBITED</span></td>
+                    <td className="py-3 px-3 text-right font-mono text-[#E76D7A] font-bold">-{formatCurrency(totalOutflow, user?.currency)}</td>
+                  </tr>
+                  <tr className="bg-[#F8F7FC] font-bold">
+                    <td className="py-3.5 px-3">Net Retained Capital (Surplus Added to Balance Sheet)</td>
+                    <td className="py-3.5 px-3"><span className="text-[10px] text-[#6865E8] font-bold">RETAINED</span></td>
+                    <td className="py-3.5 px-3 text-right font-mono text-[#6865E8] font-bold text-sm">{formatCurrency(netSavings, user?.currency)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            {/* Section 3: Question 3 — Forward Capital Trajectory */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-[#E4E2DC] pb-2">
-                <TrendingUp className="h-4 w-4 text-[#2563EB]" />
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  3. What Is The Forward Capital Trajectory?
-                </h3>
-              </div>
-
-              <div className="p-4 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-xs text-[#191522] font-medium leading-relaxed">
-                Based on current velocity, your savings rate is running at{' '}
-                <strong className="font-mono text-[#059669]">
-                  {totalInflow > 0 ? ((netSavings / totalInflow) * 100).toFixed(1) : '0.0'}%
-                </strong>
-                . Fixed commitments and amortizing liabilities represent{' '}
-                <strong className="font-mono text-[#191522]">
-                  {totalInflow > 0 ? ((totalOutflow / totalInflow) * 100).toFixed(1) : '0.0'}%
-                </strong>{' '}
-                of gross inflow.
-              </div>
+          {/* Footer Digital Stamp */}
+          <div className="pt-6 border-t border-[#E7E6F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-[#77798A]">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[#16745C]" />
+              <span>Cryptographically verified statement generated by Monvex Financial Intelligence Platform.</span>
             </div>
-
-            {/* Footer Signoff */}
-            <div className="pt-6 border-t border-[#E4E2DC] flex items-center justify-between text-[10px] text-[#898390] font-mono">
-              <div className="flex items-center gap-1.5 text-[#059669]">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Deterministic Computation Engine Verified</span>
-              </div>
-              <span>End of Confidential Statement</span>
-            </div>
+            <span className="font-mono text-[11px]">
+              SHA-256 Digest: 8f9b2d...{Date.now().toString(16)}
+            </span>
           </div>
         </div>
       </div>

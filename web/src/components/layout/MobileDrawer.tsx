@@ -6,26 +6,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   X,
   Search,
-  Home,
-  Receipt,
-  PieChart,
-  Target,
-  BarChart2,
-  Sparkles,
-  Settings,
-  TrendingUp,
-  ShieldCheck,
-  Sliders,
-  Landmark,
-  CreditCard,
-  Repeat,
-  FileText,
-  Bell,
   LogOut,
   Plus,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { MONVEX_NAV_GROUPS } from '@/config/navigation';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -41,6 +30,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   // Close drawer on escape key
   useEffect(() => {
@@ -65,51 +55,17 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     };
   }, [isOpen]);
 
-  interface NavItem {
-    name: string;
-    href: string;
-    icon: React.ComponentType<any>;
-    badge?: string;
-  }
-
-  const overviewNav: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-  ];
-
-  const moneyNav: NavItem[] = [
-    { name: 'Transactions', href: '/transactions', icon: Receipt },
-    { name: 'Net Worth', href: '/net-worth', icon: Landmark },
-    { name: 'Debt & EMI', href: '/debt', icon: CreditCard },
-    { name: 'Subscriptions', href: '/subscriptions', icon: Repeat },
-  ];
-
-  const planningNav: NavItem[] = [
-    { name: 'Budgets', href: '/budgets', icon: PieChart },
-    { name: 'Savings Goals', href: '/goals', icon: Target },
-    { name: 'What-If Simulator', href: '/simulator', icon: Sliders, badge: 'Sim' },
-  ];
-
-  const intelligenceNav: NavItem[] = [
-    { name: 'Analytics', href: '/analytics', icon: BarChart2 },
-    { name: 'Cashflow Forecast', href: '/forecast', icon: TrendingUp },
-    { name: 'AI Copilot', href: '/ai', icon: Sparkles, badge: 'AI' },
-  ];
-
-  const documentsNav: NavItem[] = [
-    { name: 'Receipt Vision', href: '/receipts', icon: Receipt, badge: 'OCR' },
-    { name: 'Reports & Statements', href: '/reports', icon: FileText },
-  ];
-
-  const systemNav: NavItem[] = [
-    { name: 'Smart Alerts', href: '/notifications', icon: Bell },
-    { name: 'Security Shield', href: '/security', icon: ShieldCheck, badge: 'ZeroTrust' },
-    { name: 'Settings & Profile', href: '/settings', icon: Settings },
-  ];
-
   const handleLogout = async () => {
     onClose();
     await logout();
     router.replace('/login');
+  };
+
+  const isItemActive = (href: string, exact?: boolean) => {
+    if (exact || href === '/dashboard') {
+      return pathname === '/dashboard' || pathname === '/';
+    }
+    return pathname === href || pathname.startsWith(href + '/');
   };
 
   const handleNavClick = () => {
@@ -127,28 +83,45 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
     >
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 bg-[#2A1F3D]/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-[#20212B]/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Slide-out Panel */}
-      <div className="fixed inset-y-0 left-0 w-[82vw] max-w-xs bg-[#FBFBFA] border-r border-[#E4E2DC] shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-left duration-250">
+      <div className="fixed inset-y-0 left-0 w-[82vw] max-w-xs bg-[#FAF9FC] dark:bg-[#111019] border-r border-[#E7E6F0] dark:border-[#2D2B3F] shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-left duration-250">
         {/* Top Header */}
-        <div className="p-4 border-b border-[#E4E2DC] flex items-center justify-between bg-white/80">
+        <div className="p-4 border-b border-[#E7E6F0] dark:border-[#2D2B3F] flex items-center justify-between bg-white/80 dark:bg-[#161522]/90">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl overflow-hidden shadow-2xs bg-white border border-[#E4E2DC] flex items-center justify-center p-0.5">
-              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
+            <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7C5CFC] to-[#6865E8] flex items-center justify-center text-white shadow-md shadow-[#6865E8]/25 shrink-0">
+              <svg
+                className="w-5 h-5 text-white"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                <path d="M6 6h10" />
+                <path d="M6 10h10" />
+                <path d="M6 14h6" />
+              </svg>
             </div>
-            <div>
-              <span className="text-sm font-extrabold text-[#191522] block leading-tight">MONVEX</span>
-              <span className="text-[10px] text-[#898390] font-medium block">Financial Intelligence</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-black tracking-tight text-[#20212B] dark:text-[#F4F3FA] leading-none truncate">
+                Monvex
+              </span>
+              <span className="text-[10px] font-semibold text-[#8E8FA2] dark:text-[#79778E] uppercase tracking-wider mt-1 leading-none">
+                Financial OS
+              </span>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[#898390] hover:text-[#191522] hover:bg-[#F6F5F1] transition-colors focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#20212B] dark:text-[#A6A4B8] dark:hover:text-[#F4F3FA] hover:bg-[#F8F7FC] dark:hover:bg-[#1C1B2E] transition-colors focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none focus-visible:ring-offset-1"
             aria-label="Close menu"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -166,10 +139,10 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   window.dispatchEvent(new Event('monvex:open-command-center'));
                 }
               }}
-              className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-white border border-[#E4E2DC] text-xs font-bold text-[#191522] shadow-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+              className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-white border border-[#E7E6F0] text-xs font-bold text-[#20212B] shadow-xs active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none"
               aria-label="Open search command center"
             >
-              <Search className="h-3.5 w-3.5 text-[#4056A1]" aria-hidden="true" />
+              <Search className="h-3.5 w-3.5 text-[#6865E8]" aria-hidden="true" />
               <span>Search</span>
             </button>
 
@@ -179,7 +152,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                   onClose();
                   onOpenAddTransaction();
                 }}
-                className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-subtle active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
+                className="flex items-center justify-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-[#6865E8] hover:bg-[#5754DC] text-white text-xs font-bold shadow-subtle active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none"
                 aria-label="Add transaction record"
               >
                 <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -188,21 +161,14 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
             )}
           </div>
 
-          {/* Navigation Groups (6 Logical Tiers) */}
-          {[
-            { title: 'Overview', items: overviewNav },
-            { title: 'Money Movement', items: moneyNav },
-            { title: 'Planning & Projections', items: planningNav },
-            { title: 'Financial Intelligence', items: intelligenceNav },
-            { title: 'Documents & Reports', items: documentsNav },
-            { title: 'System & Security', items: systemNav },
-          ].map((group) => (
-            <div key={group.title} className="space-y-1">
-              <div className="px-2.5 pb-1 text-[10px] font-mono uppercase tracking-wider text-[#898390] font-bold">
+          {/* Navigation Groups (5 Finora-Style Hierarchical Tiers) */}
+          {MONVEX_NAV_GROUPS.map((group) => (
+            <div key={group.id} className="space-y-1">
+              <div className="px-3 pb-1 pt-1 text-[11px] font-semibold text-[#8E8FA2] dark:text-[#79778E] tracking-tight">
                 {group.title}
               </div>
               {group.items.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = isItemActive(item.href, item.exact);
                 const Icon = item.icon;
                 return (
                   <Link
@@ -211,23 +177,37 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                     onClick={handleNavClick}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'flex items-center justify-between rounded-xl px-3 py-2.5 min-h-[44px] text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
+                      'group flex items-center justify-between rounded-2xl px-3.5 py-2.5 min-h-[44px] text-xs transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6865E8]/40',
                       isActive
-                        ? 'bg-[#EEEAF7] text-[#191522] shadow-xs border border-[#625477]/20'
-                        : 'text-[#625D69] hover:text-[#191522] hover:bg-white/60'
+                        ? 'bg-gradient-to-r from-[#6865E8] via-[#7B68EE] to-[#9E57E8] text-white shadow-md shadow-[#6865E8]/25 font-bold'
+                        : 'font-semibold text-[#77798A] dark:text-[#A6A4B8] hover:text-[#20212B] dark:hover:text-[#F4F3FA] hover:bg-[#F4F3FA]/80 dark:hover:bg-[#1C1B2E]'
                     )}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-[#2A1F3D]' : 'text-[#898390]')} aria-hidden="true" />
-                      <span>{item.name}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Icon
+                        className={cn(
+                          'h-4.5 w-4.5 shrink-0 transition-colors',
+                          isActive
+                            ? 'text-white'
+                            : 'text-[#8E8FA2] dark:text-[#79778E] group-hover:text-[#20212B] dark:group-hover:text-[#F4F3FA]'
+                        )}
+                        strokeWidth={isActive ? 2.4 : 2}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate leading-none">{item.name}</span>
                     </div>
+
                     {item.badge && (
-                      <span className="brutalist-tag-indigo text-[9px] py-0 px-1.5">
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 transition-colors leading-none',
+                          isActive
+                            ? 'bg-white/20 text-white'
+                            : 'bg-[#EEEDF8] dark:bg-[#6865E8]/20 text-[#6865E8] dark:text-[#908EF2]'
+                        )}
+                      >
                         {item.badge}
                       </span>
-                    )}
-                    {isActive && !item.badge && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#2A1F3D]" />
                     )}
                   </Link>
                 );
@@ -237,18 +217,52 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
         </nav>
 
         {/* Bottom User & Sign Out Footer */}
-        <div className="p-3.5 border-t border-[#E4E2DC] bg-white/90 space-y-2">
+        <div className="p-3.5 border-t border-[#E7E6F0] bg-white/90 dark:bg-[#161522] dark:border-[#2D2B3F] space-y-2.5">
+          {/* Segmented Light / Dark Toggle */}
+          <div className="flex items-center p-1 rounded-2xl bg-[#EBE9F5] border border-[#E7E6F0] dark:bg-[#141320] dark:border-[#2D2B3F]">
+            <button
+              type="button"
+              onClick={() => setTheme('light')}
+              aria-label="Switch to light theme"
+              aria-pressed={theme === 'light'}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                theme === 'light'
+                  ? 'bg-black text-white shadow-xs dark:bg-[#6865E8] dark:text-white'
+                  : 'text-[#77798A] hover:text-[#20212B] dark:text-[#A6A4B8] dark:hover:text-[#F4F3FA]'
+              )}
+            >
+              <Sun className="h-3.5 w-3.5" />
+              <span>Light</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme('dark')}
+              aria-label="Switch to dark theme"
+              aria-pressed={theme === 'dark'}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                theme === 'dark'
+                  ? 'bg-black text-white shadow-xs dark:bg-[#6865E8] dark:text-white'
+                  : 'text-[#77798A] hover:text-[#20212B] dark:text-[#A6A4B8] dark:hover:text-[#F4F3FA]'
+              )}
+            >
+              <Moon className="h-3.5 w-3.5" />
+              <span>Dark</span>
+            </button>
+          </div>
+
           {user && (
             <div className="flex items-center justify-between px-2 py-1">
               <div className="min-w-0">
-                <span className="text-xs font-extrabold text-[#191522] block truncate">
+                <span className="text-xs font-extrabold text-[#20212B] dark:text-[#F4F3FA] block truncate">
                   {user.first_name || user.username}
                 </span>
-                <span className="text-[10px] text-[#898390] block truncate">
+                <span className="text-[10px] text-[#77798A] dark:text-[#A6A4B8] block truncate">
                   @{user.username}
                 </span>
               </div>
-              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#E8F7F1] text-[#059669] border border-[#A7F3D0]">
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#E6F9F5] text-[#16745C] border border-[#75DCC0] dark:bg-[#16745C]/20 dark:text-[#75DCC0] dark:border-[#75DCC0]/40">
                 Active
               </span>
             </div>
@@ -256,7 +270,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl text-xs font-bold text-[#E11D48] hover:bg-[#FFF1F2] border border-[#FECDD3] transition-colors active:scale-98"
+            className="w-full flex items-center justify-center gap-2 py-3 min-h-[44px] rounded-xl text-xs font-bold text-[#E76D7A] hover:bg-[#FDEEF0] border border-[#F8B4BD] dark:border-[#E76D7A]/30 dark:hover:bg-[#E76D7A]/10 transition-colors active:scale-98"
           >
             <LogOut className="h-3.5 w-3.5" />
             <span>Sign out of MONVEX</span>

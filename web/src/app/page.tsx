@@ -1476,45 +1476,105 @@ export default function LandingPage() {
         </CardReveal>
       </section>
 
-      {/* ─── FOOTER ──────────────────────────────────────────────────────── */}
-      <footer className="mt-auto border-t border-[#E4E2DC] bg-white py-12 px-4 sm:px-6 lg:px-12 text-xs text-[#625D69]">
-        <CardReveal className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-white border border-[#E4E2DC] shadow-2xs flex items-center justify-center p-1 overflow-hidden">
-              <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
+      {/* ─── COMPREHENSIVE FOOTER ────────────────────────────────────────── */}
+      <footer className="mt-auto border-t border-[#E7E6F0] dark:border-[#2D2B3F] bg-white dark:bg-[#151421] py-14 px-4 sm:px-6 lg:px-12 text-xs transition-colors">
+        <div className="max-w-[1600px] mx-auto space-y-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
+            {/* Column 1: Brand & Origin */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-white dark:bg-[#1B1A2A] border border-[#E7E6F0] dark:border-[#2D2B3F] shadow-2xs flex items-center justify-center p-1 overflow-hidden">
+                  <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-extrabold text-base text-[#20212B] dark:text-[#F4F3FA]">MONVEX</span>
+                  <span className="text-[10px] text-[#77798A] dark:text-[#A6A4B8]">Financial Operating System</span>
+                </div>
+              </div>
+              <p className="text-xs text-[#77798A] dark:text-[#A6A4B8] leading-relaxed">
+                Deterministic double-entry personal finance and autonomous scenario intelligence. Zero advertising data monetization.
+              </p>
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>All Systems Operational</span>
+              </div>
+              <div className="pt-1 text-[11px] text-[#77798A] dark:text-[#A6A4B8]">
+                Engineered by <span className="font-bold text-[#20212B] dark:text-[#F4F3FA]">Danish Ansari (Drix)</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-[#191522]">MONVEX</span>
-              <span className="text-[10px] text-[#898390]">AI-powered personal financial intelligence.</span>
+
+            {/* Column 2: Platform Architecture */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#20212B] dark:text-[#F4F3FA]">
+                Platform Architecture
+              </h3>
+              <ul className="space-y-2 font-medium text-[#77798A] dark:text-[#A6A4B8]">
+                <li><a href="#core-loop" className="hover:text-[#6865E8] transition-colors">Core Double-Entry Loop</a></li>
+                <li><a href="#simulator" className="hover:text-[#6865E8] transition-colors">What-If Runway Simulator</a></li>
+                <li><a href="#intelligence" className="hover:text-[#6865E8] transition-colors">Gemini Copilot Engine</a></li>
+                <li><a href="#desktop" className="hover:text-[#6865E8] transition-colors">Tauri Native Desktop</a></li>
+                <li><Link href="/dashboard" className="hover:text-[#6865E8] transition-colors">Live Telemetry Console</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Trust & Security */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#20212B] dark:text-[#F4F3FA]">
+                Trust & Security
+              </h3>
+              <ul className="space-y-2 font-medium text-[#77798A] dark:text-[#A6A4B8]">
+                <li><Link href="/security-overview" className="hover:text-[#6865E8] transition-colors">Security Architecture</Link></li>
+                <li><Link href="/security-overview#data-protection" className="hover:text-[#6865E8] transition-colors">Zero-Trust Vault & MFA</Link></li>
+                <li><Link href="/privacy-policy#data-protection" className="hover:text-[#6865E8] transition-colors">Zero-Knowledge Ingestion</Link></li>
+                <li><Link href="/security-overview#disclosure" className="hover:text-[#6865E8] transition-colors">Vulnerability Disclosure</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Legal & Governance */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#20212B] dark:text-[#F4F3FA]">
+                Legal & Governance
+              </h3>
+              <ul className="space-y-2 font-medium text-[#77798A] dark:text-[#A6A4B8]">
+                <li><Link href="/privacy-policy" className="hover:text-[#6865E8] transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms-of-service" className="hover:text-[#6865E8] transition-colors">Terms of Service</Link></li>
+                <li><Link href="/cookie-policy" className="hover:text-[#6865E8] transition-colors">Cookie & Storage Policy</Link></li>
+                <li><Link href="/financial-disclaimer" className="hover:text-[#6865E8] transition-colors">Financial Disclaimer</Link></li>
+              </ul>
+            </div>
+
+            {/* Column 5: Support & Company */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#20212B] dark:text-[#F4F3FA]">
+                Support & Company
+              </h3>
+              <ul className="space-y-2 font-medium text-[#77798A] dark:text-[#A6A4B8]">
+                <li><Link href="/about" className="hover:text-[#6865E8] transition-colors">About MONVEX</Link></li>
+                <li><Link href="/help" className="hover:text-[#6865E8] transition-colors">Help Center & FAQ</Link></li>
+                <li><Link href="/contact" className="hover:text-[#6865E8] transition-colors">Contact Engineering</Link></li>
+                <li><Link href="/login" className="hover:text-[#6865E8] transition-colors">Workspace Sign In</Link></li>
+                <li><Link href="/register" className="hover:text-[#6865E8] transition-colors">Create Free Account</Link></li>
+              </ul>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 font-semibold">
-            <a href="#core-loop" className="hover:text-[#191522] transition-colors">Core Architecture</a>
-            <a href="#simulator" className="hover:text-[#191522] transition-colors">What-If Simulator</a>
-            <a href="#intelligence" className="hover:text-[#191522] transition-colors">Intelligence System</a>
-            <a href="#desktop" className="hover:text-[#191522] transition-colors">Apps & Desktop</a>
-            <a href="#about" className="hover:text-[#191522] transition-colors">About</a>
-            <button
-              type="button"
-              onClick={() => setIsContactOpen(true)}
-              className="hover:text-[#191522] transition-colors font-semibold cursor-pointer"
-            >
-              Contact
-            </button>
-            <Link href="/security" className="hover:text-[#191522] transition-colors">Security Center</Link>
-            <Link href="/login" className="hover:text-[#191522] transition-colors">Sign In</Link>
-          </div>
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-[#E7E6F0] dark:border-[#2D2B3F] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#77798A] dark:text-[#A6A4B8]">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
+              <span>&copy; {new Date().getFullYear()} MONVEX. All rights reserved.</span>
+              <span className="hidden sm:inline text-[#E7E6F0] dark:text-[#2D2B3F]">•</span>
+              <span>Deterministic Double-Entry Personal Finance</span>
+            </div>
 
-          <div className="text-center md:text-right space-y-0.5">
-            <div className="font-semibold text-[11px] text-[#191522]">
-              Built by Danish Ansari (Drix)
-            </div>
-            <div className="font-mono text-[10px] text-[#898390]">
-              &copy; 2026 MONVEX. All rights reserved.
+            <div className="flex items-center gap-4 text-[11px]">
+              <Link href="/privacy-policy" className="hover:underline">Privacy</Link>
+              <Link href="/terms-of-service" className="hover:underline">Terms</Link>
+              <Link href="/cookie-policy" className="hover:underline">Cookies</Link>
+              <Link href="/financial-disclaimer" className="hover:underline">Disclaimer</Link>
+              <Link href="/contact" className="hover:underline">Contact</Link>
             </div>
           </div>
-        </CardReveal>
+        </div>
       </footer>
 
       {/* ─── CONTACT MODAL ────────────────────────────────────────────────── */}

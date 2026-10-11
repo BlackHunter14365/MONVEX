@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { ArrowUp, Mic, MicOff, Terminal, X, CornerDownLeft, Sparkles } from 'lucide-react';
-import { AIIdentityIcon } from './AIIdentityIcon';
-import { AIQuickActions } from './AIQuickActions';
+import { ArrowUp, Mic, MicOff, Paperclip, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FinancialCommandBarProps {
@@ -29,6 +27,8 @@ export const FinancialCommandBar: React.FC<FinancialCommandBarProps> = ({
   compact = false,
   className,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -46,102 +46,99 @@ export const FinancialCommandBar: React.FC<FinancialCommandBarProps> = ({
     }
   };
 
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
-    <div className={cn('w-full space-y-2 select-none', className)}>
-      {/* Quick Financial Action Chips Tray */}
-      <div className="px-1">
-        <AIQuickActions
-          onSelectAction={(prompt) => onSend(prompt)}
-          disabled={isLoading}
-          compact={compact}
-        />
-      </div>
+    <div className={cn('w-full max-w-4xl mx-auto select-none', className)}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*,.pdf,.csv"
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            setInputQuery(`${inputQuery} [Attached: ${e.target.files[0].name}] `);
+          }
+        }}
+      />
 
-      {/* Main Command Console Bezel */}
-      <div className="relative rounded-2xl sm:rounded-3xl border border-[#D8D2E7] bg-white p-2 sm:p-2.5 shadow-sm transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/15">
-        <div className="flex items-start gap-2 sm:gap-2.5">
-          {/* Terminal Command Prompt Indicator */}
-          <div className="pt-2 pl-1.5 shrink-0 hidden sm:flex items-center gap-1 text-[#898390]">
-            <Terminal className="h-4 w-4 text-[#2563EB]" />
-          </div>
-
-          {/* Dynamic Auto-resizing Textarea */}
+      {/* Main Input Bezel (Image 2 Nexora Style) */}
+      <div className="rounded-3xl border border-[#E7E6F0] bg-white p-3 sm:p-4 shadow-sm focus-within:border-[#6865E8]/40 focus-within:ring-2 focus-within:ring-[#6865E8]/10 transition-all space-y-3">
+        {/* Dynamic Auto-resizing Textarea */}
+        <div className="relative">
           <textarea
             ref={textareaRef}
             rows={1}
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            aria-label="Financial AI copilot command input"
+            aria-label="Ask Finexa about your finances"
             placeholder={
               isRecording
-                ? 'Listening to your financial command...'
-                : 'Command financial copilot (e.g. "Can I afford ₹45,000 for a trip next month?", "Analyze my spending outliers")...'
+                ? 'Listening to your financial voice command...'
+                : 'Ask Finexa about your finances...'
             }
             disabled={isLoading}
-            className="w-full resize-none bg-transparent py-2 px-1 text-xs sm:text-sm font-medium text-[#191522] placeholder:text-[#898390] focus:outline-none disabled:opacity-60 max-h-36 leading-relaxed"
+            className="w-full resize-none bg-transparent px-2 py-1 text-sm font-medium text-[#20212B] placeholder:text-[#77798A] focus:outline-none disabled:opacity-60 max-h-32 leading-relaxed"
           />
 
-          {/* Clear button if text typed */}
           {inputQuery.trim() && !isLoading && (
             <button
               type="button"
               onClick={handleClear}
-              className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#191522] hover:bg-[#F3F1F8] transition-colors shrink-0 mt-0.5 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]"
-              aria-label="Clear input text"
+              className="absolute right-1 top-1 p-1 rounded-lg text-[#77798A] hover:text-[#20212B] hover:bg-[#FAF9FC] transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
           )}
-
-          {/* Voice Input Trigger */}
-          <button
-            type="button"
-            onClick={toggleVoiceRecording}
-            className={cn(
-              'p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl border transition-all shrink-0 mt-0.5 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
-              isRecording
-                ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
-                : 'bg-white hover:bg-[#F6F5F1] text-[#625D69] border-[#E4E2DC] hover:text-[#191522]'
-            )}
-            title={isRecording ? 'Stop voice recording' : 'Voice command (Speech Recognition)'}
-            aria-label={isRecording ? 'Stop voice recording' : 'Voice command input'}
-          >
-            {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </button>
-
-          {/* Primary Execute Button */}
-          <button
-            type="button"
-            onClick={() => onSend()}
-            disabled={!inputQuery.trim() || isLoading}
-            className={cn(
-              'inline-flex items-center justify-center p-2 min-h-[40px] min-w-[40px] rounded-xl font-bold transition-all shrink-0 mt-0.5 shadow-xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
-              inputQuery.trim() && !isLoading
-                ? 'bg-[#2A1F3D] hover:bg-[#3B2D54] text-white hover:scale-105 active:scale-95'
-                : 'bg-[#EEEAF7] text-[#898390] cursor-not-allowed opacity-70'
-            )}
-            aria-label="Send financial command"
-          >
-            <ArrowUp className="h-4 w-4" />
-          </button>
         </div>
 
-        {/* Bottom Utility & Keyboard Shortcut Hint Bar */}
-        <div className="mt-1 pt-1.5 border-t border-[#F1EFEA] flex items-center justify-between px-1 text-[10px] text-[#898390] font-mono">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span>Deterministic Ledger Grounding</span>
-            </span>
-          </div>
+        {/* Action Row: Attach (Left) | Voice + Purple Send Button (Right) */}
+        <div className="flex items-center justify-between pt-1 border-t border-[#F4F3FA]">
+          {/* Attach Button (Image 2) */}
+          <button
+            type="button"
+            onClick={handleAttachClick}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#E7E6F0] bg-[#FAF9FC] hover:bg-white text-xs font-semibold text-[#77798A] hover:text-[#20212B] transition-all cursor-pointer shadow-2xs"
+          >
+            <Paperclip className="h-3.5 w-3.5 text-[#77798A]" />
+            <span>Attach</span>
+          </button>
 
-          <div className="hidden sm:flex items-center gap-2">
-            <span>Press</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-[#F1EFEA] border border-[#E4E2DC] text-[9.5px] font-bold text-[#625D69]">
-              Enter ↵
-            </kbd>
-            <span>to execute</span>
+          {/* Right Cluster: Voice + Send */}
+          <div className="flex items-center gap-2">
+            {/* Voice Pill Button (Image 2) */}
+            <button
+              type="button"
+              onClick={toggleVoiceRecording}
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border transition-all cursor-pointer shadow-2xs text-xs font-semibold',
+                isRecording
+                  ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
+                  : 'bg-[#FAF9FC] hover:bg-white border-[#E7E6F0] text-[#77798A] hover:text-[#20212B]'
+              )}
+            >
+              <Mic className={cn('h-3.5 w-3.5', isRecording ? 'text-white' : 'text-[#6865E8]')} />
+              <span>Voice</span>
+            </button>
+
+            {/* Purple Circular Send Button (Image 2) */}
+            <button
+              type="button"
+              onClick={() => onSend()}
+              disabled={!inputQuery.trim() || isLoading}
+              className={cn(
+                'h-9 w-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-sm',
+                inputQuery.trim() && !isLoading
+                  ? 'bg-[#6865E8] hover:bg-[#5754D6] text-white hover:scale-105 active:scale-95 shadow-[#6865E8]/30'
+                  : 'bg-[#ECEBFF] text-[#6865E8]/50 cursor-not-allowed'
+              )}
+              aria-label="Send prompt"
+            >
+              <Send className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>

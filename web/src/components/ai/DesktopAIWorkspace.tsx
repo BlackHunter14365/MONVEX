@@ -105,8 +105,8 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
   const currentIntent = latestAssistantMsg?.intent;
 
   return (
-    <div className="hidden lg:block p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E2DFD7] shadow-sm">
-      <div className="flex flex-col h-[calc(100vh-8.5rem)] rounded-[22px] overflow-hidden border border-[#ECE9E0] shadow-inner bg-[#FBFBFA]">
+    <div className="hidden lg:block p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E7E6F0] shadow-sm">
+      <div className="flex flex-col h-[calc(100vh-8.5rem)] rounded-[22px] overflow-hidden border border-[#E7E6F0] shadow-inner bg-[#FAF9FC]">
         {/* 1. INTELLIGENCE COMMAND HEADER */}
         <AICopilotHeader
           activeModel={activeModel}
@@ -123,7 +123,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
         {/* 2. MAIN WORKSPACE BODY: CONVERSATION FEED + CONTEXTUAL PANEL */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* Main Intelligence Feed & Command Bar Column */}
-          <div className="flex-1 flex flex-col min-w-0 bg-[#FAF9FD]/50">
+          <div className="flex-1 flex flex-col min-w-0 bg-[#FAF9FC]/60">
             {/* Conversation Feed */}
             <AIConversationWorkspace
               messages={messages}
@@ -143,7 +143,7 @@ export const DesktopAIWorkspace: React.FC<DesktopAIWorkspaceProps> = ({
             />
 
             {/* Financial Command Terminal Bar */}
-            <div className="p-3 sm:p-4 bg-white/95 border-t border-[#E4E2DC] shrink-0">
+            <div className="p-3 sm:p-4 bg-white/95 border-t border-[#E7E6F0] shrink-0">
               <div className="max-w-4xl mx-auto w-full">
                 <FinancialCommandBar
                   inputQuery={inputQuery}

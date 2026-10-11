@@ -14,11 +14,13 @@ import {
   ShieldCheck,
   TrendingUp,
   Sparkles,
+  User,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { UserProfileModal, PRESET_AVATARS } from '@/components/profile/UserProfileModal';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { GlobalSearch } from './GlobalSearch';
+import { NotificationPopover } from './NotificationPopover';
 
 interface TopbarProps {
   onOpenAddTransaction?: () => void;
@@ -35,48 +37,27 @@ export const Topbar: React.FC<TopbarProps> = ({
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const avatarUrl = user?.avatar_url;
   const avatarPreset = user?.avatar_preset ? PRESET_AVATARS.find((p) => p.id === user.avatar_preset) : null;
+  const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'Sarah Rahman';
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const notificationsRef = useRef<HTMLDivElement>(null);
 
-  // Click-outside and Escape listener to dismiss overlays
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
       if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setIsDropdownOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
-        setIsNotificationsOpen(false);
-      }
     };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsDropdownOpen(false);
-        setIsNotificationsOpen(false);
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close menus on route change
   useEffect(() => {
     setIsDropdownOpen(false);
-    setIsNotificationsOpen(false);
   }, [pathname]);
 
   const getPageTitle = () => {
@@ -84,14 +65,14 @@ export const Topbar: React.FC<TopbarProps> = ({
     if (pathname.includes('/budgets')) return 'Budgets';
     if (pathname.includes('/goals')) return 'Savings Goals';
     if (pathname.includes('/analytics')) return 'Analytics';
-    if (pathname.includes('/ai')) return 'AI Intelligence';
+    if (pathname.includes('/ai')) return 'AI Assistant';
     if (pathname.includes('/simulator')) return 'What-If Simulator';
     if (pathname.includes('/forecast')) return 'Cashflow Forecast';
     if (pathname.includes('/receipts')) return 'Receipt Vision';
     if (pathname.includes('/net-worth')) return 'Net Worth';
     if (pathname.includes('/debt')) return 'Debt & Loans';
     if (pathname.includes('/subscriptions')) return 'Subscriptions';
-    if (pathname.includes('/reports')) return 'Monthly Reports';
+    if (pathname.includes('/reports')) return 'Reports';
     if (pathname.includes('/notifications')) return 'Alerts';
     if (pathname.includes('/security')) return 'Security';
     if (pathname.includes('/settings')) return 'Settings';
@@ -104,224 +85,119 @@ export const Topbar: React.FC<TopbarProps> = ({
     router.replace('/login');
   };
 
-  const todayFormatted = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
   return (
-    <header
-      className={cn(
-        'sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-[#E4E2DC] bg-[#F6F5F1]/80 px-3 sm:px-6 lg:px-8 select-none backdrop-blur-md gap-2 sm:gap-4',
-        className
-      )}
-    >
-      {/* Title & Mobile Hamburger */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        <button
-          onClick={() => {
-            if (onOpenMobileDrawer) {
-              onOpenMobileDrawer();
-            } else if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('monvex:open-mobile-drawer'));
-            }
-          }}
-          className="lg:hidden h-11 w-11 flex items-center justify-center rounded-xl text-[#191522] hover:bg-white/80 border border-[#E4E2DC] transition-colors shadow-2xs shrink-0 focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
-          aria-label="Open navigation menu"
-        >
-          <Menu className="h-4 w-4" aria-hidden="true" />
-        </button>
-
-        <h1 className="text-sm sm:text-lg font-bold text-[#191522] tracking-tight truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">
-          {getPageTitle()}
-        </h1>
-        <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E8F7F1] text-[#059669] border border-[#A7F3D0] text-[10px] font-bold shrink-0">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" aria-hidden="true" />
-          Live
-        </span>
-      </div>
-
-      {/* Search & Command Center Trigger */}
-      <button
-        onClick={() => {
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('monvex:open-command-center'));
-          }
-        }}
-        className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 min-h-[44px] rounded-xl bg-white/90 hover:bg-white border border-[#E4E2DC] hover:border-[#7184C4]/40 text-xs text-[#625D69] hover:text-[#191522] transition-all shadow-2xs group max-w-[140px] sm:max-w-xs sm:w-64 focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
-        title="Open Universal Command Center (Ctrl+K / Cmd+K)"
-        aria-label="Search MONVEX (Ctrl+K)"
+    <>
+      <header
+        className={cn(
+          'sticky top-0 z-30 flex h-20 w-full items-center justify-between bg-transparent px-4 sm:px-8 select-none',
+          className
+        )}
       >
-        <Search className="h-3.5 w-3.5 text-[#898390] group-hover:text-[#191522] shrink-0" aria-hidden="true" />
-        <span className="hidden sm:inline font-medium">Search MONVEX...</span>
-        <span className="sm:hidden font-medium text-[11px] truncate">Search...</span>
-        <kbd className="ml-auto hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-sm bg-[#F6F5F1] border border-[#E4E2DC] text-[10px] font-mono font-bold text-[#625D69]">
-          ⌘K
-        </kbd>
-      </button>
-
-      {/* Right Controls */}
-      <div className="flex items-center gap-3 sm:gap-4">
-        {/* Formatted Date */}
-        <span className="hidden md:inline-block text-xs font-medium text-[#898390]">
-          {todayFormatted}
-        </span>
-
-        {/* Notification Bell with Dropdown */}
-        <div ref={notificationsRef} className="relative">
+        {/* LEFT: MOBILE MENU TRIGGER & PAGE TITLE */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => {
-              setIsNotificationsOpen((prev) => !prev);
-              setIsDropdownOpen(false);
-            }}
-            aria-expanded={isNotificationsOpen}
-            aria-haspopup="true"
-            className="relative h-11 w-11 flex items-center justify-center rounded-xl text-[#625D69] hover:text-[#191522] hover:bg-white/80 border border-transparent hover:border-[#E4E2DC] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
-            aria-label="Notifications"
+            onClick={onOpenMobileDrawer}
+            className="lg:hidden p-2 rounded-xl text-[#77798A] dark:text-[#A6A4B8] hover:text-[#20212B] dark:hover:text-[#F4F3FA] hover:bg-white dark:hover:bg-[#1B1A2A] border border-[#E7E6F0] dark:border-[#2D2B3F] shadow-xs cursor-pointer"
+            aria-label="Open Navigation Menu"
           >
-            <Bell className="h-4 w-4" aria-hidden="true" />
-            <span className="absolute top-1.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#E11D48] text-white text-[9px] font-black">
-              2
-            </span>
+            <Menu className="h-5 w-5" />
           </button>
-
-          {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white p-3.5 shadow-2xl border border-[#E4E2DC] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC] mb-2">
-                <span className="text-xs font-bold text-[#191522]">Telemetry Notifications</span>
-                <span
-                  onClick={() => setIsNotificationsOpen(false)}
-                  className="text-[10px] font-bold text-[#4056A1] hover:underline cursor-pointer"
-                >
-                  Mark read
-                </span>
-              </div>
-              <div className="space-y-2">
-                <div className="p-2.5 rounded-lg bg-[#E8F7F1]/80 border border-[#A7F3D0] text-xs">
-                  <div className="flex items-center gap-1.5 text-[#059669] font-bold">
-                    <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Monthly Surplus on Track</span>
-                  </div>
-                  <p className="text-[11px] text-[#065F46] mt-1 font-medium leading-relaxed">
-                    Your savings rate is +28.4% above last month’s baseline.
-                  </p>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#E9EDFA]/80 border border-[#7184C4]/30 text-xs">
-                  <div className="flex items-center gap-1.5 text-[#26335F] font-bold">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#4056A1]" aria-hidden="true" />
-                    <span>Security Engine Active</span>
-                  </div>
-                  <p className="text-[11px] text-[#334155] mt-1 font-medium leading-relaxed">
-                    Zero anomalous outbound spikes detected across current cycle.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#20212B] dark:text-[#F4F3FA] tracking-tight">
+              {getPageTitle()}
+            </h1>
+          </div>
         </div>
 
-        {/* + Add Transaction Button */}
-        {onOpenAddTransaction && (
-          <button
-            onClick={onOpenAddTransaction}
-            aria-label="Add transaction"
-            className="hidden sm:flex items-center gap-1.5 rounded-xl bg-[#2A1F3D] hover:bg-[#3B2D54] active:bg-[#21182F] py-2 px-3.5 min-h-[44px] text-xs font-bold text-white transition-all shadow-subtle active:translate-y-[1px] focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none focus-visible:ring-offset-1"
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Add transaction</span>
-          </button>
-        )}
+        {/* RIGHT: SEARCH, NOTIFICATIONS, ADD BTN & USER PILL */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Functional Debounced Global Search Bar */}
+          <GlobalSearch />
 
-        {/* User Profile Dropdown Pill */}
-        {user ? (
-          <div ref={dropdownRef} className="relative">
+          {/* Functional Notification Bell with Popover and Real Unread Synchronisation */}
+          <NotificationPopover />
+
+          {/* User Profile Capsule */}
+          <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => {
-                setIsDropdownOpen((prev) => !prev);
-                setIsNotificationsOpen(false);
-              }}
-              aria-expanded={isDropdownOpen}
-              aria-haspopup="true"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-2xl bg-white dark:bg-[#161522] border border-[#E7E6F0] dark:border-[#2D2B3F] shadow-xs hover:border-[#6865E8]/30 transition-all cursor-pointer"
               aria-label="User profile menu"
-              className="flex items-center gap-2 rounded-xl bg-white/90 border border-[#E4E2DC] px-2.5 py-1.5 min-h-[44px] hover:border-[#D6D4CD] transition-all shadow-sm group focus-visible:ring-2 focus-visible:ring-[#4056A1]/30 focus-visible:outline-none"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg overflow-hidden bg-[#2A1F3D] text-white text-xs font-bold uppercase shadow-xs">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#6865E8] to-[#8C8AEF] flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={user.username} className="h-full w-full object-cover" />
+                  <img src={avatarUrl} alt={fullName} className="h-full w-full rounded-full object-cover" />
                 ) : avatarPreset ? (
-                  <div className={cn('h-full w-full flex items-center justify-center text-sm bg-gradient-to-br', avatarPreset.bg)}>
-                    {avatarPreset.emoji}
-                  </div>
+                  <span>{avatarPreset.emoji}</span>
                 ) : (
-                  user.username.slice(0, 1)
+                  <span>{fullName.slice(0, 1).toUpperCase()}</span>
                 )}
               </div>
-              <span className="hidden sm:inline text-xs font-bold text-[#191522] max-w-[120px] truncate">
-                {user.username}
+              <span className="hidden sm:inline-block text-xs font-bold text-[#20212B] dark:text-[#F4F3FA]">
+                {fullName}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-[#898390] hidden sm:inline group-hover:text-[#191522]" />
+              <ChevronDown className="h-3.5 w-3.5 text-[#77798A] dark:text-[#A6A4B8]" />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Profile Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white py-2 shadow-2xl border border-[#E4E2DC] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="px-4 py-2 border-b border-[#E4E2DC]/80 mb-1">
-                  <span className="text-xs font-black text-[#191522] block truncate">
-                    {user.username}
-                  </span>
-                  <span className="text-[10px] text-[#898390] block truncate font-medium mt-0.5">
-                    {user.email}
-                  </span>
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-[#161522] border border-[#E7E6F0] dark:border-[#2D2B3F] shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-4 py-2 border-b border-[#E7E6F0]/60 dark:border-[#2D2B3F]/60">
+                  <p className="text-xs font-bold text-[#20212B] dark:text-[#F4F3FA] truncate">{fullName}</p>
+                  <p className="text-[10px] text-[#77798A] dark:text-[#A6A4B8] truncate">{user?.email || 'account@monvex.com'}</p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    setIsProfileOpen(true);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#191522] hover:bg-[#F6F5F1] transition-colors text-left"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
-                  <span>Profile Setup & Avatar</span>
-                </button>
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setIsProfileModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#77798A] dark:text-[#A6A4B8] hover:text-[#20212B] dark:hover:text-[#F4F3FA] hover:bg-[#FAF9FC] dark:hover:bg-[#1E1C30] transition-colors cursor-pointer"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>My Profile</span>
+                  </button>
 
-                <Link
-                  href="/settings"
-                  onClick={() => setIsDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#625D69] hover:text-[#191522] hover:bg-[#F6F5F1] transition-colors"
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  <span>Preferences & Security</span>
-                </Link>
+                  <Link
+                    href="/settings"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#77798A] dark:text-[#A6A4B8] hover:text-[#20212B] dark:hover:text-[#F4F3FA] hover:bg-[#FAF9FC] dark:hover:bg-[#1E1C30] transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Account Settings</span>
+                  </Link>
 
-                <div className="my-1 border-t border-[#E4E2DC]/80" />
+                  <Link
+                    href="/security"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#77798A] dark:text-[#A6A4B8] hover:text-[#20212B] dark:hover:text-[#F4F3FA] hover:bg-[#FAF9FC] dark:hover:bg-[#1E1C30] transition-colors"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Security Vault</span>
+                  </Link>
+                </div>
 
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#E11D48] hover:bg-[#FFF1F2] transition-colors text-left"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>Sign out</span>
-                </button>
+                <div className="pt-1 border-t border-[#E7E6F0]/60 dark:border-[#2D2B3F]/60">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#E76D7A] hover:bg-[#FDEEF0] dark:hover:bg-[#E76D7A]/10 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        ) : (
-          <Link
-            href="/login"
-            className="rounded-xl bg-[#2A1F3D] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#3B2D54] transition-colors"
-          >
-            Sign in
-          </Link>
-        )}
-      </div>
+        </div>
+      </header>
 
-      <UserProfileModal
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-      />
-    </header>
+      {/* Profile Modal */}
+      {isProfileModalOpen && (
+        <UserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+        />
+      )}
+    </>
   );
 };

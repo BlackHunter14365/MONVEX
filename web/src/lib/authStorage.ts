@@ -241,9 +241,34 @@ class AuthStorageManager {
       if (clearReason) {
         localStorage.removeItem(AUTH_CONFIG.STORAGE_KEYS.SESSION_EXPIRED_REASON);
       }
+      localStorage.removeItem(AUTH_CONFIG.STORAGE_KEYS.USER_PROFILE);
     } catch {
       // ignore
     }
+  }
+
+  public saveUserProfile(profile: any) {
+    if (!this.isBrowser() || !profile) return;
+    try {
+      localStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+    } catch {}
+  }
+
+  public getUserProfile(): any | null {
+    if (!this.isBrowser()) return null;
+    try {
+      const raw = localStorage.getItem(AUTH_CONFIG.STORAGE_KEYS.USER_PROFILE);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  public clearUserProfile() {
+    if (!this.isBrowser()) return;
+    try {
+      localStorage.removeItem(AUTH_CONFIG.STORAGE_KEYS.USER_PROFILE);
+    } catch {}
   }
 
   public setSessionExpiredReason(reason: SessionExpiredReason) {

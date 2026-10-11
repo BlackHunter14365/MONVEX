@@ -19,7 +19,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             'id', 'username', 'first_name', 'last_name', 'phone_number', 'status', 'email_verified', 'is_verified',
             'currency', 'monthly_income', 'savings_target_percentage', 'theme',
             'avatar_url', 'avatar_preset', 'bio', 'preferences',
-            'has_google_auth', 'has_password_auth'
+            'has_google_auth', 'has_password_auth', 'is_mfa_enabled'
         ]
 
     def get_has_google_auth(self, obj):
@@ -64,6 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
     preferences = serializers.JSONField(source='profile.preferences', required=False)
     is_verified = serializers.BooleanField(source='profile.email_verified', read_only=True)
     status = serializers.CharField(source='profile.status', read_only=True)
+    is_mfa_enabled = serializers.BooleanField(source='profile.is_mfa_enabled', read_only=True)
     has_google_auth = serializers.SerializerMethodField()
     has_password_auth = serializers.SerializerMethodField()
 
@@ -73,10 +74,10 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'first_name', 'last_name', 'phone_number',
             'currency', 'monthly_income', 'savings_target_percentage',
             'theme', 'bio', 'avatar_url', 'avatar_preset', 'preferences',
-            'is_verified', 'status',
+            'is_verified', 'status', 'is_mfa_enabled',
             'has_google_auth', 'has_password_auth', 'profile'
         ]
-        read_only_fields = ['id', 'email', 'is_verified', 'status', 'has_google_auth', 'has_password_auth']
+        read_only_fields = ['id', 'email', 'is_verified', 'status', 'is_mfa_enabled', 'has_google_auth', 'has_password_auth']
 
     def get_has_google_auth(self, obj):
         return obj.google_identities.exists()

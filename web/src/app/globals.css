@@ -37,9 +37,9 @@
 }
 
 /* =========================================================================
-   1. EDITORIAL SURFACE & CARD SYSTEM
+   1. AURORA GLASS SURFACE & CARD SYSTEM
    ========================================================================= */
-.editorial-card {
+.editorial-card, .aurora-card {
   background-color: var(--mx-surface);
   border: 1px solid var(--mx-border);
   border-radius: var(--mx-radius-lg);
@@ -47,7 +47,7 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.editorial-card:hover {
+.editorial-card:hover, .aurora-card:hover {
   border-color: var(--mx-border-strong);
   box-shadow: var(--mx-shadow-elevated);
 }
@@ -65,37 +65,129 @@
   border-radius: var(--mx-radius-md);
 }
 
+/* Aurora Glass Primitives */
+.aurora-glass {
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(231, 230, 240, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.aurora-glass-violet {
+  background-color: rgba(238, 237, 248, 0.75);
+  border: 1px solid rgba(104, 101, 232, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.aurora-glass-mint {
+  background-color: rgba(230, 249, 245, 0.75);
+  border: 1px solid rgba(117, 220, 192, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.aurora-pill-active {
+  background-color: #6865E8;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px -1px rgba(104, 101, 232, 0.35);
+}
+
 /* Legacy Alias Bridge */
 .liquid-card, .ref-card {
-  background-color: #FFFFFF;
-  border: 1px solid #E4E2DC;
+  background-color: var(--mx-surface);
+  border: 1px solid var(--mx-border);
   border-radius: 16px;
-  box-shadow: 0 1px 3px 0 rgba(42, 31, 61, 0.04);
+  box-shadow: var(--mx-shadow-card);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .liquid-card:hover, .ref-card-hover:hover {
-  box-shadow: 0 4px 12px -2px rgba(42, 31, 61, 0.08);
-  border-color: #D6D4CD;
+  box-shadow: var(--mx-shadow-elevated);
+  border-color: var(--mx-border-strong);
 }
 
 .liquid-glass {
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid #E4E2DC;
+  background-color: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--mx-border);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .liquid-glass-sidebar {
-  background-color: #F6F5F1;
-  border-right: 1px solid #E4E2DC;
+  background-color: var(--mx-sidebar);
+  border-right: 1px solid var(--mx-border);
 }
 
 .liquid-glass-topbar {
-  background-color: rgba(246, 245, 241, 0.92);
-  border-bottom: 1px solid #E4E2DC;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(244, 243, 250, 0.88);
+  border-bottom: 1px solid var(--mx-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Dark Mode Aurora Glass & Surface Rules */
+.dark .aurora-glass {
+  background-color: rgba(27, 26, 42, 0.85);
+  border-color: rgba(45, 43, 63, 0.9);
+}
+
+.dark .aurora-glass-violet {
+  background-color: rgba(35, 33, 59, 0.75);
+  border-color: rgba(124, 121, 242, 0.35);
+}
+
+.dark .aurora-glass-mint {
+  background-color: rgba(20, 46, 43, 0.75);
+  border-color: rgba(117, 220, 192, 0.35);
+}
+
+.dark .liquid-glass {
+  background-color: rgba(27, 26, 42, 0.88);
+  border-color: var(--mx-border);
+}
+
+.dark .liquid-glass-topbar {
+  background-color: rgba(15, 14, 23, 0.88);
+  border-bottom-color: var(--mx-border);
+}
+
+.dark .bg-white {
+  background-color: var(--mx-surface) !important;
+}
+
+.dark .bg-\[\#F4F3FA\] {
+  background-color: var(--mx-bg) !important;
+}
+
+.dark .bg-\[\#FAF9FC\] {
+  background-color: var(--mx-surface-subtle) !important;
+}
+
+.dark .bg-\[\#F6F5FD\] {
+  background-color: var(--mx-surface) !important;
+}
+
+.dark .border-\[\#E7E6F0\] {
+  border-color: var(--mx-border) !important;
+}
+
+.dark .text-\[\#20212B\] {
+  color: var(--mx-text-primary) !important;
+}
+
+.dark .text-\[\#77798A\] {
+  color: var(--mx-text-secondary) !important;
+}
+
+.dark .text-\[\#9DA0B3\] {
+  color: var(--mx-text-muted) !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  color-scheme: dark;
 }
 
 /* =========================================================================
@@ -255,8 +347,8 @@
 
 .ref-table thead,
 .editorial-table thead {
-  background-color: #FAF9F6;
-  border-bottom: 1px solid #E4E2DC;
+  background-color: var(--mx-surface-subtle);
+  border-bottom: 1px solid var(--mx-border);
 }
 
 .ref-table thead th,
@@ -267,7 +359,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #858D9A;
+  color: var(--mx-text-muted);
   white-space: nowrap;
 }
 
@@ -278,7 +370,7 @@
 
 .ref-table tbody tr,
 .editorial-table tbody tr {
-  border-bottom: 1px solid #F0EFEA;
+  border-bottom: 1px solid var(--mx-border);
   transition: background-color 0.15s ease;
 }
 
@@ -289,7 +381,7 @@
 
 .ref-table tbody tr:hover,
 .editorial-table tbody tr:hover {
-  background-color: #FAF9F6;
+  background-color: var(--mx-surface-subtle);
 }
 
 .ref-table tbody td,

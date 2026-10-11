@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
-  variant?: 'light' | 'subtle' | 'dark';
+  variant?: 'light' | 'subtle' | 'dark' | 'aurora' | 'violet' | 'mint';
   glow?: boolean;
 }
 
@@ -18,9 +18,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const variantClass = {
-    light: 'liquid-glass',
-    subtle: 'liquid-glass-subtle',
-    dark: 'liquid-glass-dark',
+    light: 'aurora-glass',
+    subtle: 'bg-white/70 border border-[#E7E6F0] backdrop-blur-md',
+    dark: 'bg-[#20212B]/90 text-white border border-[#42415E] backdrop-blur-md',
+    aurora: 'aurora-glass',
+    violet: 'aurora-glass-violet',
+    mint: 'aurora-glass-mint',
   }[variant];
 
   return (

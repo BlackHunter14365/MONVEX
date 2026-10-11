@@ -23,24 +23,24 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <header
       className={cn(
-        'flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#E4E2DC]',
+        'flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E6F0]',
         className
       )}
     >
       <div className="space-y-1">
         {eyebrow && (
-          <span className="swiss-eyebrow text-[10px] font-bold text-[#898390] uppercase tracking-wider block">
+          <span className="text-[10px] font-mono font-bold text-[#6865E8] uppercase tracking-wider block">
             {eyebrow}
           </span>
         )}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#191522] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#20212B] tracking-tight">
             {title}
           </h1>
           {badge}
         </div>
         {description && (
-          <p className="text-xs sm:text-sm font-medium text-[#625D69] max-w-2xl leading-relaxed">
+          <p className="text-xs font-medium text-[#77798A] max-w-2xl leading-relaxed">
             {description}
           </p>
         )}

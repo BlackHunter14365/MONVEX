@@ -9,8 +9,12 @@ import {
   Sparkles,
   TrendingUp,
   Coins,
+  ArrowUpRight,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -132,65 +136,90 @@ export default function GoalsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-[1600px] mx-auto w-full">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         {/* =========================================================================
             1. HEADER & OVERVIEW
             ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#E4E2DC]">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
-              Capital Accumulation & Goals
-            </h1>
-            <p className="text-xs text-[#625D69] font-medium mt-0.5">
-              Structured milestone tracking, target deadlines, and required monthly capital run-rates.
-            </p>
+        <PageHeader
+          eyebrow="CAPITAL ACCUMULATION"
+          title="Savings Milestones & Goals"
+          description="Structured capital accumulation telemetry: target deadlines, progress tracking, and required monthly velocity."
+          actionSlot={
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              variant="primary"
+              size="md"
+              leftIcon={<Plus className="h-4 w-4" />}
+              className="bg-[#6865E8] hover:bg-[#5b58db] text-white shadow-xs rounded-2xl px-5 py-2.5 font-semibold text-xs"
+            >
+              Create Milestone
+            </Button>
+          }
+        />
+
+        {/* =========================================================================
+            2. SUMMARY STAT CARDS (Aurora Glass)
+            ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                Cumulative Target Capital
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Target className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalTarget} currency={user?.currency} size="2xl" type="neutral" />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Total capital across all milestones</p>
+            </div>
           </div>
 
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="touch-target"
-          >
-            Create Goal
-          </Button>
-        </div>
-
-        {/* SUMMARY STATS */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] block">
-              Cumulative Target Capital
-            </span>
-            <FinancialAmount amount={totalTarget} currency={user?.currency} size="xl" type="neutral" />
-            <span className="text-[10px] text-[#625D69] block">Total capital across all milestones</span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Accumulated Balance
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalSaved} currency={user?.currency} size="2xl" type="income" />
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#E8FBF4] text-[#16745C]">
+                  {overallPct}% reached
+                </span>
+                <span className="text-xs text-[#77798A]">of aggregate targets</span>
+              </div>
+            </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669] block">
-              Accumulated Balance
-            </span>
-            <FinancialAmount amount={totalSaved} currency={user?.currency} size="xl" type="income" />
-            <span className="text-[10px] text-[#059669] font-bold block">{overallPct}% of target reached</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#4056A1] block">
-              Active Programs
-            </span>
-            <div className="text-xl font-mono font-black text-[#191522]">{goals.length} Concurrent Milestones</div>
-            <span className="text-[10px] text-[#625D69] block">Real-time progress telemetry</span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                Active Programs
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Sparkles className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">{goals.length} Concurrent Milestones</div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Real-time progress telemetry</p>
+            </div>
           </div>
         </div>
 
         {/* =========================================================================
-            2. GOALS GRID
+            3. GOALS GRID
             ========================================================================= */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Skeleton className="h-52 w-full rounded-2xl" />
-            <Skeleton className="h-52 w-full rounded-2xl" />
+            <Skeleton className="h-64 w-full rounded-3xl" />
+            <Skeleton className="h-64 w-full rounded-3xl" />
+            <Skeleton className="h-64 w-full rounded-3xl" />
           </div>
         ) : isError && goals.length === 0 ? (
           <ErrorState
@@ -224,103 +253,117 @@ export default function GoalsPage() {
               }
 
               return (
-                <div key={g.id} className="double-bezel">
-                  <div className="double-bezel-inner p-5 space-y-4 flex flex-col justify-between h-full">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E9EDFA] text-[#4056A1] shrink-0">
-                            <Target className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-[#191522] block leading-tight">
-                              {g.title || g.name}
-                            </h3>
-                            {deadline && (
-                              <span className="text-[10px] font-mono text-[#898390]">
-                                Target: {new Date(deadline).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                              </span>
-                            )}
-                          </div>
+                <div
+                  key={g.id}
+                  className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs hover:border-[#6865E8]/40 hover:shadow-md transition-all flex flex-col justify-between h-full space-y-5"
+                >
+                  <div className="space-y-4">
+                    {/* Header Row: Icon + Title + Percent Pill */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#ECEBFF] text-[#6865E8] shrink-0">
+                          <Target className="h-5 w-5" />
                         </div>
-
-                        <span className="text-xs font-mono font-black text-[#059669]">
-                          {pct}%
-                        </span>
+                        <div>
+                          <h3 className="text-sm font-bold text-[#20212B] block leading-tight">
+                            {g.title || g.name}
+                          </h3>
+                          {deadline ? (
+                            <span className="text-[10px] font-mono text-[#77798A]">
+                              Target: {new Date(deadline).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono text-[#77798A]">Open Horizon</span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Amounts */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs items-baseline">
-                          <span className="font-mono font-bold text-[#191522]">
+                      <span className={cn(
+                        'text-xs font-mono font-bold px-2.5 py-1 rounded-full border',
+                        pct >= 100
+                          ? 'bg-[#E8FBF4] text-[#16745C] border-[#B6F0DE]'
+                          : 'bg-[#ECEBFF] text-[#6865E8] border-[#D8D5FB]'
+                      )}>
+                        {pct}%
+                      </span>
+                    </div>
+
+                    {/* Progress Track & Amounts */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-baseline">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-base font-mono font-bold text-[#20212B]">
                             {formatCurrency(cur, user?.currency)}
                           </span>
-                          <span className="font-mono text-[#898390] text-[11px]">
+                          <span className="text-xs font-mono text-[#77798A]">
                             of {formatCurrency(tar, user?.currency)}
                           </span>
                         </div>
-
-                        <div
-                          role="progressbar"
-                          aria-valuenow={pct}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-label={`${g.title || g.name} milestone progress`}
-                          className="w-full h-2 bg-[#F1F0EC] rounded-full overflow-hidden"
-                        >
-                          <div
-                            className={cn(
-                              'h-full rounded-full transition-all',
-                              pct >= 100 ? 'bg-[#059669]' : 'bg-[#4056A1]'
-                            )}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
+                        <span className="text-xs text-[#77798A] font-medium">
+                          {formatCurrency(remaining, user?.currency)} to go
+                        </span>
                       </div>
 
-                      {/* Planning Telemetry */}
-                      <div className="p-2.5 rounded-lg bg-[#F8F9FA] border border-[#E4E2DC] text-[11px] space-y-1">
-                        <div className="flex justify-between text-[#625D69]">
-                          <span>Remaining Capital:</span>
-                          <span className="font-mono font-bold text-[#191522]">
-                            {formatCurrency(remaining, user?.currency)}
+                      <div
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${g.title || g.name} milestone progress`}
+                        className="w-full h-2.5 bg-[#ECEBFF] rounded-full overflow-hidden"
+                      >
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all duration-500',
+                            pct >= 100 ? 'bg-[#75DCC0]' : 'bg-[#6865E8]'
+                          )}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Planning Telemetry */}
+                    <div className="p-3.5 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] text-xs space-y-2">
+                      <div className="flex justify-between items-center text-[#77798A]">
+                        <span>Remaining Capital:</span>
+                        <span className="font-mono font-bold text-[#20212B]">
+                          {formatCurrency(remaining, user?.currency)}
+                        </span>
+                      </div>
+                      {requiredMonthly !== null && (
+                        <div className="flex justify-between items-center text-[#77798A]">
+                          <span>Required Run-Rate:</span>
+                          <span className="font-mono font-bold text-[#6865E8]">
+                            {formatCurrency(requiredMonthly, user?.currency)} / mo
                           </span>
                         </div>
-                        {requiredMonthly !== null && (
-                          <div className="flex justify-between text-[#625D69]">
-                            <span>Required Run-Rate:</span>
-                            <span className="font-mono font-bold text-[#4056A1]">
-                              {formatCurrency(requiredMonthly, user?.currency)} / mo
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
+                  </div>
 
-                    {/* Actions */}
-                    <div className="pt-2 border-t border-[#E4E2DC] flex items-center justify-between">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        leftIcon={<Coins className="h-3 w-3" />}
-                        onClick={() => {
-                          setSelectedGoal(g);
-                          setContributeAmount('');
-                          setIsContributeOpen(true);
-                        }}
-                        className="touch-target"
-                      >
-                        Contribute Funds
-                      </Button>
+                  {/* Actions Row */}
+                  <div className="pt-3 border-t border-[#E7E6F0] flex items-center justify-between">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={<Coins className="h-3.5 w-3.5 text-[#6865E8]" />}
+                      onClick={() => {
+                        setSelectedGoal(g);
+                        setContributeAmount('');
+                        setIsContributeOpen(true);
+                      }}
+                      className="rounded-xl font-semibold text-xs border-[#E7E6F0] hover:bg-[#ECEBFF] hover:text-[#6865E8]"
+                    >
+                      Contribute Funds
+                    </Button>
 
-                      <button
-                        onClick={() => handleDeleteGoal(g.id)}
-                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                        aria-label={`Delete savings goal ${g.title || g.name}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDeleteGoal(g.id)}
+                      className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#E76D7A] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none"
+                      aria-label={`Delete savings goal ${g.title || g.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
               );
@@ -333,29 +376,32 @@ export default function GoalsPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title="Establish Savings Milestone"
+          description="Track capital accumulation towards your major milestones with automated runway calculations."
         >
           <form onSubmit={handleCreateGoal} className="space-y-4 pt-2">
             {errorMsg && (
-              <div className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECDD3] text-xs font-bold text-[#DC2626]">
+              <div className="p-3.5 rounded-2xl bg-[#FEF2F2] border border-[#FECDD3] text-xs font-bold text-[#E76D7A]">
                 {errorMsg}
               </div>
             )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-[#191522] block">Milestone Title</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Milestone Title</label>
               <input
                 type="text"
                 required
                 value={goalName}
                 onChange={(e) => setGoalName(e.target.value)}
-                placeholder="e.g. Emergency Reserve, Down Payment"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                placeholder="e.g. Emergency Reserve, Real Estate Down Payment"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-[#191522] block">Target Amount ({user?.currency || 'INR'})</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">
+                  Target Amount ({user?.currency || 'INR'})
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -363,38 +409,44 @@ export default function GoalsPage() {
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="e.g. 500000"
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-[#191522] block">Current Capital Seeded</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Current Capital Seeded</label>
                 <input
                   type="number"
                   step="0.01"
                   value={currentAmount}
                   onChange={(e) => setCurrentAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-[#191522] block">Target Maturity Date (Optional)</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Target Maturity Date (Optional)</label>
               <input
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
+            <div className="pt-3 flex justify-end gap-2.5">
+              <Button variant="outline" size="md" onClick={() => setIsModalOpen(false)} className="rounded-2xl">
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSubmitting}
+                className="bg-[#6865E8] hover:bg-[#5b58db] rounded-2xl"
+              >
                 Establish Goal
               </Button>
             </div>
@@ -406,25 +458,26 @@ export default function GoalsPage() {
           isOpen={isContributeOpen}
           onClose={() => setIsContributeOpen(false)}
           title={`Allocate Capital to "${selectedGoal?.title || selectedGoal?.name}"`}
+          description="Record a capital contribution to accelerate this milestone's maturity."
         >
           <form onSubmit={handleContribute} className="space-y-4 pt-2">
-            <div className="p-3 rounded-lg bg-[#F8F9FA] border border-[#E4E2DC] text-xs space-y-1">
-              <div className="flex justify-between">
-                <span className="text-[#898390]">Current Progress:</span>
-                <span className="font-mono font-bold text-[#191522]">
+            <div className="p-3.5 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] text-xs space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[#77798A]">Current Progress:</span>
+                <span className="font-mono font-bold text-[#20212B]">
                   {formatCurrency(selectedGoal?.current_amount || 0, user?.currency)}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#898390]">Target Goal:</span>
-                <span className="font-mono font-bold text-[#191522]">
+              <div className="flex justify-between items-center">
+                <span className="text-[#77798A]">Target Goal:</span>
+                <span className="font-mono font-bold text-[#20212B]">
                   {formatCurrency(selectedGoal?.target_amount || 0, user?.currency)}
                 </span>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-[#191522] block">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">
                 Contribution Amount ({user?.currency || 'INR'})
               </label>
               <input
@@ -435,15 +488,21 @@ export default function GoalsPage() {
                 value={contributeAmount}
                 onChange={(e) => setContributeAmount(e.target.value)}
                 placeholder="e.g. 5000"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsContributeOpen(false)}>
+            <div className="pt-3 flex justify-end gap-2.5">
+              <Button variant="outline" size="md" onClick={() => setIsContributeOpen(false)} className="rounded-2xl">
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSubmitting}
+                className="bg-[#6865E8] hover:bg-[#5b58db] rounded-2xl"
+              >
                 Allocate Capital
               </Button>
             </div>

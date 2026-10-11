@@ -16,6 +16,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'monvex-insecure-dev-key-super-secret-12345
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+if not DEBUG and (not SECRET_KEY or SECRET_KEY == 'monvex-insecure-dev-key-super-secret-1234567890!@#$%' or len(SECRET_KEY) < 32):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("SECRET_KEY environment variable must be set to a secure, unique string (at least 32 characters) in production mode (DEBUG=False).")
+
 _raw_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,testserver,.onrender.com,monvex-backend.onrender.com,.koyeb.app')
 ALLOWED_HOSTS = list({
     host.strip().strip('"\'').rstrip('/') for host in _raw_hosts.split(',') if host.strip()
@@ -182,6 +186,8 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+JWT_AUTH_COOKIE = 'monvex_refresh_token'
 
 # Production Security Headers & Reverse Proxy Support
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

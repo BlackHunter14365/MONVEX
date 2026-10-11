@@ -15,8 +15,11 @@ import {
   TrendingUp,
   ShieldCheck,
   Calendar,
+  Sparkles,
+  ArrowUpRight,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -122,89 +125,113 @@ export default function BudgetsPage() {
   const getCategoryStyles = (catName: string) => {
     const lower = (catName || '').toLowerCase();
     if (lower.includes('food') || lower.includes('dining')) {
-      return { icon: Utensils, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', barColor: 'bg-[#10B981]' };
+      return { icon: Utensils, bg: 'bg-[#E8FBF4]', text: 'text-[#16745C]', barColor: 'bg-[#75DCC0]' };
     }
     if (lower.includes('shop')) {
-      return { icon: ShoppingBag, bg: 'bg-[#FEF3C7]', text: 'text-[#B45309]', barColor: 'bg-[#F59E0B]' };
+      return { icon: ShoppingBag, bg: 'bg-[#FEF6EB]', text: 'text-[#E8A54B]', barColor: 'bg-[#E8A54B]' };
     }
     if (lower.includes('bill') || lower.includes('util') || lower.includes('rent')) {
-      return { icon: Home, bg: 'bg-[#E0F2FE]', text: 'text-[#0369A1]', barColor: 'bg-[#2563EB]' };
+      return { icon: Home, bg: 'bg-[#ECEBFF]', text: 'text-[#6865E8]', barColor: 'bg-[#6865E8]' };
     }
     if (lower.includes('grocer')) {
-      return { icon: ShoppingBasket, bg: 'bg-[#DCFCE7]', text: 'text-[#15803D]', barColor: 'bg-[#10B981]' };
+      return { icon: ShoppingBasket, bg: 'bg-[#E8FBF4]', text: 'text-[#16745C]', barColor: 'bg-[#75DCC0]' };
     }
     if (lower.includes('trans') || lower.includes('travel') || lower.includes('cab')) {
-      return { icon: Car, bg: 'bg-[#F3E8FF]', text: 'text-[#7E22CE]', barColor: 'bg-[#8B5CF6]' };
+      return { icon: Car, bg: 'bg-[#F3E8FF]', text: 'text-[#8B5CF6]', barColor: 'bg-[#8B5CF6]' };
     }
-    return { icon: CreditCard, bg: 'bg-[#F1F0EC]', text: 'text-[#625D69]', barColor: 'bg-[#2A1F3D]' };
+    return { icon: CreditCard, bg: 'bg-[#ECEBFF]', text: 'text-[#6865E8]', barColor: 'bg-[#6865E8]' };
   };
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-[1600px] mx-auto w-full">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         {/* =========================================================================
             1. HEADER & OVERVIEW BAR
             ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#E4E2DC]">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
-              Spending Guardrails & Budgets
-            </h1>
-            <p className="text-xs text-[#625D69] font-medium mt-0.5">
-              Deterministic allocation limits to enforce capital preservation and prevent discretionary burn.
-            </p>
+        <PageHeader
+          eyebrow="CAPITAL GOVERNANCE"
+          title="Spending Guardrails & Budgets"
+          description="Deterministic allocation limits to enforce capital preservation, control burn velocity, and protect discretionary buffers."
+          actionSlot={
+            <Button
+              onClick={() => {
+                setEditingBudget(null);
+                setBudgetAmount('');
+                setIsModalOpen(true);
+              }}
+              variant="primary"
+              size="md"
+              leftIcon={<Plus className="h-4 w-4" />}
+              className="bg-[#6865E8] hover:bg-[#5b58db] text-white shadow-xs rounded-2xl px-5 py-2.5 font-semibold text-xs"
+            >
+              Create Guardrail
+            </Button>
+          }
+        />
+
+        {/* =========================================================================
+            2. SUMMARY STAT CARDS (Aurora Glass 3-Metric Strip)
+            ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                Total Budgeted Cap
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <CreditCard className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalAllocated} currency={user?.currency} size="2xl" type="neutral" />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Cumulative monthly limit</p>
+            </div>
           </div>
 
-          <Button
-            onClick={() => {
-              setEditingBudget(null);
-              setBudgetAmount('');
-              setIsModalOpen(true);
-            }}
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="touch-target"
-          >
-            Create Guardrail
-          </Button>
-        </div>
-
-        {/* SUMMARY CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] block">
-              Total Budgeted Cap
-            </span>
-            <FinancialAmount amount={totalAllocated} currency={user?.currency} size="xl" type="neutral" />
-            <span className="text-[10px] text-[#625D69] block">Cumulative monthly limit</span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#E76D7A]">
+                Spent This Month
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalSpent} currency={user?.currency} size="2xl" type="expense" />
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEF0] text-[#E76D7A]">
+                  {overallPct}% utilized
+                </span>
+                <span className="text-xs text-[#77798A]">of target cap</span>
+              </div>
+            </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E11D48] block">
-              Spent This Month
-            </span>
-            <FinancialAmount amount={totalSpent} currency={user?.currency} size="xl" type="expense" />
-            <span className="text-[10px] text-[#E11D48] font-bold block">{overallPct}% of allowance utilized</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669] block">
-              Remaining Buffer
-            </span>
-            <FinancialAmount amount={totalRemaining} currency={user?.currency} size="xl" type="income" />
-            <span className="text-[10px] text-[#059669] font-bold block">Available discretionary capital</span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Remaining Buffer
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalRemaining} currency={user?.currency} size="2xl" type="income" />
+              <p className="text-xs text-[#16745C] font-semibold mt-1">Available discretionary capital</p>
+            </div>
           </div>
         </div>
 
         {/* =========================================================================
-            2. BUDGET CARDS GRID
+            3. BUDGET CARDS GRID
             ========================================================================= */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Skeleton className="h-44 w-full rounded-2xl" />
-            <Skeleton className="h-44 w-full rounded-2xl" />
-            <Skeleton className="h-44 w-full rounded-2xl" />
+            <Skeleton className="h-56 w-full rounded-3xl" />
+            <Skeleton className="h-56 w-full rounded-3xl" />
+            <Skeleton className="h-56 w-full rounded-3xl" />
           </div>
         ) : isBudgetsError && budgets.length === 0 ? (
           <ErrorState
@@ -235,104 +262,115 @@ export default function BudgetsPage() {
               const dailyAllowance = Math.round(remaining / daysLeft);
 
               return (
-                <div key={b.id} className="double-bezel">
-                  <div className="double-bezel-inner p-5 space-y-4 flex flex-col justify-between h-full">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg shrink-0', catStyles.bg, catStyles.text)}>
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-[#191522] block leading-tight">
-                              {b.category_name || b.name}
-                            </h3>
-                            <span className="text-[10px] font-mono text-[#898390] uppercase">{b.period || 'Monthly'}</span>
-                          </div>
+                <div
+                  key={b.id}
+                  className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs hover:border-[#6865E8]/40 hover:shadow-md transition-all flex flex-col justify-between h-full space-y-5"
+                >
+                  <div className="space-y-4">
+                    {/* Top Row: Icon + Title + Status Pill */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl shrink-0', catStyles.bg, catStyles.text)}>
+                          <Icon className="h-5 w-5" />
                         </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-[#20212B] block leading-tight">
+                            {b.category_name || b.name}
+                          </h3>
+                          <span className="text-[10px] font-mono font-medium text-[#77798A] uppercase">
+                            {b.period || 'Monthly'}
+                          </span>
+                        </div>
+                      </div>
 
-                        <span
-                          className={cn(
-                            'text-[10px] font-bold px-2 py-0.5 rounded-md border',
-                            isOver
-                              ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FECDD3]'
-                              : pct >= 80
-                              ? 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'
-                              : 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0]'
-                          )}
-                        >
-                          {isOver ? 'EXCEEDED' : pct >= 80 ? 'APPROACHING' : 'ON TRACK'}
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold px-2.5 py-1 rounded-full border',
+                          isOver
+                            ? 'bg-[#FEF2F2] text-[#E76D7A] border-[#FECDD3]'
+                            : pct >= 80
+                            ? 'bg-[#FFFBEB] text-[#E8A54B] border-[#FDE68A]'
+                            : 'bg-[#E8FBF4] text-[#16745C] border-[#B6F0DE]'
+                        )}
+                      >
+                        {isOver ? 'EXCEEDED' : pct >= 80 ? 'APPROACHING' : 'ON TRACK'}
+                      </span>
+                    </div>
+
+                    {/* Nexora-style Progress Bar & Fraction Badge */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-baseline">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-base font-mono font-bold text-[#20212B]">
+                            {formatCurrency(spent, user?.currency)}
+                          </span>
+                          <span className="text-xs font-mono text-[#77798A]">
+                            / {formatCurrency(limit, user?.currency)}
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-[#6865E8] bg-[#ECEBFF] px-2.5 py-0.5 rounded-full">
+                          {pct}%
                         </span>
                       </div>
 
-                      {/* Amounts */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-baseline text-xs">
-                          <span className="font-mono text-[#191522] font-bold">
-                            {formatCurrency(spent, user?.currency)}
-                          </span>
-                          <span className="font-mono text-[#898390]">
-                            / {formatCurrency(limit, user?.currency)} ({pct}%)
-                          </span>
-                        </div>
-
-                        {/* Progress Bar */}
+                      {/* Smooth Progress Track */}
+                      <div
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${b.category_name || b.name} spending limit utilization`}
+                        className="w-full h-2.5 bg-[#ECEBFF] rounded-full overflow-hidden"
+                      >
                         <div
-                          role="progressbar"
-                          aria-valuenow={pct}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-label={`${b.category_name || b.name} spending limit utilization`}
-                          className="w-full h-2 bg-[#F1F0EC] rounded-full overflow-hidden"
-                        >
-                          <div
-                            className={cn(
-                              'h-full rounded-full transition-all',
-                              isOver ? 'bg-[#E11D48]' : pct >= 80 ? 'bg-[#D97706]' : 'bg-[#059669]'
-                            )}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Telemetry info */}
-                      <div className="p-2.5 rounded-lg bg-[#F8F9FA] border border-[#E4E2DC] text-[11px] space-y-1">
-                        <div className="flex justify-between text-[#625D69]">
-                          <span>Remaining Cap:</span>
-                          <span className="font-mono font-bold text-[#191522]">{formatCurrency(remaining, user?.currency)}</span>
-                        </div>
-                        <div className="flex justify-between text-[#625D69]">
-                          <span>Daily Allowance:</span>
-                          <span className="font-mono font-bold text-[#059669]">
-                            {isOver ? '₹0 / day' : `${formatCurrency(dailyAllowance, user?.currency)} / day`}
-                          </span>
-                        </div>
+                          className={cn(
+                            'h-full rounded-full transition-all duration-500',
+                            isOver ? 'bg-[#E76D7A]' : pct >= 80 ? 'bg-[#E8A54B]' : 'bg-[#6865E8]'
+                          )}
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="pt-2 border-t border-[#E4E2DC] flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => {
-                          setEditingBudget(b);
-                          setCategoryName(b.category_name || b.name);
-                          setBudgetAmount(String(b.limit_amount ?? b.amount));
-                          setPeriod(b.period || 'MONTHLY');
-                          setIsModalOpen(true);
-                        }}
-                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#1D4ED8] hover:bg-[#EFF6FF] border border-transparent hover:border-[#BFDBFE] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                        aria-label={`Edit budget for ${b.category_name || b.name}`}
-                      >
-                        <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteBudget(b.id)}
-                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                        aria-label={`Delete budget for ${b.category_name || b.name}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
+                    {/* Telemetry Capsule */}
+                    <div className="p-3.5 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] text-xs space-y-2">
+                      <div className="flex justify-between items-center text-[#77798A]">
+                        <span>Remaining Cap:</span>
+                        <span className="font-mono font-bold text-[#20212B]">
+                          {formatCurrency(remaining, user?.currency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[#77798A]">
+                        <span>Daily Allowance:</span>
+                        <span className="font-mono font-bold text-[#16745C]">
+                          {isOver ? '₹0 / day' : `${formatCurrency(dailyAllowance, user?.currency)} / day`}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Actions Row */}
+                  <div className="pt-3 border-t border-[#E7E6F0] flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingBudget(b);
+                        setCategoryName(b.category_name || b.name);
+                        setBudgetAmount(String(b.limit_amount ?? b.amount));
+                        setPeriod(b.period || 'MONTHLY');
+                        setIsModalOpen(true);
+                      }}
+                      className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#6865E8] hover:bg-[#ECEBFF] border border-transparent hover:border-[#6865E8]/20 transition-all focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none"
+                      aria-label={`Edit budget for ${b.category_name || b.name}`}
+                    >
+                      <Edit2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBudget(b.id)}
+                      className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#E76D7A] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none"
+                      aria-label={`Delete budget for ${b.category_name || b.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
               );
@@ -348,21 +386,22 @@ export default function BudgetsPage() {
             setEditingBudget(null);
           }}
           title={editingBudget ? 'Edit Spending Guardrail' : 'Establish Spending Guardrail'}
+          description="Enforce category spending caps to protect your monthly savings velocity."
         >
           <form onSubmit={handleSaveBudget} className="space-y-4 pt-2">
             {errorMsg && (
-              <div className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECDD3] text-xs font-bold text-[#DC2626]">
+              <div className="p-3.5 rounded-2xl bg-[#FEF2F2] border border-[#FECDD3] text-xs font-bold text-[#E76D7A]">
                 {errorMsg}
               </div>
             )}
 
             {!editingBudget && (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-[#191522] block">Category</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Category</label>
                 <select
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 >
                   {categories.map((c: any) => (
                     <option key={c.id} value={c.name}>
@@ -373,8 +412,10 @@ export default function BudgetsPage() {
               </div>
             )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-[#191522] block">Monthly Cap Limit ({user?.currency || 'INR'})</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">
+                Monthly Cap Limit ({user?.currency || 'INR'})
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -382,16 +423,16 @@ export default function BudgetsPage() {
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
                 placeholder="e.g. 15000"
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-[#191522] block">Period Cadence</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Period Cadence</label>
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="w-full rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] p-2.5 min-h-[48px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               >
                 <option value="MONTHLY">Monthly</option>
                 <option value="WEEKLY">Weekly</option>
@@ -399,18 +440,25 @@ export default function BudgetsPage() {
               </select>
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
+            <div className="pt-3 flex justify-end gap-2.5">
               <Button
                 variant="outline"
-                size="sm"
+                size="md"
                 onClick={() => {
                   setIsModalOpen(false);
                   setEditingBudget(null);
                 }}
+                className="rounded-2xl"
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSubmitting}
+                className="bg-[#6865E8] hover:bg-[#5b58db] rounded-2xl"
+              >
                 {editingBudget ? 'Save Changes' : 'Establish Guardrail'}
               </Button>
             </div>

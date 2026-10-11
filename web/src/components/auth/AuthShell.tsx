@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { AuthTopNav } from './AuthTopNav';
 
 interface AuthShellProps {
@@ -127,10 +128,12 @@ export const AuthShell: React.FC<AuthShellProps> = ({ children }) => {
           <div>
             © {new Date().getFullYear()} MONVEX. All rights reserved.
           </div>
-          <div className="flex items-center gap-5">
-            <span className="hover:text-[#191522] transition-colors cursor-default">Privacy</span>
-            <span className="hover:text-[#191522] transition-colors cursor-default">Terms</span>
-            <span className="hover:text-[#191522] transition-colors cursor-default">System Health</span>
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5">
+            <Link href="/privacy-policy" className="hover:text-[#191522] transition-colors">Privacy</Link>
+            <Link href="/terms-of-service" className="hover:text-[#191522] transition-colors">Terms</Link>
+            <Link href="/security-overview" className="hover:text-[#191522] transition-colors">Security</Link>
+            <Link href="/financial-disclaimer" className="hover:text-[#191522] transition-colors">Disclaimer</Link>
+            <Link href="/contact" className="hover:text-[#191522] transition-colors">Contact</Link>
           </div>
         </div>
       </footer>

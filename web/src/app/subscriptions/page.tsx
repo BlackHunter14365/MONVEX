@@ -33,13 +33,17 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useSubscriptionsQuery } from '@/hooks/queries/useSubscriptionsQuery';
 
 export default function SubscriptionsPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [subscriptions, setSubscriptions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: rawSubscriptions, isLoading, refetch: fetchSubscriptions } = useSubscriptionsQuery();
+  const subscriptions: any[] = useMemo(() => {
+    return Array.isArray(rawSubscriptions) ? rawSubscriptions : rawSubscriptions?.results || [];
+  }, [rawSubscriptions]);
+
   const [filterFrequency, setFilterFrequency] = useState<string>('ALL');
 
   // Add Subscription Modal State
@@ -49,22 +53,6 @@ export default function SubscriptionsPage() {
   const [frequency, setFrequency] = useState('MONTHLY');
   const [nextDueDate, setNextDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSaving, setIsSaving] = useState(false);
-
-  const fetchSubscriptions = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getRecurringPayments();
-      setSubscriptions(Array.isArray(data) ? data : data?.results || []);
-    } catch {
-      toast.error('Failed to load subscriptions.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSubscriptions();
-  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,27 +153,28 @@ export default function SubscriptionsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         <PageHeader
-          title="Recurring Obligations & Subscriptions"
+          eyebrow="RECURRING OBLIGATIONS"
+          title="Subscriptions & Recurring Cash Drain"
           description="Audit recurring monthly cash drain, track upcoming renewal schedules, and eliminate silent subscription creep."
           actionSlot={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={fetchSubscriptions}
+                size="md"
+                onClick={() => { fetchSubscriptions(); }}
                 leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isLoading ? 'animate-spin' : '')} />}
-                className="text-xs font-bold touch-target"
+                className="text-xs font-bold rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B]"
               >
                 Refresh
               </Button>
               <Button
                 variant="primary"
-                size="sm"
+                size="md"
                 onClick={() => setIsAddOpen(true)}
-                leftIcon={<Plus className="h-3.5 w-3.5" />}
-                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm touch-target"
+                leftIcon={<Plus className="h-4 w-4" />}
+                className="bg-[#6865E8] hover:bg-[#5b58db] text-white text-xs font-semibold rounded-2xl shadow-xs"
               >
                 Add Subscription
               </Button>
@@ -194,156 +183,168 @@ export default function SubscriptionsPage() {
         />
 
         {/* =========================================================================
-            1. DOUBLE-BEZEL RECURRING BURN HERO
+            1. RECURRING BURN HERO (Aurora Glass)
             ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 sm:p-7">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              {/* Left 7 cols: Aggregates */}
-              <div className="lg:col-span-7 space-y-3">
-                <div className="flex items-center gap-2 text-[#898390]">
-                  <Repeat className="h-4 w-4 text-[#2563EB]" />
-                  <span className="text-[11px] font-mono uppercase tracking-wider font-bold">
-                    Automated Recurring Burn Rate
-                  </span>
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E7E6F0] shadow-xs">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left 7 cols: Aggregates */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex items-center gap-2 text-[#77798A]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                  <Repeat className="h-3.5 w-3.5" />
                 </div>
-
-                <div className="flex flex-wrap items-baseline gap-6 sm:gap-8">
-                  <div>
-                    <span className="text-[10px] font-mono text-[#898390] block uppercase tracking-wider">
-                      Monthly Burn Rate
-                    </span>
-                    <FinancialAmount
-                      amount={totalMonthly}
-                      currency={user?.currency}
-                      size="2xl"
-                      type="expense"
-                      showSign={false}
-                    />
-                  </div>
-
-                  <div className="h-10 w-px bg-[#E4E2DC] hidden sm:block self-center" />
-
-                  <div>
-                    <span className="text-[10px] font-mono text-[#898390] block uppercase tracking-wider">
-                      Annualized Drain
-                    </span>
-                    <FinancialAmount
-                      amount={totalAnnual}
-                      currency={user?.currency}
-                      size="xl"
-                      type="expense"
-                      showSign={false}
-                    />
-                  </div>
-
-                  <div className="h-10 w-px bg-[#E4E2DC] hidden sm:block self-center" />
-
-                  <div>
-                    <span className="text-[10px] font-mono text-[#898390] block uppercase tracking-wider">
-                      Active Subscriptions
-                    </span>
-                    <span className="text-xl sm:text-2xl font-mono font-black text-[#191522] tnum">
-                      {subscriptions.length}
-                    </span>
-                  </div>
-                </div>
+                <span className="text-[11px] font-mono uppercase tracking-wider font-bold">
+                  Automated Recurring Burn Rate
+                </span>
               </div>
 
-              {/* Right 5 cols: Telemetry */}
-              <div className="lg:col-span-5 grid grid-cols-2 gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#E4E2DC] lg:pl-6">
-                <div className="p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1">
-                  <span className="text-[10px] font-mono text-[#625D69] block uppercase">Next 30 Days Due</span>
-                  <div className="text-xl font-mono font-black text-[#E11D48] tnum">
-                    {formatCurrency(upcoming30DaysTotal, user?.currency)}
-                  </div>
-                  <span className="text-[10px] text-[#625D69] font-medium block">
-                    {upcomingRenewals.filter((s) => s.diffDays >= 0 && s.diffDays <= 30).length} upcoming bills
+              <div className="flex flex-wrap items-baseline gap-6 sm:gap-10">
+                <div>
+                  <span className="text-[11px] font-mono text-[#77798A] block uppercase tracking-wider font-semibold">
+                    Monthly Burn Rate
                   </span>
+                  <FinancialAmount
+                    amount={totalMonthly}
+                    currency={user?.currency}
+                    size="2xl"
+                    type="expense"
+                    showSign={false}
+                  />
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1">
-                  <span className="text-[10px] font-mono text-[#625D69] block uppercase">Avg Cost / Service</span>
-                  <div className="text-xl font-mono font-black text-[#191522] tnum">
-                    {formatCurrency(avgCostPerService, user?.currency)}
-                  </div>
-                  <span className="text-[10px] text-[#059669] font-bold block">
-                    Per active provider
+                <div className="h-12 w-px bg-[#E7E6F0] hidden sm:block self-center" />
+
+                <div>
+                  <span className="text-[11px] font-mono text-[#77798A] block uppercase tracking-wider font-semibold">
+                    Annualized Drain
+                  </span>
+                  <FinancialAmount
+                    amount={totalAnnual}
+                    currency={user?.currency}
+                    size="xl"
+                    type="expense"
+                    showSign={false}
+                  />
+                </div>
+
+                <div className="h-12 w-px bg-[#E7E6F0] hidden sm:block self-center" />
+
+                <div>
+                  <span className="text-[11px] font-mono text-[#77798A] block uppercase tracking-wider font-semibold">
+                    Active Services
+                  </span>
+                  <span className="text-2xl font-mono font-bold text-[#20212B]">
+                    {subscriptions.length}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Right 5 cols: Telemetry Capsules */}
+            <div className="lg:col-span-5 grid grid-cols-2 gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#E7E6F0] lg:pl-8">
+              <div className="p-4 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-1.5">
+                <span className="text-[10px] font-mono text-[#77798A] block uppercase font-bold">Next 30 Days Due</span>
+                <div className="text-xl font-mono font-bold text-[#E76D7A]">
+                  {formatCurrency(upcoming30DaysTotal, user?.currency)}
+                </div>
+                <span className="text-[11px] text-[#77798A] font-medium block">
+                  {upcomingRenewals.filter((s) => s.diffDays >= 0 && s.diffDays <= 30).length} upcoming bills
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-1.5">
+                <span className="text-[10px] font-mono text-[#77798A] block uppercase font-bold">Avg Cost / Service</span>
+                <div className="text-xl font-mono font-bold text-[#20212B]">
+                  {formatCurrency(avgCostPerService, user?.currency)}
+                </div>
+                <span className="text-[11px] text-[#16745C] font-semibold block">
+                  Per active provider
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* =========================================================================
-            2. RENEWAL TIMELINE STRIP (Upcoming Deadlines)
+            2. RENEWAL TIMELINE STRIP (Upcoming Deadlines - Monvex Schedule)
             ========================================================================= */}
         {upcomingRenewals.length > 0 && (
-          <div className="double-bezel">
-            <div className="double-bezel-inner p-5 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC]">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-[#4056A1]" />
-                  <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                    Chronological Renewal Horizon
-                  </h3>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] shadow-xs p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                  <Clock className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[10px] font-mono text-[#898390]">
-                  Sorted by payment deadline
-                </span>
+                <h3 className="text-sm font-bold text-[#20212B]">
+                  Upcoming Payment Schedule
+                </h3>
               </div>
+              <span className="text-xs font-mono text-[#77798A]">
+                Sorted by payment deadline
+              </span>
+            </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                {upcomingRenewals.slice(0, 6).map((sub) => {
-                  const isUrgent = sub.diffDays <= 3 && sub.diffDays >= 0;
-                  const isPast = sub.diffDays < 0;
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+              {upcomingRenewals.slice(0, 6).map((sub) => {
+                const isUrgent = sub.diffDays <= 3 && sub.diffDays >= 0;
+                const isPast = sub.diffDays < 0;
+                const Icon = getServiceIcon(sub.name);
 
-                  return (
-                    <div
-                      key={sub.id}
-                      className={cn(
-                        'min-w-[190px] p-3.5 rounded-xl border flex-shrink-0 space-y-2',
-                        isUrgent
-                          ? 'bg-[#FFF1F2] border-[#FECDD3]'
-                          : isPast
-                          ? 'bg-[#F6F5F1] border-[#E4E2DC]'
-                          : 'bg-white border-[#E4E2DC]'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#191522] truncate max-w-[110px]">
+                return (
+                  <div
+                    key={sub.id}
+                    className={cn(
+                      'min-w-[210px] p-4 rounded-2xl border flex-shrink-0 space-y-3 transition-all',
+                      isUrgent
+                        ? 'bg-[#FEF2F2] border-[#FECDD3]'
+                        : isPast
+                        ? 'bg-[#F8F7FC] border-[#E7E6F0]'
+                        : 'bg-white border-[#E7E6F0] hover:border-[#6865E8]/40 hover:shadow-xs'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-[#ECEBFF] text-[#6865E8] flex items-center justify-center shrink-0">
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="text-xs font-bold text-[#20212B] truncate">
                           {sub.name}
                         </span>
-                        <Badge
-                          variant={isUrgent ? 'danger' : isPast ? 'outline' : 'neutral'}
-                          size="sm"
-                        >
-                          {isPast
-                            ? 'Overdue'
-                            : sub.diffDays === 0
-                            ? 'Today'
-                            : sub.diffDays === 1
-                            ? 'Tomorrow'
-                            : `${sub.diffDays}d left`}
-                        </Badge>
                       </div>
-
-                      <div className="flex items-center justify-between pt-1 border-t border-[#E4E2DC]/60">
-                        <span className="text-[10px] font-mono text-[#898390]">
-                          {sub.next_due_date}
-                        </span>
-                        <FinancialAmount
-                          amount={sub.amount}
-                          currency={user?.currency}
-                          size="sm"
-                          showSign={false}
-                        />
-                      </div>
+                      <span
+                        className={cn(
+                          'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                          isUrgent
+                            ? 'bg-[#FDEEF0] text-[#E76D7A] border-[#FECDD3]'
+                            : isPast
+                            ? 'bg-[#F8F7FC] text-[#77798A] border-[#E7E6F0]'
+                            : 'bg-[#ECEBFF] text-[#6865E8] border-[#D8D5FB]'
+                        )}
+                      >
+                        {isPast
+                          ? 'Overdue'
+                          : sub.diffDays === 0
+                          ? 'Today'
+                          : sub.diffDays === 1
+                          ? 'Tomorrow'
+                          : `${sub.diffDays}d left`}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-[#E7E6F0]">
+                      <span className="text-[11px] font-mono text-[#77798A]">
+                        {sub.next_due_date}
+                      </span>
+                      <FinancialAmount
+                        amount={sub.amount}
+                        currency={user?.currency}
+                        size="sm"
+                        showSign={false}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -351,201 +352,194 @@ export default function SubscriptionsPage() {
         {/* =========================================================================
             3. SUBSCRIPTIONS DIRECTORY & MANAGEMENT
             ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 space-y-5">
-            {/* Filter Pills & Directory Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E4E2DC]">
-              <div>
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  Managed Subscriptions ({subscriptions.length})
-                </h3>
-                <span className="text-[10px] text-[#898390] block">
-                  Click any subscription to audit or remove
-                </span>
-              </div>
-
-              {/* Frequency Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto" role="group" aria-label="Filter subscriptions by frequency">
-                {['ALL', 'MONTHLY', 'YEARLY', 'WEEKLY'].map((freq) => (
-                  <button
-                    key={freq}
-                    type="button"
-                    onClick={() => setFilterFrequency(freq)}
-                    aria-pressed={filterFrequency === freq}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all touch-target focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
-                      filterFrequency === freq
-                        ? 'bg-[#2A1F3D] text-white shadow-sm'
-                        : 'bg-[#F6F5F1] text-[#625D69] hover:bg-[#EAE8E1]'
-                    )}
-                  >
-                    {freq}
-                  </button>
-                ))}
-              </div>
+        <div className="rounded-3xl bg-white border border-[#E7E6F0] shadow-xs p-7 space-y-6">
+          {/* Filter Pills & Directory Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E6F0]">
+            <div>
+              <h3 className="text-base font-bold text-[#20212B]">
+                Active Subscriptions ({subscriptions.length})
+              </h3>
+              <p className="text-xs text-[#77798A] mt-0.5">
+                Manage recurring retainers, software licenses, and utility bills
+              </p>
             </div>
 
-            {/* Subscriptions Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Skeleton className="h-32 w-full rounded-xl" />
-                <Skeleton className="h-32 w-full rounded-xl" />
-                <Skeleton className="h-32 w-full rounded-xl" />
-              </div>
-            ) : filteredSubscriptions.length === 0 ? (
-              <EmptyState
-                title={
-                  filterFrequency !== 'ALL'
-                    ? `No ${filterFrequency.toLowerCase()} subscriptions`
-                    : 'No subscriptions active'
-                }
-                description={
-                  subscriptions.length === 0
-                    ? 'Track Netflix, Spotify, gym memberships, utilities, or SaaS bills to prevent subscription creep.'
-                    : 'Try selecting a different frequency filter.'
-                }
-                actionLabel={subscriptions.length === 0 ? 'Add First Subscription' : undefined}
-                onAction={subscriptions.length === 0 ? () => setIsAddOpen(true) : undefined}
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSubscriptions.map((sub) => {
-                  const Icon = getServiceIcon(sub.name);
-                  const amt = Number(sub.amount) || 0;
-                  const monthlyEquiv =
-                    sub.frequency === 'YEARLY'
-                      ? amt / 12
-                      : sub.frequency === 'WEEKLY'
-                      ? amt * 4.33
-                      : amt;
+            {/* Frequency Filter Pills */}
+            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0]" role="group" aria-label="Filter subscriptions by frequency">
+              {['ALL', 'MONTHLY', 'YEARLY', 'WEEKLY'].map((freq) => (
+                <button
+                  key={freq}
+                  type="button"
+                  onClick={() => setFilterFrequency(freq)}
+                  aria-pressed={filterFrequency === freq}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
+                    filterFrequency === freq
+                      ? 'bg-[#6865E8] text-white shadow-xs'
+                      : 'text-[#77798A] hover:text-[#20212B]'
+                  )}
+                >
+                  {freq}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                  return (
-                    <div
-                      key={sub.id}
-                      className="p-4 rounded-xl bg-white border border-[#E4E2DC] hover:border-[#CBD5E1] transition-all flex flex-col justify-between space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-[#F6F5F1] text-[#2A1F3D] flex items-center justify-center font-bold border border-[#E4E2DC]">
-                            <Icon className="h-4 w-4 text-[#4056A1]" aria-hidden="true" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold text-[#191522] block">{sub.name}</span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB] uppercase">
-                              {sub.frequency}
-                            </span>
-                          </div>
+          {/* Subscriptions Grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <Skeleton className="h-40 w-full rounded-3xl" />
+              <Skeleton className="h-40 w-full rounded-3xl" />
+              <Skeleton className="h-40 w-full rounded-3xl" />
+            </div>
+          ) : filteredSubscriptions.length === 0 ? (
+            <EmptyState
+              title={
+                filterFrequency !== 'ALL'
+                  ? `No ${filterFrequency.toLowerCase()} subscriptions`
+                  : 'No subscriptions active'
+              }
+              description={
+                subscriptions.length === 0
+                  ? 'Track Netflix, Spotify, gym memberships, utilities, or SaaS bills to prevent subscription creep.'
+                  : 'Try selecting a different frequency filter.'
+              }
+              actionLabel={subscriptions.length === 0 ? 'Add First Subscription' : undefined}
+              onAction={subscriptions.length === 0 ? () => setIsAddOpen(true) : undefined}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredSubscriptions.map((sub) => {
+                const Icon = getServiceIcon(sub.name);
+                const amt = Number(sub.amount) || 0;
+
+                return (
+                  <div
+                    key={sub.id}
+                    className="p-5 rounded-3xl bg-white border border-[#E7E6F0] hover:border-[#6865E8]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-11 w-11 rounded-2xl bg-[#ECEBFF] text-[#6865E8] flex items-center justify-center shrink-0">
+                          <Icon className="h-5 w-5" />
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(sub.id)}
-                          className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                          aria-label={`Remove subscription ${sub.name}`}
-                          title="Remove subscription"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                      </div>
-
-                      <div className="pt-2 border-t border-[#E4E2DC] flex items-center justify-between">
                         <div>
-                          <span className="text-[9px] font-mono text-[#898390] uppercase block">Next Due</span>
-                          <span className="text-xs font-bold text-[#191522]">
-                            {sub.next_due_date || 'Upcoming'}
+                          <span className="text-sm font-bold text-[#20212B] block">{sub.name}</span>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#F8F7FC] text-[#6865E8] border border-[#E7E6F0] uppercase">
+                            {sub.frequency}
                           </span>
                         </div>
+                      </div>
 
-                        <div className="text-right">
-                          <FinancialAmount
-                            amount={amt}
-                            currency={user?.currency}
-                            size="md"
-                            type="neutral"
-                            showSign={false}
-                          />
-                          {sub.frequency === 'YEARLY' && (
-                            <span className="text-[9px] font-mono text-[#898390] block">
-                              ~{formatCurrency(monthlyEquiv, user?.currency)}/mo
-                            </span>
-                          )}
-                        </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(sub.id)}
+                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#E76D7A] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#6865E8]/40 focus-visible:outline-none"
+                        aria-label={`Remove subscription ${sub.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+
+                    <div className="pt-3 border-t border-[#E7E6F0] flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-mono text-[#77798A] uppercase block">Next Due</span>
+                        <span className="text-xs font-bold text-[#20212B]">
+                          {sub.next_due_date || 'Upcoming'}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <FinancialAmount
+                          amount={amt}
+                          currency={user?.currency}
+                          size="lg"
+                          type="neutral"
+                          showSign={false}
+                        />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* =========================================================================
-            4. ADD SUBSCRIPTION MODAL
-            ========================================================================= */}
+        {/* Modal: Add Subscription */}
         <Modal
           isOpen={isAddOpen}
           onClose={() => setIsAddOpen(false)}
-          title="Register Recurring Subscription"
+          title="Establish Recurring Subscription"
+          description="Register automated services and periodic liabilities for forward burn modeling."
         >
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Service Name</label>
+          <form onSubmit={handleCreate} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Service / Vendor Name</label>
               <input
                 type="text"
-                placeholder="e.g. Netflix, Spotify Premium, Cult.fit, AWS Cloud"
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                placeholder="e.g. Netflix, AWS, Cult.fit, Fiber Broadband"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Billing Amount</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">
+                  Billing Amount ({user?.currency || 'INR'})
+                </label>
                 <input
                   type="number"
                   step="0.01"
-                  placeholder="649.00"
+                  required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  required
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  placeholder="e.g. 649"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Billing Cycle</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Frequency Cadence</label>
                 <select
                   value={frequency}
                   onChange={(e) => setFrequency(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 >
                   <option value="MONTHLY">Monthly</option>
-                  <option value="YEARLY">Yearly / Annual</option>
+                  <option value="YEARLY">Yearly</option>
                   <option value="WEEKLY">Weekly</option>
                   <option value="DAILY">Daily</option>
                 </select>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Next Renewal Date</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Next Payment Date</label>
               <input
                 type="date"
+                required
                 value={nextDueDate}
                 onChange={(e) => setNextDueDate(e.target.value)}
-                required
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[48px] text-base sm:text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E4E2DC]">
-              <Button variant="outline" size="sm" onClick={() => setIsAddOpen(false)}>
+            <div className="pt-3 flex justify-end gap-2.5">
+              <Button variant="outline" size="md" onClick={() => setIsAddOpen(false)} className="rounded-2xl">
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" type="submit" isLoading={isSaving}>
-                Record Subscription
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSaving}
+                className="bg-[#6865E8] hover:bg-[#5b58db] rounded-2xl"
+              >
+                Save Subscription
               </Button>
             </div>
           </form>

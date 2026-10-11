@@ -14,6 +14,7 @@ export const AUTH_CONFIG = {
     SESSION: 'monvex_auth_session',
     LAST_ACTIVITY: 'monvex_last_activity_ts',
     SESSION_EXPIRED_REASON: 'monvex_session_expired_reason',
+    USER_PROFILE: 'monvex_user_profile',
     // Legacy keys for clean migration/purging
     LEGACY_ACCESS: 'monvex_access_token',
     LEGACY_REFRESH: 'monvex_refresh_token',

@@ -6,21 +6,58 @@ import base64
 import io
 import uuid
 import logging
+from datetime import timedelta
+import pyotp
 from PIL import Image
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.db import transaction, IntegrityError, DatabaseError, OperationalError
 from django.db.models import Q
 from django.core.files.base import ContentFile
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from services.google_auth_service import GoogleAuthService, GoogleAuthError
 
 logger = logging.getLogger('monvex.auth')
+
+AUTH_COOKIE_NAME = getattr(settings, 'JWT_AUTH_COOKIE', 'monvex_refresh_token')
+
+def _get_cookie_max_age():
+    refresh_lifetime = getattr(settings, 'SIMPLE_JWT', {}).get('REFRESH_TOKEN_LIFETIME', timedelta(days=7))
+    if isinstance(refresh_lifetime, timedelta):
+        return int(refresh_lifetime.total_seconds())
+    return int(refresh_lifetime)
+
+def set_refresh_token_cookie(response, refresh_token_str: str):
+    """
+    Sets the refresh token in an HttpOnly, SameSite=Lax cookie.
+    Protects long-lived tokens from XSS exfiltration while maintaining seamless rotation.
+    """
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=str(refresh_token_str),
+        max_age=_get_cookie_max_age(),
+        httponly=True,
+        secure=not getattr(settings, 'DEBUG', True),
+        samesite='Lax',
+        path='/api/v1/auth/',
+    )
+
+def clear_refresh_token_cookie(response):
+    """
+    Clears the HttpOnly refresh token cookie on logout.
+    """
+    response.delete_cookie(
+        key=AUTH_COOKIE_NAME,
+        path='/api/v1/auth/',
+        samesite='Lax',
+    )
 
 
 from .serializers import (
@@ -41,6 +78,33 @@ def get_client_context(request):
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     return {'ip': ip, 'user_agent': user_agent}
 
+
+class CookieTokenRefreshView(BaseTokenRefreshView):
+    """
+    Enhanced TokenRefreshView:
+    Accepts refresh token via HttpOnly cookie `monvex_refresh_token` OR JSON body `refresh`.
+    On rotation, updates the HttpOnly cookie with the rotated refresh token.
+    """
+    def post(self, request, *args, **kwargs):
+        cookie_refresh = request.COOKIES.get(AUTH_COOKIE_NAME)
+        # If refresh token not in request body, inject from HttpOnly cookie
+        if not request.data.get('refresh') and cookie_refresh:
+            if hasattr(request.data, '_mutable'):
+                request.data['refresh'] = cookie_refresh
+            else:
+                data = dict(request.data)
+                data['refresh'] = cookie_refresh
+                request._full_data = data
+
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == status.HTTP_200_OK:
+            new_refresh = response.data.get('refresh') or cookie_refresh
+            if new_refresh:
+                set_refresh_token_cookie(response, new_refresh)
+
+        return response
+
 class RegisterView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
@@ -53,13 +117,15 @@ class RegisterView(APIView):
             with transaction.atomic():
                 user = serializer.save()
                 refresh = RefreshToken.for_user(user)
-                return Response({
+                response = Response({
                     "success": True,
                     "message": "Account created successfully.",
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
                     "user": UserSerializer(user).data
                 }, status=status.HTTP_201_CREATED)
+                set_refresh_token_cookie(response, str(refresh))
+                return response
 
         except IntegrityError as ie:
             logger.warning(f"Registration integrity conflict for {request.data.get('username')}: {ie}")
@@ -111,30 +177,45 @@ class CustomLoginView(APIView):
                 "message": "This account is disabled. Please contact support."
             }, status=status.HTTP_403_FORBIDDEN)
 
+        profile, _ = Profile.objects.get_or_create(user=user)
+        if profile.is_mfa_enabled:
+            signer = TimestampSigner(salt="monvex-mfa-challenge")
+            challenge_token = signer.sign(str(user.id))
+            return Response({
+                "success": True,
+                "mfa_required": True,
+                "mfa_token": challenge_token,
+                "message": "Two-Factor Authentication code required."
+            }, status=status.HTTP_200_OK)
+
         refresh = RefreshToken.for_user(user)
-        return Response({
+        response = Response({
             "success": True,
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "user": UserSerializer(user).data
         }, status=status.HTTP_200_OK)
+        set_refresh_token_cookie(response, str(refresh))
+        return response
 
 class LogoutView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        refresh_token = request.data.get('refresh') or request.data.get('refresh_token')
+        refresh_token = request.data.get('refresh') or request.data.get('refresh_token') or request.COOKIES.get(AUTH_COOKIE_NAME)
         if refresh_token:
             try:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
             except Exception:
                 pass
-        return Response({
+        response = Response({
             "success": True,
             "message": "Successfully logged out."
         }, status=status.HTTP_200_OK)
+        clear_refresh_token_cookie(response)
+        return response
 
 class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -174,7 +255,7 @@ class GoogleLoginView(APIView):
                 return Response(res, status=status.HTTP_200_OK)
 
             if res.get('success', False):
-                return Response({
+                response = Response({
                     "success": True,
                     "action": res.get("action", "LOGIN"),
                     "is_new_user": res.get("is_new_user", False),
@@ -182,6 +263,9 @@ class GoogleLoginView(APIView):
                     "refresh": res["refresh"],
                     "user": UserSerializer(res["user"]).data
                 }, status=status.HTTP_201_CREATED if res.get("is_new_user") else status.HTTP_200_OK)
+                if "refresh" in res:
+                    set_refresh_token_cookie(response, res["refresh"])
+                return response
 
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
@@ -228,13 +312,16 @@ class GoogleLinkAccountView(APIView):
             res = GoogleAuthService.link_google_account(claims, password, request_context=ctx)
 
             if res.get('success', False):
-                return Response({
+                response = Response({
                     "success": True,
                     "action": res.get("action", "LINKED_AND_LOGGED_IN"),
                     "access": res["access"],
                     "refresh": res["refresh"],
                     "user": UserSerializer(res["user"]).data
                 }, status=status.HTTP_200_OK)
+                if "refresh" in res:
+                    set_refresh_token_cookie(response, res["refresh"])
+                return response
 
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
@@ -277,10 +364,15 @@ class AvatarUploadView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             try:
+                from services.file_validation_service import FileValidationService
+                from django.core.exceptions import ValidationError as DjangoValidationError
+                FileValidationService.validate_avatar_file(file)
                 img = Image.open(file)
-                img.verify()
-                file.seek(0)
-                img = Image.open(file)
+            except DjangoValidationError as ve:
+                return Response({
+                    "success": False,
+                    "message": str(ve.message if hasattr(ve, 'message') else ve)
+                }, status=status.HTTP_400_BAD_REQUEST)
             except Exception:
                 return Response({
                     "success": False,
@@ -372,4 +464,185 @@ class AvatarUploadView(APIView):
             "avatar_preset": "",
             "user": UserSerializer(request.user).data
         }, status=status.HTTP_200_OK)
+
+
+# =========================================================================
+# MULTI-FACTOR AUTHENTICATION (TOTP / RFC 6238)
+# =========================================================================
+
+class MFASetupView(APIView):
+    """
+    POST /api/v1/auth/mfa/setup/
+    Generates a unique Base32 TOTP secret and returns the otpauth URI
+    for authenticator apps (Google Authenticator, Microsoft Authenticator, 1Password).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        secret = pyotp.random_base32()
+        profile.mfa_secret = secret
+        profile.is_mfa_enabled = False
+        profile.save(update_fields=['mfa_secret', 'is_mfa_enabled'])
+
+        totp = pyotp.TOTP(secret)
+        otpauth_url = totp.provisioning_uri(
+            name=request.user.email or request.user.username,
+            issuer_name="MONVEX Financial"
+        )
+
+        return Response({
+            "success": True,
+            "secret": secret,
+            "otpauth_url": otpauth_url,
+            "message": "Scan the QR code into your authenticator app and call /auth/mfa/verify/ with a 6-digit code to activate."
+        }, status=status.HTTP_200_OK)
+
+
+class MFAVerifyView(APIView):
+    """
+    POST /api/v1/auth/mfa/verify/
+    Verifies the 6-digit code to activate 2FA on the account.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        code = str(request.data.get('code') or '').strip()
+        if not code or len(code) != 6:
+            return Response({
+                "success": False,
+                "message": "A valid 6-digit verification code is required."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        if not profile.mfa_secret:
+            return Response({
+                "success": False,
+                "message": "MFA setup has not been initiated. Please call /auth/mfa/setup/ first."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        totp = pyotp.TOTP(profile.mfa_secret)
+        if totp.verify(code, valid_window=1):
+            profile.is_mfa_enabled = True
+            profile.save(update_fields=['is_mfa_enabled'])
+            return Response({
+                "success": True,
+                "message": "Two-Factor Authentication activated successfully."
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            "success": False,
+            "message": "Invalid authentication code. Please check your authenticator app and try again."
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MFADisableView(APIView):
+    """
+    POST /api/v1/auth/mfa/disable/
+    Disables 2FA after verifying the current 6-digit code.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        code = str(request.data.get('code') or '').strip()
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+        if not profile.is_mfa_enabled:
+            return Response({
+                "success": True,
+                "message": "Two-Factor Authentication is already disabled."
+            }, status=status.HTTP_200_OK)
+
+        totp = pyotp.TOTP(profile.mfa_secret)
+        if totp.verify(code, valid_window=1):
+            profile.is_mfa_enabled = False
+            profile.mfa_secret = ''
+            profile.save(update_fields=['is_mfa_enabled', 'mfa_secret'])
+            return Response({
+                "success": True,
+                "message": "Two-Factor Authentication disabled successfully."
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            "success": False,
+            "message": "Invalid code. Two-Factor Authentication could not be disabled."
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MFAStatusView(APIView):
+    """
+    GET /api/v1/auth/mfa/status/
+    Returns current MFA state.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        return Response({
+            "success": True,
+            "is_mfa_enabled": profile.is_mfa_enabled
+        }, status=status.HTTP_200_OK)
+
+
+class MFALoginCompleteView(APIView):
+    """
+    POST /api/v1/auth/mfa/login/
+    Completes login challenge with temporary mfa_token and 6-digit code.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        mfa_token = request.data.get('mfa_token')
+        code = str(request.data.get('code') or '').strip()
+
+        if not mfa_token or not code:
+            return Response({
+                "success": False,
+                "message": "Both mfa_token and 6-digit code are required."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        signer = TimestampSigner(salt="monvex-mfa-challenge")
+        try:
+            user_id = signer.unsign(mfa_token, max_age=300)  # 5-minute expiry
+            user = User.objects.get(id=user_id)
+        except (BadSignature, SignatureExpired, User.DoesNotExist):
+            return Response({
+                "success": False,
+                "code": "MFA_SESSION_EXPIRED",
+                "message": "Two-Factor session expired or invalid. Please sign in again."
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_active:
+            return Response({
+                "success": False,
+                "code": "ACCOUNT_DISABLED",
+                "message": "This account is disabled. Please contact support."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        profile, _ = Profile.objects.get_or_create(user=user)
+        if not profile.is_mfa_enabled or not profile.mfa_secret:
+            return Response({
+                "success": False,
+                "message": "Two-Factor Authentication is not configured for this account."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        totp = pyotp.TOTP(profile.mfa_secret)
+        if not totp.verify(code, valid_window=1):
+            return Response({
+                "success": False,
+                "code": "INVALID_MFA_CODE",
+                "message": "Invalid authentication code."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        refresh = RefreshToken.for_user(user)
+        response = Response({
+            "success": True,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": UserSerializer(user).data
+        }, status=status.HTTP_200_OK)
+        set_refresh_token_cookie(response, str(refresh))
+        return response
+
 

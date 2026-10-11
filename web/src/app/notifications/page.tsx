@@ -30,31 +30,21 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
+import { useNotificationsQuery } from '@/hooks/queries/useNotificationsQuery';
 
 export default function NotificationsPage() {
   const toast = useToast();
 
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [filterType, setFilterType] = useState<string>('ALL');
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getNotifications(filterType === 'ALL' ? undefined : filterType);
-      const list = Array.isArray(data) ? data : data?.results || [];
-      setNotifications(list);
-    } catch {
-      toast.error('Failed to load alerts.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: rawNotifications, isLoading, refetch: fetchNotifications } = useNotificationsQuery(filterType);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [filterType]);
+    if (rawNotifications) {
+      setNotifications(Array.isArray(rawNotifications) ? rawNotifications : rawNotifications?.results || []);
+    }
+  }, [rawNotifications]);
 
   const handleMarkRead = async (id: string) => {
     try {
@@ -99,61 +89,50 @@ export default function NotificationsPage() {
     return list;
   }, [notifications, filterSeverity]);
 
-  const getSeverityBadge = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL':
-        return <Badge variant="danger" size="sm">CRITICAL</Badge>;
-      case 'WARNING':
-        return <Badge variant="warning" size="sm">WARNING</Badge>;
-      case 'INFO':
-      default:
-        return <Badge variant="neutral" size="sm">INFO</Badge>;
-    }
-  };
-
   const getNotificationIcon = (type: string, severity: string) => {
     if (severity === 'CRITICAL') {
-      return <ShieldAlert className="h-4 w-4 text-[#E11D48]" />;
+      return <ShieldAlert className="h-5 w-5 text-[#E76D7A]" />;
     }
     switch (type) {
       case 'BUDGET_WARNING':
-        return <AlertTriangle className="h-4 w-4 text-[#D97706]" />;
+        return <AlertTriangle className="h-5 w-5 text-[#E8A54B]" />;
       case 'UNUSUAL_SPENDING':
-        return <Zap className="h-4 w-4 text-[#E11D48]" />;
+        return <Zap className="h-5 w-5 text-[#E76D7A]" />;
       case 'GOAL_RISK':
-        return <Target className="h-4 w-4 text-[#7C3AED]" />;
+        return <Target className="h-5 w-5 text-[#6865E8]" />;
       case 'UPCOMING_PAYMENT':
-        return <CreditCard className="h-4 w-4 text-[#2563EB]" />;
+        return <CreditCard className="h-5 w-5 text-[#3B82F6]" />;
       case 'FORECAST_WARNING':
-        return <TrendingUp className="h-4 w-4 text-[#D97706]" />;
+        return <TrendingUp className="h-5 w-5 text-[#E8A54B]" />;
       default:
-        return <Info className="h-4 w-4 text-[#4056A1]" />;
+        return <Info className="h-5 w-5 text-[#6865E8]" />;
     }
   };
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      <div className="space-y-6 max-w-5xl mx-auto pb-16">
         <PageHeader
+          eyebrow="TELEMETRY FEED"
           title="Smart Financial Alerts & Telemetry"
           description="Real-time proactive monitoring for budget thresholds, unusual spending velocity, bill maturities, and goal health."
           actionSlot={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={fetchNotifications}
+                size="md"
+                onClick={() => { fetchNotifications(); }}
                 leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isLoading ? 'animate-spin' : '')} />}
-                className="text-xs font-bold touch-target"
+                className="rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B]"
               >
                 Refresh
               </Button>
               <Button
                 variant="outline"
-                size="sm"
+                size="md"
                 onClick={handleClearAll}
-                leftIcon={<Check className="h-3.5 w-3.5 text-[#059669]" />}
-                className="text-xs font-bold touch-target"
+                leftIcon={<Check className="h-4 w-4 text-[#16745C]" />}
+                className="rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B]"
               >
                 Mark All Read
               </Button>
@@ -162,257 +141,154 @@ export default function NotificationsPage() {
         />
 
         {/* =========================================================================
-            1. DOUBLE-BEZEL TELEMETRY HERO
+            1. TOP 3 ALERT METRICS (Aurora Glass)
             ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 sm:p-7">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              {/* Left 7 cols: Alert Posture */}
-              <div className="lg:col-span-7 space-y-2">
-                <div className="flex items-center gap-2 text-[#898390]">
-                  <Bell className="h-4 w-4 text-[#4056A1]" />
-                  <span className="text-[11px] font-mono uppercase tracking-wider font-bold">
-                    Telemetry Stream Status
-                  </span>
-                </div>
-
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-mono font-black text-[#191522] tnum">
-                    {unreadCount}
-                  </span>
-                  <span className="text-xs text-[#625D69] font-medium">
-                    Unread alerts requiring attention
-                  </span>
-                </div>
-
-                <p className="text-xs text-[#898390]">
-                  Heuristic anomaly detectors continuously monitor transaction streams and budget limits.
-                </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#E76D7A]">
+                Critical Blocks
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                <ShieldAlert className="h-4 w-4" />
               </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#E76D7A]">{criticalCount} Urgent</div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Requires immediate attention</p>
+            </div>
+          </div>
 
-              {/* Right 5 cols: Severity Counter Strips */}
-              <div className="lg:col-span-5 grid grid-cols-3 gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#E4E2DC] lg:pl-6" role="group" aria-label="Filter by severity level">
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={filterSeverity === 'CRITICAL'}
-                  aria-label={`Filter critical notifications (${criticalCount})`}
-                  onClick={() => setFilterSeverity(filterSeverity === 'CRITICAL' ? 'ALL' : 'CRITICAL')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setFilterSeverity(filterSeverity === 'CRITICAL' ? 'ALL' : 'CRITICAL');
-                    }
-                  }}
-                  className={cn(
-                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#E11D48]',
-                    filterSeverity === 'CRITICAL'
-                      ? 'bg-[#FFF1F2] border-[#E11D48] ring-1 ring-[#E11D48]'
-                      : 'bg-[#F6F5F1] border-[#E4E2DC] hover:border-[#CBD5E1]'
-                  )}
-                >
-                  <span className="text-[10px] font-mono text-[#E11D48] uppercase font-bold block">Critical</span>
-                  <span className="text-xl font-mono font-black text-[#E11D48] tnum block">
-                    {criticalCount}
-                  </span>
-                  <span className="text-[9px] text-[#898390]">Immediate</span>
-                </div>
-
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={filterSeverity === 'WARNING'}
-                  aria-label={`Filter warning notifications (${warningCount})`}
-                  onClick={() => setFilterSeverity(filterSeverity === 'WARNING' ? 'ALL' : 'WARNING')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setFilterSeverity(filterSeverity === 'WARNING' ? 'ALL' : 'WARNING');
-                    }
-                  }}
-                  className={cn(
-                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#D97706]',
-                    filterSeverity === 'WARNING'
-                      ? 'bg-[#FFFBEB] border-[#D97706] ring-1 ring-[#D97706]'
-                      : 'bg-[#F6F5F1] border-[#E4E2DC] hover:border-[#CBD5E1]'
-                  )}
-                >
-                  <span className="text-[10px] font-mono text-[#D97706] uppercase font-bold block">Warning</span>
-                  <span className="text-xl font-mono font-black text-[#D97706] tnum block">
-                    {warningCount}
-                  </span>
-                  <span className="text-[9px] text-[#898390]">Thresholds</span>
-                </div>
-
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={filterSeverity === 'INFO'}
-                  aria-label={`Filter info notifications (${notifications.filter((n) => n.severity === 'INFO' && !n.is_read).length})`}
-                  onClick={() => setFilterSeverity(filterSeverity === 'INFO' ? 'ALL' : 'INFO')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setFilterSeverity(filterSeverity === 'INFO' ? 'ALL' : 'INFO');
-                    }
-                  }}
-                  className={cn(
-                    'p-3 rounded-xl border cursor-pointer transition-all space-y-1 min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
-                    filterSeverity === 'INFO'
-                      ? 'bg-[#EFF6FF] border-[#2563EB] ring-1 ring-[#2563EB]'
-                      : 'bg-[#F6F5F1] border-[#E4E2DC] hover:border-[#CBD5E1]'
-                  )}
-                >
-                  <span className="text-[10px] font-mono text-[#2563EB] uppercase font-bold block">Info</span>
-                  <span className="text-xl font-mono font-black text-[#2563EB] tnum block">
-                    {notifications.filter((n) => n.severity === 'INFO' && !n.is_read).length}
-                  </span>
-                  <span className="text-[9px] text-[#898390]">Updates</span>
-                </div>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#E8A54B]">
+                Active Warnings
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FEF6EB] text-[#E8A54B]">
+                <AlertTriangle className="h-4 w-4" />
               </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#E8A54B]">{warningCount} Warnings</div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Budget and forecast thresholds</p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                Unread Total
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Bell className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">{unreadCount} Pending</div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Total pending inbox</p>
             </div>
           </div>
         </div>
 
         {/* =========================================================================
-            2. FILTER STRIP
+            2. ALERTS FEED DIRECTORY
             ========================================================================= */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#E4E2DC] scrollbar-none" role="tablist" aria-label="Filter notifications by category">
-          {[
-            { id: 'ALL', label: 'All Telemetry' },
-            { id: 'BUDGET_WARNING', label: 'Budget Warnings' },
-            { id: 'UNUSUAL_SPENDING', label: 'Velocity Spikes' },
-            { id: 'UPCOMING_PAYMENT', label: 'Upcoming Bills' },
-            { id: 'GOAL_RISK', label: 'Goal Risks' },
-            { id: 'INSIGHT_AVAILABLE', label: 'Smart Insights' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={filterType === tab.id}
-              onClick={() => setFilterType(tab.id)}
-              className={cn(
-                'px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all whitespace-nowrap min-h-[44px] shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
-                filterType === tab.id
-                  ? 'bg-[#2A1F3D] text-white shadow-xs'
-                  : 'bg-[#F6F5F1] text-[#625D69] hover:text-[#191522] hover:bg-[#EAE8E1]'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* =========================================================================
-            3. NOTIFICATIONS AUDIT STREAM (Double Bezel)
-            ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E4E2DC]">
-              <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                Telemetry Alerts ({filteredNotifications.length})
+        <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E6F0]">
+            <div>
+              <h3 className="text-base font-bold text-[#20212B]">
+                Alert Telemetry Stream ({filteredNotifications.length})
               </h3>
-              <span className="text-[10px] font-mono text-[#898390]">
-                {filterSeverity !== 'ALL' ? `Filtered by ${filterSeverity}` : 'All Severities'}
-              </span>
+              <p className="text-xs text-[#77798A] mt-0.5">Chronological system notifications and intelligence triggers</p>
             </div>
 
-            {isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-              </div>
-            ) : filteredNotifications.length === 0 ? (
-              <EmptyState
-                title="Zero telemetry alerts active"
-                description={
-                  filterType !== 'ALL' || filterSeverity !== 'ALL'
-                    ? 'No notifications match the active filter criteria.'
-                    : 'All budgets, cash burn rates, and savings trajectories are running in nominal bounds.'
-                }
-              />
-            ) : (
-              <div className="space-y-3">
-                {filteredNotifications.map((notif) => {
-                  const Icon = getNotificationIcon(notif.notification_type, notif.severity);
+            {/* Severity Filter Pills */}
+            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0]">
+              {['ALL', 'CRITICAL', 'WARNING', 'INFO'].map((sev) => (
+                <button
+                  key={sev}
+                  onClick={() => setFilterSeverity(sev)}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
+                    filterSeverity === sev
+                      ? 'bg-[#6865E8] text-white shadow-xs'
+                      : 'text-[#77798A] hover:text-[#20212B]'
+                  )}
+                >
+                  {sev}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                  return (
-                    <div
-                      key={notif.id}
-                      className={cn(
-                        'p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3',
-                        notif.is_read
-                          ? 'bg-[#FBFBFA] border-[#E4E2DC] opacity-75'
-                          : notif.severity === 'CRITICAL'
-                          ? 'bg-white border-[#FECDD3] shadow-sm ring-1 ring-[#E11D48]/15'
-                          : 'bg-white border-[#E4E2DC] hover:border-[#CBD5E1]'
-                      )}
-                    >
-                      <div className="flex items-start gap-3.5">
-                        <div
-                          className={cn(
-                            'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border',
-                            notif.severity === 'CRITICAL'
-                              ? 'bg-[#FFF1F2] border-[#FECDD3]'
-                              : notif.severity === 'WARNING'
-                              ? 'bg-[#FFFBEB] border-[#FDE68A]'
-                              : 'bg-[#F6F5F1] border-[#E4E2DC]'
-                          )}
-                        >
-                          {Icon}
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#191522]">
-                              {notif.title}
-                            </span>
-                            {getSeverityBadge(notif.severity)}
-                            {!notif.is_read && (
-                              <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-20 w-full rounded-2xl" />
+              <Skeleton className="h-20 w-full rounded-2xl" />
+            </div>
+          ) : filteredNotifications.length === 0 ? (
+            <EmptyState
+              title="All alerts cleared"
+              description="Your account is operating inside healthy financial parameters. No active warnings."
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredNotifications.map((n: any) => {
+                const icon = getNotificationIcon(n.type, n.severity);
+                return (
+                  <div
+                    key={n.id}
+                    className={cn(
+                      'p-5 rounded-2xl border transition-all flex items-start justify-between gap-4',
+                      !n.is_read
+                        ? 'bg-white border-[#6865E8]/30 shadow-xs'
+                        : 'bg-[#F8F7FC] border-[#E7E6F0] opacity-80'
+                    )}
+                  >
+                    <div className="flex items-start gap-3.5 min-w-0">
+                      <div className="h-10 w-10 rounded-xl bg-[#ECEBFF] flex items-center justify-center shrink-0 mt-0.5">
+                        {icon}
+                      </div>
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-[#20212B]">
+                            {n.title || n.type}
+                          </span>
+                          <span
+                            className={cn(
+                              'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                              n.severity === 'CRITICAL'
+                                ? 'bg-[#FDEEF0] text-[#E76D7A] border-[#FECDD3]'
+                                : n.severity === 'WARNING'
+                                ? 'bg-[#FEF6EB] text-[#E8A54B] border-[#FDE68A]'
+                                : 'bg-[#ECEBFF] text-[#6865E8] border-[#D8D5FB]'
                             )}
-                          </div>
-                          <p className="text-xs text-[#625D69] leading-relaxed font-medium">
-                            {notif.message}
-                          </p>
-                          <span className="text-[10px] text-[#898390] font-mono block">
-                            {new Date(notif.created_at).toLocaleString([], {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}
+                          >
+                            {n.severity}
                           </span>
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                        {notif.action_url && (
-                          <a
-                            href={notif.action_url}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#F6F5F1] hover:bg-[#2A1F3D] hover:text-white text-xs font-mono font-bold text-[#191522] transition-all touch-target"
-                          >
-                            <span>Inspect</span>
-                            <ChevronRight className="h-3 w-3" />
-                          </a>
-                        )}
-                        {!notif.is_read && (
-                          <button
-                            type="button"
-                            onClick={() => handleMarkRead(notif.id)}
-                            className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#F6F5F1] text-[#898390] hover:text-[#059669] transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#059669]"
-                            title="Mark as read"
-                            aria-label={`Mark notification as read: ${notif.title}`}
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                        )}
+                        <p className="text-xs text-[#77798A] leading-relaxed">
+                          {n.message || n.description}
+                        </p>
+                        <span className="text-[10px] font-mono text-[#77798A] block">
+                          {n.created_at ? new Date(n.created_at).toLocaleString() : 'Just now'}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+
+                    {!n.is_read && (
+                      <button
+                        onClick={() => handleMarkRead(n.id)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#6865E8] hover:bg-[#ECEBFF] border border-[#6865E8]/20 transition-all shrink-0"
+                      >
+                        Mark read
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </AppShell>

@@ -1,0 +1,154 @@
+[
+  {
+    "route": "http://localhost:3000/",
+    "name": "landing",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 117,
+      "sampleCardBg": "rgb(255, 255, 255)",
+      "sampleCardBorder": "rgb(228, 226, 220)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 7751
+    }
+  },
+  {
+    "route": "http://localhost:3000/login",
+    "name": "login",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 1,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 14,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 908
+    }
+  },
+  {
+    "route": "http://localhost:3000/dashboard",
+    "name": "dashboard",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 71,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 1532
+    }
+  },
+  {
+    "route": "http://localhost:3000/transactions",
+    "name": "transactions",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 54,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 884
+    }
+  },
+  {
+    "route": "http://localhost:3000/budgets",
+    "name": "budgets",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 47,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 790
+    }
+  },
+  {
+    "route": "http://localhost:3000/ai",
+    "name": "ai",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 106,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 1280
+    }
+  },
+  {
+    "route": "http://localhost:3000/analytics",
+    "name": "analytics",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 58,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 1211
+    }
+  },
+  {
+    "route": "http://localhost:3000/settings",
+    "name": "settings",
+    "cssAssetsCount": 1,
+    "jsAssetsCount": 7,
+    "chunk404Count": 0,
+    "consoleErrorsCount": 0,
+    "failedRequestsCount": 0,
+    "stylesInfo": {
+      "bodyBg": "rgb(244, 243, 250)",
+      "bodyColor": "rgb(32, 33, 43)",
+      "bodyFont": "__Inter_d8ebd1, __Inter_Fallback_d8ebd1, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+      "cardsCount": 59,
+      "sampleCardBg": "rgba(0, 0, 0, 0)",
+      "sampleCardBorder": "rgb(231, 230, 240)",
+      "title": "MONVEX — Financial Intelligence",
+      "innerTextLength": 824
+    }
+  }
+]

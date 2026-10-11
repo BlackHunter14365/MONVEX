@@ -1,112 +1,234 @@
 :root {
   /* ==========================================================================
-     MONVEX MULTI-TINT / MULTI-SHADE / MULTI-SURFACE VISUAL SYSTEM TOKENS
-     Reference: Warm Canvas, Pure White Cards, Pastel Semantic Tints, Indigo & Plum Hierarchy
+     MONVEX AURORA GLASS DESIGN SYSTEM TOKENS
+     Palette: Soft Lavender Canvas (#F4F3FA), Crisp White Cards (#FFFFFF),
+              Violet Accent (#6865E8), Mint Accent (#75DCC0),
+              Deep Charcoal-Slate Typography (#20212B / #77798A),
+              Delicate Hairline Borders (#E7E6F0)
      ========================================================================== */
 
   /* 1. Canvas & Neutral Surface Hierarchy */
-  --mx-bg: #F6F5F1;
-  --mx-background: #F6F5F1;
-  --mx-canvas-warm: #F6F5F1;
-  --mx-sidebar: #F6F5F1;
+  --mx-bg: #F4F3FA;
+  --mx-background: #F4F3FA;
+  --mx-canvas-warm: #F4F3FA;
+  --mx-sidebar: #FAF9FC;
   --mx-surface: #FFFFFF;
   --mx-surface-pure: #FFFFFF;
-  --mx-surface-subtle: #F1F0EC;
-  --mx-surface-muted: #F1F0EC;
-  --mx-surface-raised: #E8E7E1;
-  --mx-surface-overlay: rgba(25, 21, 34, 0.45);
+  --mx-surface-subtle: #F8F7FC;
+  --mx-surface-muted: #EEEDF8;
+  --mx-surface-raised: #EBE9F5;
+  --mx-surface-overlay: rgba(32, 33, 43, 0.45);
 
   /* 2. Light Tinted Surfaces (Pastel Micro-Backgrounds) */
-  --mx-tint-lavender: #EEEAF7;
-  --mx-tint-plum-light: #F6F3FA;
-  --mx-tint-indigo: #E9EDFA;
-  --mx-tint-cyan: #DDF7FA;
-  --mx-tint-emerald: #E8F7F1;
-  --mx-surface-tint-emerald: #E8F7F1;
-  --mx-tint-amber: #FFF4DF;
-  --mx-surface-tint-amber: #FFF4DF;
-  --mx-tint-rose: #FDECEF;
-  --mx-surface-tint-rose: #FDECEF;
+  --mx-tint-lavender: #EEEDF8;
+  --mx-tint-plum-light: #F8F7FC;
+  --mx-tint-indigo: #EDEBFB;
+  --mx-tint-cyan: #E6F9F5;
+  --mx-tint-emerald: #E6F9F5;
+  --mx-surface-tint-emerald: #E6F9F5;
+  --mx-tint-amber: #FEF6EB;
+  --mx-surface-tint-amber: #FEF6EB;
+  --mx-tint-rose: #FDEEF0;
+  --mx-surface-tint-rose: #FDEEF0;
 
-  /* 3. Primary Brand Family (Plum / Aubergine) */
-  --mx-plum-deep: #2A1F3D;          /* Signature Deep Plum / Aubergine */
-  --mx-plum-rich: #3B2D54;          /* Elevated Interactive Plum */
-  --mx-plum-soft: #625477;          /* Soft Plum Accent / Border */
-  --mx-plum-lavender: #EEEAF7;      /* Lavender Tint */
-  --mx-plum-light: #F6F3FA;         /* Very Light Plum */
-  --mx-brand-primary: #2A1F3D;
-  --mx-brand-primary-hover: #3B2D54;
-  --mx-brand-primary-active: #21182F;
+  /* 3. Primary Brand Family (Aurora Violet) */
+  --mx-brand-primary: #6865E8;          /* Signature Aurora Violet */
+  --mx-brand-primary-hover: #5754DC;    /* Elevated Interactive Violet */
+  --mx-brand-primary-active: #4744C8;   /* Deep Pressed Violet */
+  --mx-plum-deep: #20212B;              /* Deep Anchor */
+  --mx-plum-rich: #2E2F3E;              /* Interactive Deep Slate */
+  --mx-plum-soft: #6865E8;              /* Soft Violet Accent */
+  --mx-plum-lavender: #EEEDF8;          /* Lavender Tint */
+  --mx-plum-light: #F8F7FC;             /* Very Light Tint */
 
-  /* 4. Indigo Intelligence & Analytical Family */
-  --mx-indigo-deep: #26335F;        /* Deep Indigo Anchor */
-  --mx-indigo-medium: #4056A1;      /* Interactive Indigo / Chart Primary */
-  --mx-indigo-soft: #7184C4;        /* Soft Indigo Border / Subtext */
-  --mx-indigo-tint: #E9EDFA;        /* Subtle Indigo Tinted Surface */
+  /* 4. Indigo / Aurora Intelligence Family */
+  --mx-indigo-deep: #20212B;            /* Deep Anchor */
+  --mx-indigo-medium: #6865E8;          /* Interactive Violet / Chart Primary */
+  --mx-indigo-soft: #8C8AEF;            /* Soft Violet Border / Subtext */
+  --mx-indigo-tint: #EDEBFB;            /* Subtle Violet Tinted Surface */
 
-  /* 5. Blue & Cyan Precision Accents */
-  --mx-blue-electric: #2563EB;      /* Interactive Link & Informational Blue */
-  --mx-blue-soft: #EFF6FF;
-  --mx-cyan-bright: #06B6D4;        /* Bright Cyan Tool Accent */
-  --mx-cyan-soft: #DDF7FA;          /* Soft Cyan Surface */
+  /* 5. Mint / Emerald Precision Accents */
+  --mx-accent-mint: #75DCC0;            /* Signature Aurora Mint */
+  --mx-mint-deep: #16745C;              /* High-contrast Mint text */
+  --mx-mint-medium: #75DCC0;            /* Interactive Mint */
+  --mx-mint-soft: #A7ECD9;              /* Soft Mint Border */
+  --mx-mint-tint: #E6F9F5;              /* Light Mint Surface */
+  --mx-blue-electric: #6865E8;          /* Mapped to Aurora Violet */
+  --mx-blue-soft: #EDEBFB;
+  --mx-cyan-bright: #75DCC0;
+  --mx-cyan-soft: #E6F9F5;
 
   /* 6. Controlled Dark Surface Hierarchy (Used Selectively for Depth) */
-  --mx-dark-brand: #2A1F3D;         /* Final CTA, Terminal Window Header */
-  --mx-dark-indigo: #26335F;        /* AI Workspace Header, Active Navigation Accent */
-  --mx-dark-plum: #33264A;          /* Executive KPI Card, Obsidian Wallet */
-  --mx-dark-pressed: #21182F;       /* Deep Pressed & Active State */
-  --mx-brand-surface: #2A1F3D;
-  --mx-brand-surface-elevated: #33264A;
-  --mx-brand-surface-muted: #3E305B;
-  --mx-brand-border: #4A3A68;
+  --mx-dark-brand: #20212B;             /* Primary Dark Anchor */
+  --mx-dark-indigo: #252438;            /* Dark Intelligence Panel */
+  --mx-dark-plum: #28273D;              /* Dark KPI Card */
+  --mx-dark-pressed: #181922;           /* Deep Pressed State */
+  --mx-brand-surface: #20212B;
+  --mx-brand-surface-elevated: #28273D;
+  --mx-brand-surface-muted: #34334C;
+  --mx-brand-border: #42415E;
 
   /* 7. High-Contrast Typography Hierarchy (WCAG AAA Compliance) */
-  --mx-text-primary: #191522;       /* Ultra-contrast Deep Plum-Charcoal (16.2:1 AAA on #FFFFFF) */
-  --mx-text-secondary: #625D69;     /* Balanced Neutral Slate (6.2:1 AA on #FFFFFF) */
-  --mx-text-muted: #898390;         /* Muted Meta & Label Gray (4.6:1 AA on #FFFFFF) */
-  --mx-text-disabled: #B4AEBD;
+  --mx-text-primary: #20212B;           /* Deep Charcoal-Slate (15.8:1 AAA on #FFFFFF) */
+  --mx-text-secondary: #77798A;         /* Slate Neutral (5.8:1 AA on #FFFFFF) */
+  --mx-text-muted: #9DA0B3;             /* Muted Metadata (4.5:1 AA on #FFFFFF) */
+  --mx-text-disabled: #C2C4D1;
 
   /* 8. Structural Hairlines & Borders */
-  --mx-border: #E4E2DC;
-  --mx-border-strong: #D6D4CD;
-  --mx-border-interactive: #B8B5AB;
-  --mx-border-plum-soft: rgba(98, 84, 119, 0.20);
-  --mx-border-indigo-soft: rgba(113, 132, 196, 0.25);
-  --mx-border-cyan-soft: rgba(6, 182, 212, 0.25);
+  --mx-border: #E7E6F0;
+  --mx-border-strong: #D5D3E3;
+  --mx-border-interactive: #B6B3D6;
+  --mx-border-plum-soft: rgba(104, 101, 232, 0.20);
+  --mx-border-indigo-soft: rgba(104, 101, 232, 0.25);
+  --mx-border-cyan-soft: rgba(117, 220, 192, 0.30);
 
   /* 9. Semantic Financial Colors & Tints */
-  --mx-success: #059669;            /* Financial Emerald Inflows/Surpluses */
-  --mx-success-soft: #E8F7F1;
-  --mx-success-border: #A7F3D0;
+  --mx-success: #16745C;                /* Financial Emerald / Inflows */
+  --mx-success-soft: #E6F9F5;
+  --mx-success-border: #75DCC0;
 
-  --mx-warning: #D97706;            /* Alert Amber */
-  --mx-warning-soft: #FFF4DF;
-  --mx-warning-border: #FDE68A;
+  --mx-warning: #E8A54B;                /* Alert Amber */
+  --mx-warning-soft: #FEF6EB;
+  --mx-warning-border: #FCD89E;
 
-  --mx-danger: #E11D48;             /* Crimson Burn/Expenses */
-  --mx-danger-soft: #FDECEF;
-  --mx-danger-border: #FECDD3;
+  --mx-danger: #E76D7A;                 /* Crimson Burn / Expenses */
+  --mx-danger-soft: #FDEEF0;
+  --mx-danger-border: #F8B4BD;
 
   /* 10. Financial Categories */
-  --mx-cat-food: #DCFCE7;
-  --mx-cat-food-text: #15803D;
-  --mx-cat-shop: #FEF3C7;
-  --mx-cat-shop-text: #B45309;
-  --mx-cat-bills: #E0F2FE;
-  --mx-cat-bills-text: #0369A1;
-  --mx-cat-trans: #EEEAF7;
-  --mx-cat-trans-text: #625477;
+  --mx-cat-food: #E6F9F5;
+  --mx-cat-food-text: #16745C;
+  --mx-cat-shop: #FEF6EB;
+  --mx-cat-shop-text: #D2811E;
+  --mx-cat-bills: #EDEBFB;
+  --mx-cat-bills-text: #5754DC;
+  --mx-cat-trans: #EEEDF8;
+  --mx-cat-trans-text: #6865E8;
 
   /* 11. Radii */
-  --mx-radius-sm: 6px;
-  --mx-radius-md: 10px;
-  --mx-radius-lg: 14px;
-  --mx-radius-xl: 18px;
+  --mx-radius-sm: 8px;
+  --mx-radius-md: 12px;
+  --mx-radius-lg: 16px;
+  --mx-radius-xl: 20px;
   --mx-radius-full: 9999px;
 
-  /* 12. Multi-Hue Elevation Shadows */
-  --mx-shadow-subtle: 0 1px 2px 0 rgba(25, 21, 34, 0.04);
-  --mx-shadow-card: 0 1px 3px 0 rgba(25, 21, 34, 0.05), 0 1px 2px -1px rgba(25, 21, 34, 0.04);
-  --mx-shadow-elevated: 0 4px 6px -1px rgba(25, 21, 34, 0.06), 0 2px 4px -2px rgba(25, 21, 34, 0.04);
-  --mx-shadow-modal: 0 20px 25px -5px rgba(25, 21, 34, 0.14), 0 8px 10px -6px rgba(25, 21, 34, 0.08);
+  /* 12. Aurora Soft Shadows */
+  --mx-shadow-subtle: 0 1px 2px 0 rgba(32, 33, 43, 0.03);
+  --mx-shadow-card: 0 1px 3px 0 rgba(32, 33, 43, 0.04), 0 1px 2px -1px rgba(32, 33, 43, 0.03);
+  --mx-shadow-elevated: 0 4px 12px -2px rgba(32, 33, 43, 0.06), 0 2px 6px -2px rgba(32, 33, 43, 0.03);
+  --mx-shadow-modal: 0 20px 25px -5px rgba(32, 33, 43, 0.12), 0 8px 10px -6px rgba(32, 33, 43, 0.06);
+}
+
+.dark {
+  /* ==========================================================================
+     MONVEX AURORA GLASS DARK MODE SYSTEM TOKENS
+     Palette: Deep Obsidian/Indigo Canvas (#0F0E17), Elevated Dark Slate Cards (#1B1A2A),
+              Vibrant Violet (#7C79F2), Crisp Mint (#75DCC0),
+              Luminescent Typography (#F4F3FA / #A6A4B8),
+              Subtle Midnight Hairlines (#2D2B3F)
+     ========================================================================== */
+
+  /* 1. Canvas & Neutral Surface Hierarchy */
+  --mx-bg: #0F0E17;
+  --mx-background: #0F0E17;
+  --mx-canvas-warm: #0F0E17;
+  --mx-sidebar: #151421;
+  --mx-surface: #1B1A2A;
+  --mx-surface-pure: #1B1A2A;
+  --mx-surface-subtle: #222135;
+  --mx-surface-muted: #28273F;
+  --mx-surface-raised: #302E4B;
+  --mx-surface-overlay: rgba(10, 10, 16, 0.75);
+
+  /* 2. Light Tinted Surfaces (Subtle Dark Mode Tints) */
+  --mx-tint-lavender: #23213B;
+  --mx-tint-plum-light: #1E1D30;
+  --mx-tint-indigo: #252445;
+  --mx-tint-cyan: #142E2B;
+  --mx-tint-emerald: #142E2B;
+  --mx-surface-tint-emerald: #142E2B;
+  --mx-tint-amber: #312616;
+  --mx-surface-tint-amber: #312616;
+  --mx-tint-rose: #34181E;
+  --mx-surface-tint-rose: #34181E;
+
+  /* 3. Primary Brand Family */
+  --mx-brand-primary: #7C79F2;
+  --mx-brand-primary-hover: #8F8DF6;
+  --mx-brand-primary-active: #6865E8;
+  --mx-plum-deep: #F4F3FA;
+  --mx-plum-rich: #ECEBFF;
+  --mx-plum-soft: #8C8AEF;
+  --mx-plum-lavender: #23213B;
+  --mx-plum-light: #1E1D30;
+
+  /* 4. Indigo / Aurora Intelligence */
+  --mx-indigo-deep: #F4F3FA;
+  --mx-indigo-medium: #7C79F2;
+  --mx-indigo-soft: #8C8AEF;
+  --mx-indigo-tint: #252445;
+
+  /* 5. Mint / Emerald Precision Accents */
+  --mx-accent-mint: #75DCC0;
+  --mx-mint-deep: #75DCC0;
+  --mx-mint-medium: #75DCC0;
+  --mx-mint-soft: #48BCA0;
+  --mx-mint-tint: #142E2B;
+  --mx-blue-electric: #7C79F2;
+  --mx-blue-soft: #252445;
+  --mx-cyan-bright: #75DCC0;
+  --mx-cyan-soft: #142E2B;
+
+  /* 6. Controlled Dark Surface Hierarchy */
+  --mx-dark-brand: #151421;
+  --mx-dark-indigo: #1B1A2A;
+  --mx-dark-plum: #222135;
+  --mx-dark-pressed: #11101A;
+  --mx-brand-surface: #1B1A2A;
+  --mx-brand-surface-elevated: #222135;
+  --mx-brand-surface-muted: #28273F;
+  --mx-brand-border: #3D3B54;
+
+  /* 7. High-Contrast Typography Hierarchy */
+  --mx-text-primary: #F4F3FA;
+  --mx-text-secondary: #A6A4B8;
+  --mx-text-muted: #79778E;
+  --mx-text-disabled: #4E4C60;
+
+  /* 8. Structural Hairlines & Borders */
+  --mx-border: #2D2B3F;
+  --mx-border-strong: #3D3B54;
+  --mx-border-interactive: #7C79F2;
+  --mx-border-plum-soft: rgba(124, 121, 242, 0.25);
+  --mx-border-indigo-soft: rgba(124, 121, 242, 0.30);
+  --mx-border-cyan-soft: rgba(117, 220, 192, 0.35);
+
+  /* 9. Semantic Financial Colors & Tints */
+  --mx-success: #75DCC0;
+  --mx-success-soft: #142E2B;
+  --mx-success-border: #287563;
+
+  --mx-warning: #F5B865;
+  --mx-warning-soft: #312616;
+  --mx-warning-border: #8A6023;
+
+  --mx-danger: #F28B96;
+  --mx-danger-soft: #34181E;
+  --mx-danger-border: #8C2E3C;
+
+  /* 10. Financial Categories */
+  --mx-cat-food: #142E2B;
+  --mx-cat-food-text: #75DCC0;
+  --mx-cat-shop: #312616;
+  --mx-cat-shop-text: #F5B865;
+  --mx-cat-bills: #252445;
+  --mx-cat-bills-text: #8C8AEF;
+  --mx-cat-trans: #23213B;
+  --mx-cat-trans-text: #7C79F2;
+
+  /* 12. Shadows */
+  --mx-shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --mx-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --mx-shadow-elevated: 0 4px 14px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -2px rgba(0, 0, 0, 0.4);
+  --mx-shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
 }

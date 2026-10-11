@@ -28,6 +28,8 @@ class Profile(models.Model):
     avatar_preset = models.CharField(max_length=64, blank=True, default='')
     bio = models.CharField(max_length=500, blank=True, default='')
     preferences = models.JSONField(default=dict, blank=True)
+    mfa_secret = models.CharField(max_length=64, blank=True, default='')
+    is_mfa_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

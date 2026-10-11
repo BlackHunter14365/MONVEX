@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useSimulatorQuery } from '@/hooks/queries/useSimulatorQuery';
 import {
   Sparkles,
   TrendingUp,
+  TrendingDown,
   Sliders,
   Calendar,
   Target,
@@ -28,7 +30,6 @@ import { FinancialAmount } from '@/components/ui/FinancialAmount';
 import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useToast } from '@/context/ToastContext';
-import { AnimatedValue, CardReveal } from '@/components/motion';
 
 export default function SimulatorPage() {
   const toast = useToast();
@@ -42,40 +43,19 @@ export default function SimulatorPage() {
   const [extraDebt, setExtraDebt] = useState<number>(0);
   const [timeframeMonths, setTimeframeMonths] = useState<number>(12);
 
-  // Results State
-  const [simResults, setSimResults] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSimulating, setIsSimulating] = useState(false);
+  const simParams = useMemo(() => ({
+    income_delta: incomeDelta,
+    category_cuts: {
+      'Food & Dining': foodCut,
+      'Shopping': shoppingCut,
+      'Transportation': transportCut,
+    },
+    extra_monthly_savings: extraSavings,
+    extra_debt_payment: extraDebt,
+    timeframe_months: timeframeMonths,
+  }), [incomeDelta, foodCut, shoppingCut, transportCut, extraSavings, extraDebt, timeframeMonths]);
 
-  const fetchSimulation = async () => {
-    setIsSimulating(true);
-    try {
-      const res = await api.runFullSimulation({
-        income_delta: incomeDelta,
-        category_cuts: {
-          'Food & Dining': foodCut,
-          'Shopping': shoppingCut,
-          'Transportation': transportCut,
-        },
-        extra_monthly_savings: extraSavings,
-        extra_debt_payment: extraDebt,
-        timeframe_months: timeframeMonths,
-      });
-
-      if (res && res.success) {
-        setSimResults(res);
-      }
-    } catch {
-      toast.error('Simulation calculation failed.');
-    } finally {
-      setIsLoading(false);
-      setIsSimulating(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSimulation();
-  }, [incomeDelta, foodCut, shoppingCut, transportCut, extraSavings, extraDebt, timeframeMonths]);
+  const { data: simResults, isLoading, isFetching: isSimulating } = useSimulatorQuery(simParams);
 
   const handleReset = () => {
     setIncomeDelta(0);
@@ -124,550 +104,284 @@ export default function SimulatorPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         <PageHeader
+          eyebrow="SCENARIO LABORATORY"
           title="What-If Financial Intelligence Simulator"
           description="Deterministic mathematical scenario laboratory. Model discretionary cuts, income shifts, and accelerated SIP allocations to calculate exact milestone dates and 5-year compounding trajectory."
           actionSlot={
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
-                className="text-xs font-bold shrink-0"
-              >
-                Reset Baseline
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={handleReset}
+              leftIcon={<RotateCcw className="h-4 w-4" />}
+              className="text-xs font-bold rounded-2xl border-[#E7E6F0] hover:bg-[#FAF9FC] text-[#20212B]"
+            >
+              Reset Baseline
+            </Button>
           }
         />
 
-        {/* PRESET QUICK-SCENARIOS STRIP */}
+        {/* =========================================================================
+            1. PRESET QUICK-SCENARIOS STRIP (Aurora Glass)
+            ========================================================================= */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1" role="region" aria-label="Quick scenarios presets">
-          <span className="text-[11px] font-mono font-bold text-[#898390] uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-[#2563EB]" aria-hidden="true" />
-            Quick Scenarios:
+          <span className="text-[11px] font-mono font-bold text-[#77798A] uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-[#6865E8]" aria-hidden="true" />
+            Quick Presets:
           </span>
           <button
             type="button"
             onClick={() => applyPreset('balanced')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-white hover:bg-[#FAF9FC] border border-[#E7E6F0] text-xs font-bold text-[#20212B] shadow-xs transition-all flex items-center gap-2 active:scale-95"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+            <span className="h-2 w-2 rounded-full bg-[#6865E8]" aria-hidden="true" />
             Balanced Boost (+₹2.5k, 15% cuts)
           </button>
           <button
             type="button"
             onClick={() => applyPreset('aggressive')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-white hover:bg-[#FAF9FC] border border-[#E7E6F0] text-xs font-bold text-[#20212B] shadow-xs transition-all flex items-center gap-2 active:scale-95"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            <span className="h-2 w-2 rounded-full bg-[#16745C]" aria-hidden="true" />
             Aggressive Frugal (30% cuts, ₹10k surplus)
           </button>
           <button
             type="button"
             onClick={() => applyPreset('promotion')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F6F5F1] border border-[#E2DFD7] text-xs font-bold text-[#191522] shadow-2xs transition-all flex items-center gap-1.5 active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1"
+            className="shrink-0 px-4 py-2 rounded-2xl bg-white hover:bg-[#FAF9FC] border border-[#E7E6F0] text-xs font-bold text-[#20212B] shadow-xs transition-all flex items-center gap-2 active:scale-95"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-purple-500" aria-hidden="true" />
-            Career Raise (+₹25k income, 24M)
+            <span className="h-2 w-2 rounded-full bg-[#E8A54B]" aria-hidden="true" />
+            Career Promotion (+₹25k income)
           </button>
         </div>
 
-        {/* TOP FOUR DOUBLE-BEZEL METRIC CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1. Monthly Surplus */}
-          <div className="p-1.5 rounded-[22px] bg-white border border-[#E2DFD7] shadow-sm">
-            <div className="p-4 sm:p-5 rounded-[18px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-2">
-              <span className="text-[10px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
-                Simulated Monthly Surplus
+        {/* =========================================================================
+            2. TOP 3 SIMULATED OUTCOMES (Aurora Glass)
+            ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Monthly Surplus Delta
               </span>
-              <div className="flex items-baseline gap-2">
-                <FinancialAmount
-                  amount={simResults?.simulated?.monthly_surplus || 0}
-                  type="income"
-                  size="xl"
-                />
-                <span className="text-[10px] font-mono text-[#898390]">/ mo</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <TrendingUp className="h-4 w-4" />
               </div>
-              <div className="pt-1 border-t border-[#ECE9E0] flex items-center justify-between text-[11px]">
-                <span className="text-[#625D69] font-medium">Shift vs Baseline:</span>
-                <span className={cn('font-mono font-bold', isPositiveDelta ? 'text-[#059669]' : 'text-[#E11D48]')}>
-                  {isPositiveDelta ? '+' : ''}{formatCurrency(monthlySurplusDelta)}/mo
-                </span>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#16745C]">
+                {isPositiveDelta ? `+${formatCurrency(monthlySurplusDelta)}` : formatCurrency(monthlySurplusDelta)} / mo
               </div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Incremental retained capital</p>
             </div>
           </div>
 
-          {/* 2. Projected Savings Rate */}
-          <div className="p-1.5 rounded-[22px] bg-white border border-[#E2DFD7] shadow-sm">
-            <div className="p-4 sm:p-5 rounded-[18px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-2">
-              <span className="text-[10px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
-                Projected Savings Rate
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                {timeframeMonths}-Month Cumulative Liquidity
               </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl sm:text-2xl font-mono font-black text-[#2563EB] tracking-tight">
-                  {simResults?.simulated?.savings_rate || 0}%
-                </span>
-                <span className="text-[10px] font-medium text-[#625D69]">of income</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Calendar className="h-4 w-4" />
               </div>
-              <div className="pt-1 border-t border-[#ECE9E0] flex items-center justify-between text-[11px]">
-                <span className="text-[#625D69] font-medium">Baseline Pace:</span>
-                <span className="font-mono font-bold text-[#191522]">
-                  {simResults?.baseline?.savings_rate || 0}%
-                </span>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">
+                {formatCurrency((simResults?.simulated?.projected_balance || 0))}
               </div>
+              <p className="text-xs text-[#6865E8] font-semibold mt-1">
+                +{(formatCurrency(monthlySurplusDelta * timeframeMonths))} simulated boost
+              </p>
             </div>
           </div>
 
-          {/* 3. Accumulated Capital */}
-          <div className="p-1.5 rounded-[22px] bg-white border border-[#E2DFD7] shadow-sm">
-            <div className="p-4 sm:p-5 rounded-[18px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-2">
-              <span className="text-[10px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
-                Accumulated Liquidity ({timeframeMonths}M)
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                5-Year Wealth Compounding
               </span>
-              <div className="flex items-baseline gap-2">
-                <FinancialAmount
-                  amount={simResults?.simulated?.total_wealth_created || 0}
-                  type="neutral"
-                  size="xl"
-                />
-              </div>
-              <div className="pt-1 border-t border-[#ECE9E0] flex items-center justify-between text-[11px]">
-                <span className="text-[#625D69] font-medium">Model Type:</span>
-                <span className="font-mono font-bold text-[#059669]">
-                  Retained Cash
-                </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Sparkles className="h-4 w-4" />
               </div>
             </div>
-          </div>
-
-          {/* 4. 5-Year Compounded Corpus */}
-          <div className="p-1.5 rounded-[22px] bg-white border border-[#E2DFD7] shadow-sm">
-            <div className="p-4 sm:p-5 rounded-[18px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-2">
-              <span className="text-[10px] font-mono font-bold text-[#898390] uppercase tracking-wider block">
-                5-Year Compounded Corpus
-              </span>
-              <div className="flex items-baseline gap-2">
-                <FinancialAmount
-                  amount={simResults?.compounded_growth?.five_year_horizon?.simulated_corpus || 0}
-                  type="neutral"
-                  size="xl"
-                  className="text-[#7C3AED]"
-                />
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">
+                {formatCurrency((simResults?.simulated?.compounded_5yr_wealth || (monthlySurplusDelta * 60 * 1.35)))}
               </div>
-              <div className="pt-1 border-t border-[#ECE9E0] flex items-center justify-between text-[11px]">
-                <span className="text-[#625D69] font-medium">Extra Wealth Boost:</span>
-                <span className="font-mono font-bold text-[#059669]">
-                  +{formatCurrency(simResults?.compounded_growth?.five_year_horizon?.additional_wealth || 0)}
-                </span>
-              </div>
+              <p className="text-xs text-[#16745C] font-semibold mt-1">
+                Assuming 12% equity CAGR reinvestment
+              </p>
             </div>
           </div>
         </div>
 
-        {/* MAIN 2-COLUMN SIMULATOR STUDIO */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* LEFT: INTERACTIVE SCENARIO LEVERS (5 COLS) */}
-          <div className="lg:col-span-5 space-y-5">
-            <div className="p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E2DFD7] shadow-sm">
-              <div className="p-5 sm:p-6 rounded-[22px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-6">
-                {/* Panel Header */}
-                <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center">
-                      <Sliders className="h-4 w-4 text-[#2563EB]" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-black text-[#191522] tracking-tight">
-                        Scenario Control Levers
-                      </h3>
-                      <span className="text-[10.5px] text-[#625D69] font-medium">
-                        Adjust parameters to project outcome
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant="neutral" size="sm" className="font-mono">
-                    {timeframeMonths}M Window
-                  </Badge>
+        {/* =========================================================================
+            3. INTERACTIVE LEVERS LABORATORY GRID
+            ========================================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          {/* DISCRETIONARY CUTS */}
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                  <TrendingDown className="h-4 w-4" />
                 </div>
-
-                {/* 1. Timeframe Horizon Selector */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[10.5px] font-mono font-bold text-[#898390] uppercase tracking-wider">
-                      Projection Horizon
-                    </span>
-                    <span className="font-mono text-xs font-bold text-[#191522]">
-                      {timeframeMonths} Months ({Math.round((timeframeMonths / 12) * 10) / 10} yrs)
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2" role="group" aria-label="Projection horizon duration">
-                    {[6, 12, 24, 36].map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setTimeframeMonths(m)}
-                        aria-pressed={timeframeMonths === m}
-                        aria-label={`${m} months projection horizon`}
-                        className={cn(
-                          'py-2.5 rounded-xl text-xs font-bold transition-all border min-h-[44px] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1',
-                          timeframeMonths === m
-                            ? 'bg-[#2A1F3D] text-white border-[#2A1F3D] shadow-xs'
-                            : 'bg-white text-[#625D69] border-[#E4E2DC] hover:bg-[#F6F5F1] hover:text-[#191522]'
-                        )}
-                      >
-                        {m}M
-                      </button>
-                    ))}
-                  </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#20212B]">Discretionary Spending Reductions</h3>
+                  <p className="text-xs text-[#77798A]">Trim lifestyle inflation to fund investments</p>
                 </div>
+              </div>
+            </div>
 
-                {/* 2. Monthly Income Shift Lever */}
-                <div className="space-y-2 pt-4 border-t border-[#E4E2DC]">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#191522]" id="income-delta-label">Monthly Inflow Delta</span>
-                    <span className={cn('font-mono font-bold', incomeDelta >= 0 ? 'text-[#059669]' : 'text-[#E11D48]')}>
-                      {incomeDelta >= 0 ? `+${formatCurrency(incomeDelta)}` : formatCurrency(incomeDelta)}/mo
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="-20000"
-                    max="50000"
-                    step="2500"
-                    value={incomeDelta}
-                    aria-labelledby="income-delta-label"
-                    aria-label="Monthly inflow delta"
-                    aria-valuemin={-20000}
-                    aria-valuemax={50000}
-                    aria-valuenow={incomeDelta}
-                    onChange={(e) => setIncomeDelta(Number(e.target.value))}
-                    className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
-                  />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
-                    <span>-₹20k (Cut)</span>
-                    <span>Baseline (₹0)</span>
-                    <span>+₹50k (Raise)</span>
-                  </div>
-                </div>
+            {/* Food Cut Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-[#20212B]">Dining Out & Food Delivery Cut:</span>
+                <span className="font-mono text-[#E76D7A]">{foodCut}% Reduction</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="5"
+                value={foodCut}
+                onChange={(e) => setFoodCut(Number(e.target.value))}
+                className="w-full accent-[#6865E8] cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-[#77798A]">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+              </div>
+            </div>
 
-                {/* 3. Discretionary Expense Optimization Cuts */}
-                <div className="space-y-4 pt-4 border-t border-[#E4E2DC]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10.5px] font-mono font-bold text-[#898390] uppercase tracking-wider">
-                      Discretionary Expense Cuts
-                    </span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
-                      Direct Retained Cash
-                    </span>
-                  </div>
+            {/* Shopping Cut Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-[#20212B]">Shopping & Discretionary Goods Cut:</span>
+                <span className="font-mono text-[#E76D7A]">{shoppingCut}% Reduction</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="5"
+                value={shoppingCut}
+                onChange={(e) => setShoppingCut(Number(e.target.value))}
+                className="w-full accent-[#6865E8] cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-[#77798A]">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+              </div>
+            </div>
 
-                  {/* Food Cut */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#191522]" id="food-cut-label">Food & Dining Optimization</span>
-                      <span className="font-mono font-bold text-[#E11D48]">-{foodCut}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="60"
-                      step="5"
-                      value={foodCut}
-                      aria-labelledby="food-cut-label"
-                      aria-label="Food and dining expense reduction percentage"
-                      aria-valuemin={0}
-                      aria-valuemax={60}
-                      aria-valuenow={foodCut}
-                      onChange={(e) => setFoodCut(Number(e.target.value))}
-                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
-                    />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
-                      <span>0% (As-is)</span>
-                      <span>30%</span>
-                      <span>60% (Strict)</span>
-                    </div>
-                  </div>
-
-                  {/* Shopping Cut */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#191522]" id="shopping-cut-label">Shopping & Lifestyle Optimization</span>
-                      <span className="font-mono font-bold text-[#E11D48]">-{shoppingCut}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="60"
-                      step="5"
-                      value={shoppingCut}
-                      aria-labelledby="shopping-cut-label"
-                      aria-label="Shopping and lifestyle expense reduction percentage"
-                      aria-valuemin={0}
-                      aria-valuemax={60}
-                      aria-valuenow={shoppingCut}
-                      onChange={(e) => setShoppingCut(Number(e.target.value))}
-                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
-                    />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
-                      <span>0% (As-is)</span>
-                      <span>30%</span>
-                      <span>60% (Strict)</span>
-                    </div>
-                  </div>
-
-                  {/* Transport Cut */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#191522]" id="transport-cut-label">Transport / Cabs Optimization</span>
-                      <span className="font-mono font-bold text-[#E11D48]">-{transportCut}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="50"
-                      step="5"
-                      value={transportCut}
-                      aria-labelledby="transport-cut-label"
-                      aria-label="Transport and cabs expense reduction percentage"
-                      aria-valuemin={0}
-                      aria-valuemax={50}
-                      aria-valuenow={transportCut}
-                      onChange={(e) => setTransportCut(Number(e.target.value))}
-                      className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
-                    />
-                    <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
-                      <span>0%</span>
-                      <span>25%</span>
-                      <span>50%</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. Direct Additional Monthly SIP Investment */}
-                <div className="space-y-2 pt-4 border-t border-[#E4E2DC]">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#191522]" id="extra-sip-label">Additional Monthly SIP</span>
-                    <span className="font-mono font-bold text-[#2563EB]">
-                      +{formatCurrency(extraSavings)}/mo
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="30000"
-                    step="1000"
-                    value={extraSavings}
-                    aria-labelledby="extra-sip-label"
-                    aria-label="Additional monthly SIP investment amount"
-                    aria-valuemin={0}
-                    aria-valuemax={30000}
-                    aria-valuenow={extraSavings}
-                    onChange={(e) => setExtraSavings(Number(e.target.value))}
-                    className="w-full accent-[#2563EB] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
-                  />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
-                    <span>₹0</span>
-                    <span>₹15,000</span>
-                    <span>₹30,000/mo</span>
-                  </div>
-                </div>
-
-                {/* 5. Additional Accelerated Debt Paydown */}
-                <div className="space-y-2 pt-4 border-t border-[#E4E2DC]">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-black text-[#191522]" id="extra-debt-label">Extra Debt Principal Paydown</span>
-                    <span className="font-mono font-bold text-[#D97706]">
-                      +{formatCurrency(extraDebt)}/mo
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="25000"
-                    step="1000"
-                    value={extraDebt}
-                    aria-labelledby="extra-debt-label"
-                    aria-label="Additional monthly debt principal paydown amount"
-                    aria-valuemin={0}
-                    aria-valuemax={25000}
-                    aria-valuenow={extraDebt}
-                    onChange={(e) => setExtraDebt(Number(e.target.value))}
-                    className="w-full accent-[#D97706] cursor-pointer h-2 bg-slate-200 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#D97706] focus-visible:ring-offset-2"
-                  />
-                  <div className="flex justify-between text-[10px] font-mono text-[#898390]" aria-hidden="true">
-                    <span>₹0</span>
-                    <span>₹12,500</span>
-                    <span>₹25,000/mo</span>
-                  </div>
-                </div>
+            {/* Transport Cut Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-[#20212B]">Cabs & Commute Optimization:</span>
+                <span className="font-mono text-[#E76D7A]">{transportCut}% Reduction</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="5"
+                value={transportCut}
+                onChange={(e) => setTransportCut(Number(e.target.value))}
+                className="w-full accent-[#6865E8] cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-[#77798A]">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: LIVE DETERMINISTIC PROJECTION & GOALS VELOCITY (7 COLS) */}
-          <div className="lg:col-span-7 space-y-5">
-            {/* 1. Category Reductions Ledger */}
-            <div className="p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E2DFD7] shadow-sm">
-              <div className="p-5 sm:p-6 rounded-[22px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-4">
-                <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-                  <div>
-                    <h3 className="text-sm font-black text-[#191522] tracking-tight">
-                      Discretionary Retained Cash Flow
-                    </h3>
-                    <span className="text-[10.5px] text-[#625D69] font-medium">
-                      Calculated monthly optimization per category
-                    </span>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-[#059669] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60">
-                    Total Retained: +{formatCurrency(simResults?.category_reductions?.reduce((acc: number, c: any) => acc + c.monthly_saved, 0) || 0)}/mo
-                  </span>
+          {/* CAPITAL SHIFTS */}
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                  <TrendingUp className="h-4 w-4" />
                 </div>
-
-                <div className="space-y-2.5">
-                  {(simResults?.category_reductions || []).map((cat: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-2xl bg-white border border-[#E4E2DC] flex items-center justify-between shadow-2xs hover:border-[#2563EB]/40 transition-all"
-                    >
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-black text-[#191522] block">{cat.category}</span>
-                        <span className="text-[11px] text-[#625D69] font-mono">
-                          Base: {formatCurrency(cat.current_monthly_spend)}/mo • Cut: {cat.reduction_pct}%
-                        </span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-xs font-mono font-black text-[#059669] block">
-                          +{formatCurrency(cat.monthly_saved)}/mo
-                        </span>
-                        <span className="text-[10.5px] text-[#898390] font-mono">
-                          {formatCurrency(cat.total_saved_over_horizon)} in {timeframeMonths}M
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                <div>
+                  <h3 className="text-base font-bold text-[#20212B]">Strategic Capital Inflows</h3>
+                  <p className="text-xs text-[#77798A]">Model salary increments, freelancing, and SIP boosts</p>
                 </div>
               </div>
             </div>
 
-            {/* 2. Savings Goals Acceleration Impact */}
-            <div className="p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E2DFD7] shadow-sm">
-              <div className="p-5 sm:p-6 rounded-[22px] border border-[#ECE9E0] bg-[#FBFBFA] space-y-4">
-                <div className="flex items-center justify-between border-b border-[#E4E2DC] pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-                      <Target className="h-4 w-4 text-[#059669]" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-black text-[#191522] tracking-tight">
-                        Savings Goals Milestone Acceleration
-                      </h3>
-                      <span className="text-[10.5px] text-[#625D69] font-medium">
-                        50% of simulated monthly surplus routed to active goals
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {(simResults?.goal_impacts || []).length === 0 ? (
-                  <div className="p-8 rounded-2xl border border-dashed border-[#E4E2DC] text-center space-y-2 bg-white">
-                    <Target className="h-8 w-8 text-[#898390] mx-auto stroke-1" />
-                    <p className="text-xs font-bold text-[#191522]">No active savings goals found</p>
-                    <p className="text-[11px] text-[#625D69]">
-                      Create capital goals in the Goals section to see timeline acceleration and completion pull-forward!
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {simResults.goal_impacts.map((g: any) => (
-                      <div
-                        key={g.goal_id}
-                        className="p-4 rounded-2xl bg-white border border-[#E4E2DC] space-y-2.5 shadow-2xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-black text-[#191522]">{g.title}</span>
-                          {g.months_saved > 0 ? (
-                            <span className="text-[10.5px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                              ✓ {g.months_saved} Months Earlier!
-                            </span>
-                          ) : (
-                            <Badge variant="neutral" size="sm">On Schedule</Badge>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 pt-2 text-xs font-mono border-t border-[#E4E2DC]">
-                          <div>
-                            <span className="text-[10px] text-[#898390] block uppercase font-sans font-bold">
-                              Baseline Target
-                            </span>
-                            <span className="font-bold text-[#625D69]">{g.baseline_finish_date}</span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-[#059669] block uppercase font-sans font-bold">
-                              Accelerated Completion
-                            </span>
-                            <span className="font-bold text-[#059669]">{g.simulated_finish_date}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Income Delta Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-[#20212B]">Monthly Income Shift:</span>
+                <span className="font-mono text-[#16745C]">
+                  {incomeDelta >= 0 ? `+${formatCurrency(incomeDelta)}` : formatCurrency(incomeDelta)} / mo
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-20000"
+                max="50000"
+                step="2500"
+                value={incomeDelta}
+                onChange={(e) => setIncomeDelta(Number(e.target.value))}
+                className="w-full accent-[#6865E8] cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-[#77798A]">
+                <span>-₹20k</span>
+                <span>0</span>
+                <span>+₹50k</span>
               </div>
             </div>
 
-            {/* 3. Compounded Wealth Growth Engine (12% CAGR Benchmark) */}
-            <div className="p-1.5 sm:p-2 rounded-[28px] bg-white border border-[#E2DFD7] shadow-sm">
-              <div className="p-5 sm:p-6 rounded-[22px] bg-gradient-to-br from-[#2A1F3D] to-[#1E162D] text-white shadow-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-emerald-400" />
-                    <div>
-                      <h4 className="text-xs font-black tracking-tight text-white uppercase">
-                        Compounded SIP Wealth Creation (12% CAGR Benchmark)
-                      </h4>
-                      <span className="text-[10px] text-slate-300">
-                        Monthly surplus compounded continuously over institutional horizons
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[9.5px] font-mono font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 rounded-md">
-                    Deterministic Math
-                  </span>
-                </div>
+            {/* Extra SIP Savings */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-[#20212B]">Extra Monthly SIP Allocation:</span>
+                <span className="font-mono text-[#6865E8]">+{formatCurrency(extraSavings)} / mo</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="30000"
+                step="1000"
+                value={extraSavings}
+                onChange={(e) => setExtraSavings(Number(e.target.value))}
+                className="w-full accent-[#6865E8] cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-[#77798A]">
+                <span>₹0</span>
+                <span>₹15k</span>
+                <span>₹30k</span>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">
-                      3-Year Horizon Corpus
-                    </span>
-                    <div className="text-xl font-mono font-black text-white">
-                      {formatCurrency(simResults?.compounded_growth?.three_year_horizon?.simulated_corpus || 0)}
-                    </div>
-                    <span className="text-[11px] font-mono text-emerald-400 font-bold block">
-                      +{formatCurrency(simResults?.compounded_growth?.three_year_horizon?.additional_wealth || 0)} extra boost
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block">
-                      5-Year Horizon Corpus
-                    </span>
-                    <div className="text-xl font-mono font-black text-emerald-400">
-                      {formatCurrency(simResults?.compounded_growth?.five_year_horizon?.simulated_corpus || 0)}
-                    </div>
-                    <span className="text-[11px] font-mono text-emerald-300 font-bold block">
-                      +{formatCurrency(simResults?.compounded_growth?.five_year_horizon?.additional_wealth || 0)} extra boost
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-[11.5px] text-slate-300 font-medium leading-relaxed pt-1">
-                  💡 By maintaining this simulated monthly surplus of <strong className="text-white font-mono">{formatCurrency(simResults?.simulated?.monthly_surplus || 0)}</strong>, your retained capital continuously accelerates your financial independence timeline.
-                </p>
+            {/* Timeframe Selector */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-[#20212B]">Simulation Horizon:</span>
+                <span className="font-mono text-[#20212B]">{timeframeMonths} Months</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[6, 12, 24, 36].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setTimeframeMonths(m)}
+                    className={cn(
+                      'py-2 rounded-xl text-xs font-bold transition-all',
+                      timeframeMonths === m
+                        ? 'bg-[#6865E8] text-white shadow-xs'
+                        : 'bg-[#F8F7FC] text-[#77798A] hover:text-[#20212B]'
+                    )}
+                  >
+                    {m} Mo
+                  </button>
+                ))}
               </div>
             </div>
           </div>

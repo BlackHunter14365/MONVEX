@@ -314,6 +314,17 @@ export default function RegisterPage() {
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             <span>{isSubmitting ? 'Creating account...' : 'Create Account'}</span>
           </button>
+
+          <div className="pt-2.5 text-center text-[11px] text-[#898390] leading-relaxed">
+            By creating an account, you agree to our{' '}
+            <Link href="/terms-of-service" className="text-[#191522] underline hover:text-[#2563EB] transition-colors font-medium">
+              Terms of Service
+            </Link>{' '}
+            and acknowledge our{' '}
+            <Link href="/privacy-policy" className="text-[#191522] underline hover:text-[#2563EB] transition-colors font-medium">
+              Privacy Policy
+            </Link>.
+          </div>
         </form>
 
         {/* SSO Divider */}

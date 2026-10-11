@@ -21,11 +21,17 @@ import { useToast } from '@/context/ToastContext';
 import { useSpeechRecognition } from '@/lib/useSpeechRecognition';
 import { PRESET_AVATARS } from '@/components/profile/UserProfileModal';
 
+import { useAIConversationsQuery } from '@/hooks/queries/useAIConversationsQuery';
+import { useAnalyticsQuery } from '@/hooks/queries/useAnalyticsQuery';
+
 export default function AIPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [summary, setSummary] = useState<any>(null);
+  const { data: analyticsData } = useAnalyticsQuery();
+  const summary = analyticsData?.summary || null;
+  const { data: convList, refetch: fetchRealAIHistory } = useAIConversationsQuery();
+
   const [messages, setMessages] = useState<DesktopChatMessage[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [inputQuery, setInputQuery] = useState('');
@@ -49,22 +55,17 @@ export default function AIPage() {
   // Real Chat History from Backend
   const [chatHistory, setChatHistory] = useState<DesktopChatSessionHistory[]>([]);
 
-  const fetchRealAIHistory = async () => {
-    try {
-      const convList = await api.getAIConversations();
-      if (Array.isArray(convList) && convList.length > 0) {
-        const mapped: DesktopChatSessionHistory[] = convList.map((c: any, idx: number) => ({
-          id: c.id,
-          title: c.title || 'Financial Inquiry',
-          dateGroup: idx === 0 ? 'Today' : idx < 4 ? 'Yesterday' : 'Previous 7 Days',
-          pinned: c.is_pinned || false,
-        }));
-        setChatHistory(mapped);
-      }
-    } catch {
-      // ignore
+  useEffect(() => {
+    if (Array.isArray(convList) && convList.length > 0) {
+      const mapped: DesktopChatSessionHistory[] = convList.map((c: any, idx: number) => ({
+        id: c.id,
+        title: c.title || 'Financial Inquiry',
+        dateGroup: idx === 0 ? 'Today' : idx < 4 ? 'Yesterday' : 'Previous 7 Days',
+        pinned: c.is_pinned || false,
+      }));
+      setChatHistory(mapped);
     }
-  };
+  }, [convList]);
 
   const handleSelectConversation = async (convId: string) => {
     try {
@@ -117,10 +118,6 @@ export default function AIPage() {
     }
   };
 
-  useEffect(() => {
-    fetchRealAIHistory();
-  }, [user]);
-
   // Voice Recognition Hook
   const {
     isListening: isRecording,
@@ -132,10 +129,6 @@ export default function AIPage() {
       setInputQuery(liveText);
     },
   });
-
-  useEffect(() => {
-    api.getAnalyticsSummary().then(setSummary).catch(() => null);
-  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

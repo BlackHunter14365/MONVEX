@@ -87,6 +87,7 @@ export class HttpClient {
             'Content-Type': 'application/json',
             'X-Client-Platform': 'web',
           },
+          credentials: 'include',
           body: JSON.stringify({ refresh: refreshToken }),
         });
 
@@ -157,6 +158,7 @@ export class HttpClient {
 
     const res = await fetch(`${API_BASE}${cleanEndpoint}`, {
       ...options,
+      credentials: options.credentials || 'include',
       headers,
     });
 
@@ -172,6 +174,7 @@ export class HttpClient {
           };
           const retryRes = await fetch(`${API_BASE}${cleanEndpoint}`, {
             ...options,
+            credentials: options.credentials || 'include',
             headers: retryHeaders,
           });
 

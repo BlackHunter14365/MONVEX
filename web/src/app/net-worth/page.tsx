@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   TrendingUp,
   ShieldCheck,
@@ -31,13 +31,13 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
+import { useNetWorthQuery } from '@/hooks/queries/useNetWorthQuery';
 
 export default function NetWorthPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [netWorthData, setNetWorthData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: netWorthData, isLoading, refetch: fetchNetWorth } = useNetWorthQuery();
 
   // Add Asset Modal State
   const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
@@ -55,22 +55,6 @@ export default function NetWorthPage() {
   const [liabRate, setLiabRate] = useState('10.5');
   const [liabTenure, setLiabTenure] = useState('24');
   const [isSavingLiab, setIsSavingLiab] = useState(false);
-
-  const fetchNetWorth = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getNetWorth();
-      setNetWorthData(data);
-    } catch {
-      toast.error('Failed to load net worth balance sheet.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNetWorth();
-  }, []);
 
   const handleCreateAsset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,27 +132,21 @@ export default function NetWorthPage() {
   const netWorth = parseFloat(netWorthData?.net_worth) || (totalAssets - totalLiabilities);
   const debtToAsset = totalAssets > 0 ? (totalLiabilities / totalAssets) * 100 : 0;
 
-  // Asset classes allocation calculation
   const assetsList = netWorthData?.assets_list || [];
   const liabilitiesList = netWorthData?.liabilities_list || [];
-
-  const assetAllocation: Record<string, number> = assetsList.reduce((acc: Record<string, number>, item: any) => {
-    const val = parseFloat(item.value) || 0;
-    const type = item.asset_type || 'OTHER';
-    acc[type] = (acc[type] || 0) + val;
-    return acc;
-  }, {});
 
   const getAssetIcon = (type: string) => {
     switch (type) {
       case 'BANK':
         return Landmark;
-      case 'EQUITY':
-        return TrendingUp;
-      case 'CRYPTO':
-        return Coins;
       case 'REAL_ESTATE':
         return Building;
+      case 'INVESTMENT':
+      case 'STOCKS':
+        return TrendingUp;
+      case 'CRYPTO':
+      case 'GOLD':
+        return Coins;
       default:
         return Wallet;
     }
@@ -176,36 +154,28 @@ export default function NetWorthPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         <PageHeader
-          title="Balance Sheet & Capital Allocation"
-          description="Double-entry institutional accounting ledger detailing liquid reserves, capital assets, and liabilities."
+          eyebrow="SOLVENCY ACCOUNTING"
+          title="Personal Balance Sheet & Net Worth"
+          description="Comprehensive solvency accounting: asset inventories, outstanding liabilities, leverage ratios, and wealth preservation."
           actionSlot={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={fetchNetWorth}
-                leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isLoading ? 'animate-spin' : '')} />}
-                className="text-xs font-bold"
-              >
-                Refresh
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                size="md"
                 onClick={() => setIsAddLiabOpen(true)}
-                leftIcon={<Plus className="h-3.5 w-3.5 text-[#E11D48]" />}
-                className="text-xs font-bold text-[#E11D48] border-[#FECDD3] hover:bg-[#FFF1F2]"
+                leftIcon={<Plus className="h-4 w-4 text-[#E76D7A]" />}
+                className="rounded-2xl border-[#E7E6F0] hover:bg-[#FEF2F2] text-[#20212B]"
               >
                 Add Liability
               </Button>
               <Button
                 variant="primary"
-                size="sm"
+                size="md"
                 onClick={() => setIsAddAssetOpen(true)}
-                leftIcon={<Plus className="h-3.5 w-3.5" />}
-                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-md"
+                leftIcon={<Plus className="h-4 w-4" />}
+                className="bg-[#6865E8] hover:bg-[#5b58db] text-white rounded-2xl shadow-xs"
               >
                 Add Asset
               </Button>
@@ -214,431 +184,407 @@ export default function NetWorthPage() {
         />
 
         {/* =========================================================================
-            1. BALANCE SHEET EQUATION HERO (Double Bezel)
+            1. TOP 3 NET WORTH SUMMARY CARDS (Aurora Glass)
             ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              {/* Left 7 cols: Equation */}
-              <div className="lg:col-span-7 space-y-3">
-                <div className="flex items-center gap-2 text-[#898390]">
-                  <Scale className="h-4 w-4 text-[#4056A1]" />
-                  <span className="text-[11px] font-mono uppercase tracking-wider font-bold">
-                    The Solvency Equation
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3 sm:gap-6">
-                  <div className="min-w-[110px]">
-                    <span className="text-[10px] font-mono text-[#898390] block uppercase">Total Assets</span>
-                    <FinancialAmount amount={totalAssets} currency={user?.currency} size="xl" showSign={false} />
-                  </div>
-
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#F6F5F1] border border-[#E4E2DC] flex items-center justify-center text-sm sm:text-base font-black text-[#898390] shrink-0">
-                    −
-                  </div>
-
-                  <div className="min-w-[110px]">
-                    <span className="text-[10px] font-mono text-[#898390] block uppercase">Total Liabilities</span>
-                    <FinancialAmount amount={-totalLiabilities} currency={user?.currency} size="xl" showSign={false} />
-                  </div>
-
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#F6F5F1] border border-[#E4E2DC] flex items-center justify-center text-sm sm:text-base font-black text-[#898390] shrink-0">
-                    =
-                  </div>
-
-                  <div className="min-w-[110px]">
-                    <span className="text-[10px] font-mono text-[#4056A1] block uppercase font-bold">Net Standing</span>
-                    <FinancialAmount amount={netWorth} currency={user?.currency} size="2xl" showSign={true} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right 5 cols: Telemetry ratios */}
-              <div className="lg:col-span-5 grid grid-cols-2 gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#E4E2DC] lg:pl-6">
-                <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1">
-                  <span className="text-[10px] font-mono text-[#625D69] block uppercase">Solvency Ratio</span>
-                  <div className="text-lg font-mono font-black text-[#191522] tnum">
-                    {totalLiabilities > 0 ? `${(totalAssets / totalLiabilities).toFixed(2)}x` : '100% Free'}
-                  </div>
-                  <span className="text-[10px] text-[#059669] font-bold">
-                    {debtToAsset < 30 ? 'Low Leverage' : debtToAsset < 60 ? 'Moderate Risk' : 'High Leverage'}
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1">
-                  <span className="text-[10px] font-mono text-[#625D69] block uppercase">Debt-to-Asset</span>
-                  <div className="text-lg font-mono font-black text-[#2563EB] tnum">
-                    {debtToAsset.toFixed(1)}%
-                  </div>
-                  <span className="text-[10px] text-[#625D69] font-medium">
-                    {liabilitiesList.length} Active Debts
-                  </span>
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                Consolidated Net Worth
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Scale className="h-4 w-4" />
               </div>
             </div>
+            <div>
+              <FinancialAmount
+                amount={netWorth}
+                currency={user?.currency}
+                size="2xl"
+                type={netWorth >= 0 ? 'income' : 'expense'}
+              />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Total Assets minus Liabilities</p>
+            </div>
+          </div>
 
-            {/* Asset Class Allocation Bar */}
-            {totalAssets > 0 && (
-              <div className="mt-6 pt-5 border-t border-[#E4E2DC] space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-[#191522]">Asset Class Distribution</span>
-                  <span className="text-[11px] font-mono text-[#898390]">{assetsList.length} registered positions</span>
-                </div>
-
-                <div className="h-2.5 w-full bg-[#E4E2DC] rounded-full overflow-hidden flex">
-                  {Object.entries(assetAllocation).map(([type, val], idx) => {
-                    const widthPct = (val / totalAssets) * 100;
-                    const colors = ['bg-[#059669]', 'bg-[#2563EB]', 'bg-[#D97706]', 'bg-[#7C3AED]', 'bg-[#0D9488]', 'bg-[#64748B]'];
-                    return (
-                      <div
-                        key={type}
-                        className={cn('h-full transition-all', colors[idx % colors.length])}
-                        style={{ width: `${widthPct}%` }}
-                        title={`${type}: ${widthPct.toFixed(1)}%`}
-                      />
-                    );
-                  })}
-                </div>
-
-                <div className="flex flex-wrap gap-4 pt-1 text-[11px]">
-                  {Object.entries(assetAllocation).map(([type, val], idx) => {
-                    const widthPct = (val / totalAssets) * 100;
-                    const dotColors = ['bg-[#059669]', 'bg-[#2563EB]', 'bg-[#D97706]', 'bg-[#7C3AED]', 'bg-[#0D9488]', 'bg-[#64748B]'];
-                    return (
-                      <div key={type} className="flex items-center gap-1.5 font-mono">
-                        <span className={cn('h-2 w-2 rounded-full', dotColors[idx % dotColors.length])} />
-                        <span className="text-[#625D69]">{type}:</span>
-                        <span className="font-bold text-[#191522] tnum">{widthPct.toFixed(0)}%</span>
-                      </div>
-                    );
-                  })}
-                </div>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Gross Asset Value
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <Landmark className="h-4 w-4" />
               </div>
-            )}
+            </div>
+            <div>
+              <FinancialAmount
+                amount={totalAssets}
+                currency={user?.currency}
+                size="2xl"
+                type="income"
+              />
+              <p className="text-xs text-[#16745C] font-semibold mt-1">
+                {assetsList.length} registered asset positions
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#E76D7A]">
+                Total Liabilities & Debt
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                <CreditCard className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount
+                amount={totalLiabilities}
+                currency={user?.currency}
+                size="2xl"
+                type="expense"
+              />
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FDEEF0] text-[#E76D7A]">
+                  {debtToAsset.toFixed(1)}% Debt-to-Asset
+                </span>
+                <span className="text-xs text-[#77798A]">ratio</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* =========================================================================
             2. TWO-COLUMN BALANCE SHEET LEDGER
             ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* ASSETS COLUMN (6 cols) */}
-          <div className="lg:col-span-6 space-y-4">
-            <div className="double-bezel">
-              <div className="double-bezel-inner p-5 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E4E2DC]">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#059669]">
-                      <Landmark className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                        Asset Portfolio
-                      </h3>
-                      <span className="text-[10px] text-[#898390] block">{assetsList.length} verified positions</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsAddAssetOpen(true)}
-                    className="text-xs font-bold text-[#059669] hover:underline"
-                  >
-                    + Add Position
-                  </button>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          {/* ASSETS COLUMN */}
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                  <Landmark className="h-4 w-4" />
                 </div>
-
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-14 w-full rounded-xl" />
-                    <Skeleton className="h-14 w-full rounded-xl" />
-                  </div>
-                ) : assetsList.length === 0 ? (
-                  <EmptyState
-                    title="No assets registered"
-                    description="Record bank deposits, investment holdings, or real properties."
-                    actionLabel="Add First Asset"
-                    onAction={() => setIsAddAssetOpen(true)}
-                  />
-                ) : (
-                  <div className="space-y-2.5">
-                    {assetsList.map((a: any) => {
-                      const Icon = getAssetIcon(a.asset_type);
-                      return (
-                        <div
-                          key={a.id}
-                          className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-[#E4E2DC] hover:border-[#CBD5E1] transition-all"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F6F5F1] text-[#4056A1]">
-                              <Icon className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-[#191522]">{a.name}</span>
-                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#2563EB] uppercase">
-                                  {a.asset_type}
-                                </span>
-                              </div>
-                              <span className="text-[10px] font-mono text-[#898390] block">
-                                {a.institution || 'Liquid Holding'}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <FinancialAmount amount={parseFloat(a.value)} currency={user?.currency} size="sm" showSign={false} />
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteAsset(a.id)}
-                              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                              aria-label={`Delete asset position ${a.name}`}
-                              title="Delete position"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <div>
+                  <h3 className="text-base font-bold text-[#20212B]">Asset Holdings</h3>
+                  <p className="text-xs text-[#77798A]">Cash, investments, equity, and property</p>
+                </div>
               </div>
+              <span className="text-xs font-mono font-bold text-[#16745C]">
+                {formatCurrency(totalAssets, user?.currency)}
+              </span>
             </div>
+
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-20 w-full rounded-2xl" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
+              </div>
+            ) : assetsList.length === 0 ? (
+              <EmptyState
+                title="No assets recorded"
+                description="Register cash reserves, real estate, stocks, or retirement funds to build your solvency record."
+                actionLabel="Add Asset"
+                onAction={() => setIsAddAssetOpen(true)}
+              />
+            ) : (
+              <div className="space-y-3">
+                {assetsList.map((asset: any) => {
+                  const Icon = getAssetIcon(asset.asset_type);
+                  return (
+                    <div
+                      key={asset.id}
+                      className="p-4 rounded-2xl bg-white border border-[#E7E6F0] hover:border-[#6865E8]/30 transition-all flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-10 w-10 rounded-xl bg-[#E8FBF4] text-[#16745C] flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-sm font-bold text-[#20212B] block truncate">
+                            {asset.name}
+                          </span>
+                          <span className="text-[11px] text-[#77798A] block">
+                            {asset.institution || asset.asset_type}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <span className="text-sm font-mono font-bold text-[#16745C] block">
+                            {formatCurrency(asset.value, user?.currency)}
+                          </span>
+                          <span className="text-[10px] font-mono text-[#77798A] uppercase">
+                            {asset.asset_type}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteAsset(asset.id)}
+                          className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#E76D7A] hover:bg-[#FEF2F2] transition-colors"
+                          aria-label={`Remove asset ${asset.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* LIABILITIES COLUMN (6 cols) */}
-          <div className="lg:col-span-6 space-y-4">
-            <div className="double-bezel">
-              <div className="double-bezel-inner p-5 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E4E2DC]">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FFF1F2] text-[#E11D48]">
-                      <CreditCard className="h-4 w-4" aria-hidden="true" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                        Liabilities & Debt
-                      </h3>
-                      <span className="text-[10px] text-[#898390] block">{liabilitiesList.length} outstanding accounts</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsAddLiabOpen(true)}
-                    className="text-xs font-bold text-[#DC2626] hover:underline"
-                  >
-                    + Add Debt
-                  </button>
+          {/* LIABILITIES COLUMN */}
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                  <CreditCard className="h-4 w-4" />
                 </div>
-
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-14 w-full rounded-xl" />
-                    <Skeleton className="h-14 w-full rounded-xl" />
-                  </div>
-                ) : liabilitiesList.length === 0 ? (
-                  <EmptyState
-                    title="Zero outstanding debt"
-                    description="Your personal balance sheet is completely debt-free."
-                    actionLabel="Add Debt If Needed"
-                    onAction={() => setIsAddLiabOpen(true)}
-                  />
-                ) : (
-                  <div className="space-y-2.5">
-                    {liabilitiesList.map((l: any) => {
-                      const balance = parseFloat(l.remaining_balance || l.principal_amount) || 0;
-                      return (
-                        <div
-                          key={l.id}
-                          className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-[#E4E2DC] hover:border-[#CBD5E1] transition-all"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF1F2] text-[#E11D48]">
-                              <CreditCard className="h-4 w-4" aria-hidden="true" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-[#191522]">{l.name}</span>
-                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FEF2F2] text-[#DC2626] uppercase">
-                                  {l.liability_type}
-                                </span>
-                              </div>
-                              <span className="text-[10px] font-mono text-[#898390] block">
-                                {l.interest_rate_pct}% APR • {l.tenure_months} mo tenure
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <FinancialAmount amount={-balance} currency={user?.currency} size="sm" showSign={false} />
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteLiability(l.id)}
-                              className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-[#898390] hover:text-[#DC2626] hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                              aria-label={`Delete liability ${l.name}`}
-                              title="Delete liability"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <div>
+                  <h3 className="text-base font-bold text-[#20212B]">Outstanding Liabilities</h3>
+                  <p className="text-xs text-[#77798A]">Loans, mortgages, and revolving obligations</p>
+                </div>
               </div>
+              <span className="text-xs font-mono font-bold text-[#E76D7A]">
+                {formatCurrency(totalLiabilities, user?.currency)}
+              </span>
             </div>
+
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-20 w-full rounded-2xl" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
+              </div>
+            ) : liabilitiesList.length === 0 ? (
+              <EmptyState
+                title="Zero debt obligations recorded"
+                description="No outstanding loans or mortgages found. Register liabilities to model payoff velocity."
+                actionLabel="Add Liability"
+                onAction={() => setIsAddLiabOpen(true)}
+              />
+            ) : (
+              <div className="space-y-3">
+                {liabilitiesList.map((liab: any) => (
+                  <div
+                    key={liab.id}
+                    className="p-4 rounded-2xl bg-white border border-[#E7E6F0] hover:border-[#E76D7A]/30 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-xl bg-[#FDEEF0] text-[#E76D7A] flex items-center justify-center shrink-0">
+                        <CreditCard className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-sm font-bold text-[#20212B] block truncate">
+                          {liab.name}
+                        </span>
+                        <span className="text-[11px] text-[#77798A] block">
+                          {liab.interest_rate_pct}% APR · {liab.tenure_months || 24}mo tenure
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <span className="text-sm font-mono font-bold text-[#E76D7A] block">
+                          {formatCurrency(liab.remaining_balance || liab.principal_amount, user?.currency)}
+                        </span>
+                        <span className="text-[10px] font-mono text-[#77798A] uppercase">
+                          {liab.liability_type}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteLiability(liab.id)}
+                        className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-[#77798A] hover:text-[#E76D7A] hover:bg-[#FEF2F2] transition-colors"
+                        aria-label={`Remove liability ${liab.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ADD ASSET MODAL */}
-        <Modal isOpen={isAddAssetOpen} onClose={() => setIsAddAssetOpen(false)} title="Register Balance Sheet Asset">
-          <form onSubmit={handleCreateAsset} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Asset Label</label>
+        {/* Modal: Add Asset */}
+        <Modal
+          isOpen={isAddAssetOpen}
+          onClose={() => setIsAddAssetOpen(false)}
+          title="Register Asset Holding"
+          description="Add a positive balance position to your solvency balance sheet."
+        >
+          <form onSubmit={handleCreateAsset} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Asset Title</label>
               <input
                 type="text"
                 required
                 value={assetName}
                 onChange={(e) => setAssetName(e.target.value)}
-                placeholder="e.g. HDFC Fixed Deposit, Index Fund Portfolio"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                placeholder="e.g. HDFC Savings, Zerodha Equities, Primary Residence"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Asset Class</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Asset Class</label>
                 <select
                   value={assetType}
                   onChange={(e) => setAssetType(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 >
-                  <option value="BANK">Bank Deposit / Cash</option>
-                  <option value="EQUITY">Stocks / Mutual Funds</option>
-                  <option value="REAL_ESTATE">Real Estate</option>
+                  <option value="BANK">Bank Account / Cash</option>
+                  <option value="INVESTMENT">Investment / Mutual Fund</option>
+                  <option value="STOCKS">Equity / Stocks</option>
+                  <option value="REAL_ESTATE">Real Estate / Property</option>
                   <option value="CRYPTO">Crypto Assets</option>
-                  <option value="GOLD">Gold / Sovereign Bonds</option>
-                  <option value="OTHER">Other Tangible Capital</option>
+                  <option value="GOLD">Physical Gold / Sovereign Bonds</option>
+                  <option value="OTHER">Other Tangible Asset</option>
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Valuation Amount</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">
+                  Current Valuation ({user?.currency || 'INR'})
+                </label>
                 <input
                   type="number"
                   step="0.01"
                   required
                   value={assetValue}
                   onChange={(e) => setAssetValue(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  placeholder="e.g. 250000"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Institution / Custodian</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Custodian / Institution (Optional)</label>
               <input
                 type="text"
                 value={assetInstitution}
                 onChange={(e) => setAssetInstitution(e.target.value)}
-                placeholder="e.g. Zerodha, ICICI Bank, Ledger Vault"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                placeholder="e.g. HDFC Bank, Zerodha, Vanguard"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" size="sm" onClick={() => setIsAddAssetOpen(false)}>
+            <div className="pt-3 flex justify-end gap-2.5">
+              <Button variant="outline" size="md" onClick={() => setIsAddAssetOpen(false)} className="rounded-2xl">
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" type="submit" isLoading={isSavingAsset}>
-                Establish Position
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSavingAsset}
+                className="bg-[#6865E8] hover:bg-[#5b58db] rounded-2xl"
+              >
+                Save Asset
               </Button>
             </div>
           </form>
         </Modal>
 
-        {/* ADD LIABILITY MODAL */}
-        <Modal isOpen={isAddLiabOpen} onClose={() => setIsAddLiabOpen(false)} title="Record Liability or Debt Obligation">
-          <form onSubmit={handleCreateLiability} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-[#625D69] mb-1 block">Liability Name</label>
+        {/* Modal: Add Liability */}
+        <Modal
+          isOpen={isAddLiabOpen}
+          onClose={() => setIsAddLiabOpen(false)}
+          title="Register Debt Liability"
+          description="Record an outstanding debt obligation to compute amortized interest and balance sheet ratios."
+        >
+          <form onSubmit={handleCreateLiability} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#20212B] block">Liability Name</label>
               <input
                 type="text"
                 required
                 value={liabName}
                 onChange={(e) => setLiabName(e.target.value)}
-                placeholder="e.g. SBI Home Loan, Auto Loan"
-                className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                placeholder="e.g. Home Mortgage, Auto Loan, Education Loan"
+                className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Liability Type</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Debt Category</label>
                 <select
                   value={liabType}
                   onChange={(e) => setLiabType(e.target.value)}
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 >
-                  <option value="MORTGAGE">Home Loan / Mortgage</option>
-                  <option value="AUTO_LOAN">Auto Loan</option>
                   <option value="PERSONAL_LOAN">Personal Loan</option>
+                  <option value="HOME_LOAN">Home Mortgage</option>
+                  <option value="AUTO_LOAN">Auto Loan</option>
                   <option value="STUDENT_LOAN">Education Loan</option>
-                  <option value="CREDIT_CARD">Credit Card Outstanding</option>
-                  <option value="OTHER">Other Debt</option>
+                  <option value="CREDIT_CARD">Credit Card Debt</option>
+                  <option value="OTHER">Other Obligation</option>
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Principal Balance</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">
+                  Outstanding Balance ({user?.currency || 'INR'})
+                </label>
                 <input
                   type="number"
                   step="0.01"
                   required
                   value={liabPrincipal}
                   onChange={(e) => setLiabPrincipal(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  placeholder="e.g. 500000"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Interest Rate (% APR)</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Interest Rate (% APR)</label>
                 <input
                   type="number"
                   step="0.1"
+                  required
                   value={liabRate}
                   onChange={(e) => setLiabRate(e.target.value)}
-                  placeholder="8.5"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  placeholder="10.5"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#625D69] mb-1 block">Tenure (Months)</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#20212B] block">Remaining Tenure (Months)</label>
                 <input
                   type="number"
+                  required
                   value={liabTenure}
                   onChange={(e) => setLiabTenure(e.target.value)}
                   placeholder="24"
-                  className="w-full rounded-lg bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 text-xs font-mono font-medium text-[#191522] focus:outline-none focus:border-[#4056A1]"
+                  className="w-full rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] p-3 min-h-[48px] text-sm font-semibold text-[#20212B] focus:border-[#6865E8] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" size="sm" onClick={() => setIsAddLiabOpen(false)}>
+            <div className="pt-3 flex justify-end gap-2.5">
+              <Button variant="outline" size="md" onClick={() => setIsAddLiabOpen(false)} className="rounded-2xl">
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" type="submit" isLoading={isSavingLiab}>
-                Record Obligation
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={isSavingLiab}
+                className="bg-[#6865E8] hover:bg-[#5b58db] rounded-2xl"
+              >
+                Save Liability
               </Button>
             </div>
           </form>

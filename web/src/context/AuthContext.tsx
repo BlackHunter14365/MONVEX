@@ -95,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const profile = await api.getProfile();
       setUser(profile);
+      authStorage.saveUserProfile(profile);
       setAuthStatus('AUTHENTICATED');
       setSessionExpiredReasonState(null);
       authStorage.updateActivity(true);
@@ -125,6 +126,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const session = authStorage.getSession();
+      if (session && !authStorage.isInactive()) {
+        const cachedProfile = authStorage.getUserProfile();
+        if (cachedProfile) setUser(cachedProfile);
+        setAuthStatus('AUTHENTICATED');
+      } else if (authStorage.isInactive() || authStorage.getSessionExpiredReason()) {
+        setAuthStatus('SESSION_EXPIRED');
+        setSessionExpiredReasonState(authStorage.getSessionExpiredReason());
+      }
+    }
+
     refreshUser();
 
     const handleAuthLogout = () => {

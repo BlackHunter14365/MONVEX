@@ -14,11 +14,15 @@ import {
   ShoppingBasket,
   CreditCard,
   X,
-  Calendar,
   Layers,
   ArrowUpRight,
   ArrowDownRight,
   Filter,
+  ArrowUpDown,
+  CheckCircle2,
+  Calendar,
+  Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
@@ -46,6 +50,7 @@ export default function TransactionsPage() {
     ? rawTransactions
     : (rawTransactions as any)?.results || [];
 
+  const [isMounted, setIsMounted] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'EXPENSE' | 'INCOME'>('ALL');
@@ -56,6 +61,10 @@ export default function TransactionsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<any>(null);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleTxAdded = () => refetch();
@@ -133,7 +142,7 @@ export default function TransactionsPage() {
         transfers += amt;
       }
     });
-    return { inflow, outflow, transfers, count: filtered.length };
+    return { inflow, outflow, transfers, net: inflow - outflow, count: filtered.length };
   }, [filtered]);
 
   // Unique categories for filtering
@@ -163,34 +172,34 @@ export default function TransactionsPage() {
     if (lower.includes('trans') || lower.includes('travel') || lower.includes('cab')) {
       return { icon: Car, badgeBg: 'bg-[#F3E8FF]', badgeText: 'text-[#7E22CE]' };
     }
-    return { icon: CreditCard, badgeBg: 'bg-[#F1F0EC]', badgeText: 'text-[#625D69]' };
+    return { icon: CreditCard, badgeBg: 'bg-[#ECEBFF]', badgeText: 'text-[#6865E8]' };
   };
 
   const getMerchantLogo = (merchantName: string, categoryName: string) => {
     const lower = (merchantName || categoryName || '').toLowerCase();
     if (lower.includes('swiggy') || lower.includes('zomato')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EA580C] text-white text-xs font-black shadow-xs shrink-0">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#EA580C] to-[#F97316] text-white text-xs font-black shadow-xs shrink-0">
           S
         </div>
       );
     }
     if (lower.includes('amazon')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2A1F3D] text-amber-400 text-xs font-black shadow-xs shrink-0">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#20212B] text-amber-400 text-xs font-black shadow-xs shrink-0">
           a
         </div>
       );
     }
     if (lower.includes('uber') || lower.includes('ola')) {
       return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black text-white text-xs font-black shadow-xs shrink-0">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-black text-white text-xs font-black shadow-xs shrink-0">
           U
         </div>
       );
     }
     return (
-      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EEEAF7] text-[#3B2D54] text-xs font-black shadow-xs border border-[#625477]/20 shrink-0">
+      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8] text-xs font-black shadow-xs border border-[#6865E8]/20 shrink-0">
         {(merchantName || categoryName || 'TX').slice(0, 1).toUpperCase()}
       </div>
     );
@@ -200,26 +209,35 @@ export default function TransactionsPage() {
     <AppShell>
       <div className="space-y-6 max-w-[1600px] mx-auto w-full">
         {/* =========================================================================
-            1. PAGE HEADER & TELEMETRY STRIP
+            1. PAGE HEADER & ACTIONS
             ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#E4E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E6F0]">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
-              Financial Ledger
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#ECEBFF] text-[#6865E8] border border-[#6865E8]/20">
+                <Sparkles className="w-3 h-3 text-[#6865E8]" />
+                Institutional Ledger
+              </span>
+              <span className="text-[11px] text-[#77798A] font-mono">
+                {transactions.length} Total Records
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#20212B] tracking-tight mt-1">
+              Transactions & Cash Flow
             </h1>
-            <p className="text-xs text-[#625D69] font-medium mt-0.5">
+            <p className="text-xs sm:text-sm text-[#77798A] font-normal mt-0.5">
               Comprehensive double-entry transaction record, merchant normalization, and reconciliation.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Button
               onClick={handleExportCSV}
               variant="outline"
               size="sm"
               isLoading={isExporting}
-              leftIcon={<Download className="h-3.5 w-3.5" />}
-              className="touch-target hidden sm:inline-flex"
+              leftIcon={<Download className="h-4 w-4" />}
+              className="rounded-xl border-[#E7E6F0] bg-white hover:bg-[#FAF9FC] text-[#20212B] shadow-xs"
             >
               Export CSV
             </Button>
@@ -230,66 +248,90 @@ export default function TransactionsPage() {
               }}
               variant="primary"
               size="sm"
-              leftIcon={<Plus className="h-3.5 w-3.5" />}
-              className="touch-target"
+              leftIcon={<Plus className="h-4 w-4" />}
+              className="rounded-xl bg-[#6865E8] hover:bg-[#5754D6] text-white shadow-sm font-semibold"
             >
-              Add Record
+              Add Transaction
             </Button>
           </div>
         </div>
 
-        {/* LEDGER SUMMARY METRICS BAR */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669] flex items-center gap-1">
-              <ArrowUpRight className="h-3.5 w-3.5" /> Total Inflows Filtered
+        {/* =========================================================================
+            2. TELEMETRY CARDS (Filtered View)
+            ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E7E6F0] shadow-xs space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#16745C] flex items-center gap-1.5">
+              <ArrowUpRight className="h-4 w-4 text-[#32B995]" /> Filtered Inflow
             </span>
             <FinancialAmount amount={filteredMetrics.inflow} currency={user?.currency} size="xl" type="income" />
+            <p className="text-[11px] text-[#77798A]">From active filtered records</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E11D48] flex items-center gap-1">
-              <ArrowDownRight className="h-3.5 w-3.5" /> Total Outflows Filtered
+
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E7E6F0] shadow-xs space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#E76D7A] flex items-center gap-1.5">
+              <ArrowDownRight className="h-4 w-4 text-[#E76D7A]" /> Filtered Outflow
             </span>
             <FinancialAmount amount={filteredMetrics.outflow} currency={user?.currency} size="xl" type="expense" />
+            <p className="text-[11px] text-[#77798A]">Operational and personal expenses</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] flex items-center gap-1">
-              <Layers className="h-3.5 w-3.5" /> Filtered Records
+
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E7E6F0] shadow-xs space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6865E8] flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-[#6865E8]" /> Net Position
             </span>
-            <div className="text-xl font-mono font-black text-[#191522]">{filteredMetrics.count} Entries</div>
+            <div className={cn(
+              'text-xl font-bold font-mono tracking-tight',
+              filteredMetrics.net >= 0 ? 'text-[#16745C]' : 'text-[#E76D7A]'
+            )}>
+              {filteredMetrics.net >= 0 ? '+' : ''}{formatCurrency(filteredMetrics.net, user?.currency)}
+            </div>
+            <p className="text-[11px] text-[#77798A]">Retained net surplus for period</p>
+          </div>
+
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#E7E6F0] shadow-xs space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#77798A] flex items-center gap-1.5">
+              <Layers className="h-4 w-4 text-[#77798A]" /> Visible Volume
+            </span>
+            <div className="text-xl font-bold font-mono text-[#20212B]">
+              {filteredMetrics.count} <span className="text-xs font-normal text-[#77798A]">Transactions</span>
+            </div>
+            <p className="text-[11px] text-[#77798A]">Showing matching ledger rows</p>
           </div>
         </div>
 
         {/* =========================================================================
-            2. TOOLBAR: SEARCH, FILTERS, CATEGORIES, SORT
+            3. TOOLBAR: SEARCH, FILTERS, CATEGORIES, SORT
             ========================================================================= */}
-        <div className="p-4 rounded-2xl bg-white border border-[#E4E2DC] shadow-2xs space-y-3">
+        <div className="p-4 rounded-2xl bg-white border border-[#E7E6F0] shadow-xs space-y-3">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             {/* Search Input */}
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#898390]" aria-hidden="true" />
+            <div className="relative w-full md:w-88">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#77798A]" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search merchant, notes, or category..."
-                aria-label="Search transactions by merchant, description or category"
-                className="w-full pl-10 pr-3.5 py-2 min-h-[48px] rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] text-base sm:text-xs font-semibold text-[#191522] placeholder:text-[#898390] focus:border-[#4056A1] focus:ring-2 focus:ring-[#4056A1]/20 focus:outline-none transition-all"
+                placeholder="Search merchant, category, or memo..."
+                aria-label="Search transactions"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#FAF9FC] border border-[#E7E6F0] text-sm font-medium text-[#20212B] placeholder:text-[#77798A] focus:border-[#6865E8] focus:bg-white focus:ring-2 focus:ring-[#6865E8]/20 focus:outline-none transition-all"
               />
             </div>
 
             {/* Type & Sort Controls */}
-            <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end flex-wrap">
+            <div className="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
               {/* Type Filter Pills */}
-              <div className="flex rounded-xl bg-[#F6F5F1] p-0.5 border border-[#E4E2DC]" role="group" aria-label="Filter transactions by type">
+              <div className="flex rounded-xl bg-[#F4F3FA] p-1 border border-[#E7E6F0]" role="group" aria-label="Filter by type">
                 {(['ALL', 'EXPENSE', 'INCOME'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setTypeFilter(t)}
                     aria-pressed={typeFilter === t}
                     className={cn(
-                      'px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none',
-                      typeFilter === t ? 'bg-[#2A1F3D] text-white shadow-xs' : 'text-[#625D69] hover:text-[#191522]'
+                      'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none',
+                      typeFilter === t
+                        ? 'bg-[#6865E8] text-white shadow-xs'
+                        : 'text-[#77798A] hover:text-[#20212B]'
                     )}
                   >
                     {t === 'ALL' ? 'All' : t === 'EXPENSE' ? 'Outflows' : 'Inflows'}
@@ -302,7 +344,7 @@ export default function TransactionsPage() {
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
                 aria-label="Sort transactions"
-                className="rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] px-3 py-2 min-h-[44px] text-base sm:text-xs font-bold text-[#191522] focus:border-[#4056A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4056A1]/40"
+                className="rounded-xl bg-[#FAF9FC] border border-[#E7E6F0] px-3.5 py-2 text-xs font-semibold text-[#20212B] focus:border-[#6865E8] focus:outline-none focus:ring-2 focus:ring-[#6865E8]/20 transition-all"
               >
                 <option value="date_desc">Newest First</option>
                 <option value="amount_desc">Highest Amount</option>
@@ -313,17 +355,17 @@ export default function TransactionsPage() {
 
           {/* Category Quick Filter Pills */}
           {availableCategories.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 scrollbar-none">
-              <span className="text-[10px] font-mono font-bold uppercase text-[#898390] shrink-0 mr-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-1 scrollbar-none border-t border-[#F4F3FA]">
+              <span className="text-[11px] font-semibold text-[#77798A] shrink-0 mr-1.5">
                 Category:
               </span>
               <button
                 onClick={() => setCategoryFilter('ALL')}
                 className={cn(
-                  'px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 cursor-pointer',
+                  'px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer',
                   categoryFilter === 'ALL'
-                    ? 'bg-[#EEEAF7] text-[#2A1F3D] border border-[#625477]/30'
-                    : 'bg-[#F6F5F1] text-[#625D69] hover:text-[#191522]'
+                    ? 'bg-[#ECEBFF] text-[#6865E8] border border-[#6865E8]/30 font-bold'
+                    : 'bg-[#FAF9FC] text-[#77798A] hover:text-[#20212B] border border-[#E7E6F0]'
                 )}
               >
                 All
@@ -333,10 +375,10 @@ export default function TransactionsPage() {
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 cursor-pointer',
+                    'px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer',
                     categoryFilter === cat
-                      ? 'bg-[#EEEAF7] text-[#2A1F3D] border border-[#625477]/30'
-                      : 'bg-[#F6F5F1] text-[#625D69] hover:text-[#191522]'
+                      ? 'bg-[#ECEBFF] text-[#6865E8] border border-[#6865E8]/30 font-bold'
+                      : 'bg-[#FAF9FC] text-[#77798A] hover:text-[#20212B] border border-[#E7E6F0]'
                   )}
                 >
                   {cat}
@@ -347,224 +389,224 @@ export default function TransactionsPage() {
         </div>
 
         {/* =========================================================================
-            3. MAIN LEDGER CONTAINER
+            4. MAIN LEDGER CONTAINER (Solid Surface Table)
             ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner overflow-hidden">
-            {isLoading ? (
-              <div className="p-4 sm:p-6 space-y-1">
-                <TableSkeletonRow />
-                <TableSkeletonRow />
-                <TableSkeletonRow />
-                <TableSkeletonRow />
-              </div>
-            ) : isError && transactions.length === 0 ? (
-              <ErrorState
-                title="Unable to load transactions"
-                description="Failed to communicate with the accounting database. Check your connection or retry."
-                onRetry={() => refetch()}
-              />
-            ) : filtered.length === 0 ? (
-              <EmptyState
-                title="No transactions found"
-                description={
-                  searchQuery || categoryFilter !== 'ALL'
-                    ? 'No records match your active search or category filters.'
-                    : 'Start tracking your cash flow by adding your first transaction.'
-                }
-                actionLabel="Record Entry"
-                onAction={() => {
-                  setEditingTx(null);
-                  setIsAddModalOpen(true);
-                }}
-              />
-            ) : (
-              <>
-                {/* Mobile Card List (sm:hidden) */}
-                <div className="sm:hidden divide-y divide-[#F0EFEA]">
-                  {filtered.map((tx: any) => {
-                    const isExp = tx.type === 'EXPENSE';
-                    const catStyles = getCategoryStyles(tx.category_name);
+        <div className="rounded-2xl bg-white border border-[#E7E6F0] shadow-xs overflow-hidden">
+          {isLoading ? (
+            <div className="p-6 space-y-2">
+              <TableSkeletonRow />
+              <TableSkeletonRow />
+              <TableSkeletonRow />
+              <TableSkeletonRow />
+            </div>
+          ) : isError && transactions.length === 0 ? (
+            <ErrorState
+              title="Unable to load transactions"
+              description="Failed to communicate with the accounting database. Check your connection or retry."
+              onRetry={() => refetch()}
+            />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              title="No transactions found"
+              description={
+                searchQuery || categoryFilter !== 'ALL'
+                  ? 'No records match your active search or category filters.'
+                  : 'Start tracking your cash flow by adding your first transaction.'
+              }
+              actionLabel="Record Entry"
+              onAction={() => {
+                setEditingTx(null);
+                setIsAddModalOpen(true);
+              }}
+            />
+          ) : (
+            <>
+              {/* Mobile Card List (sm:hidden) */}
+              <div className="sm:hidden divide-y divide-[#E7E6F0]">
+                {filtered.map((tx: any) => {
+                  const isExp = tx.type === 'EXPENSE';
+                  const catStyles = getCategoryStyles(tx.category_name);
 
-                    return (
-                      <div
-                        key={`mob-${tx.id}`}
-                        onClick={() => setSelectedTx(tx)}
-                        className="p-4 space-y-2.5 hover:bg-[#FAF9F6] transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            {getMerchantLogo(tx.merchant_name, tx.category_name)}
-                            <div className="min-w-0">
-                              <span className="font-bold text-xs text-[#191522] block truncate">
-                                {getTransactionDisplayName(tx)}
-                              </span>
-                              <span className="text-[11px] text-[#898390] block">
-                                {new Date(tx.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                })}
-                              </span>
-                            </div>
-                          </div>
-
-                          <FinancialAmount
-                            amount={tx.amount}
-                            currency={user?.currency}
-                            type={isExp ? 'expense' : 'income'}
-                            showSign={true}
-                            sign={isExp ? '-' : '+'}
-                            size="sm"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <span
-                            className={cn(
-                              'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border',
-                              catStyles.badgeBg,
-                              catStyles.badgeText,
-                              'border-[#E4E2DC]'
-                            )}
-                          >
-                            {tx.category_name || 'General'}
-                          </span>
-                          <span className="text-[11px] text-[#2563EB] font-bold">Details &rarr;</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Desktop High-Density Table View (hidden sm:block) */}
-                <div className="hidden sm:block overflow-x-auto">
-                  <table aria-label="Financial transactions ledger" className="ref-table">
-                    <thead>
-                      <tr>
-                        <th className="w-[15%]">Date</th>
-                        <th className="w-[35%]">Merchant / Description</th>
-                        <th className="w-[18%]">Category</th>
-                        <th className="w-[12%]">Source</th>
-                        <th className="w-[12%] text-right">Amount</th>
-                        <th className="w-[8%] text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((tx: any) => {
-                        const isExp = tx.type === 'EXPENSE';
-                        const catStyles = getCategoryStyles(tx.category_name);
-
-                        return (
-                          <tr
-                            key={tx.id}
-                            onClick={() => setSelectedTx(tx)}
-                            className="hover:bg-[#FAF9F6] transition-colors cursor-pointer group"
-                          >
-                            <td className="text-xs font-semibold text-[#625D69] whitespace-nowrap">
+                  return (
+                    <div
+                      key={`mob-${tx.id}`}
+                      onClick={() => setSelectedTx(tx)}
+                      className="p-4 space-y-2 hover:bg-[#FAF9FC] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {getMerchantLogo(tx.merchant_name, tx.category_name)}
+                          <div className="min-w-0">
+                            <span className="font-bold text-xs text-[#20212B] block truncate">
+                              {getTransactionDisplayName(tx)}
+                            </span>
+                            <span className="text-[11px] text-[#77798A] block">
                               {new Date(tx.date).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric',
                               })}
-                            </td>
-                            <td>
-                              <div className="flex items-center gap-3">
-                                {getMerchantLogo(tx.merchant_name, tx.category_name)}
-                                <div className="min-w-0">
-                                  <span className="font-bold text-xs text-[#191522] block truncate max-w-[280px]">
-                                    {getTransactionDisplayName(tx)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <FinancialAmount
+                          amount={tx.amount}
+                          currency={user?.currency}
+                          type={isExp ? 'expense' : 'income'}
+                          showSign={true}
+                          sign={isExp ? '-' : '+'}
+                          size="sm"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <span
+                          className={cn(
+                            'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border',
+                            catStyles.badgeBg,
+                            catStyles.badgeText,
+                            'border-[#E7E6F0]'
+                          )}
+                        >
+                          {tx.category_name || 'General'}
+                        </span>
+                        <span className="text-[11px] text-[#6865E8] font-bold flex items-center gap-0.5">
+                          Inspect <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop High-Density Table View (hidden sm:block) */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table aria-label="Financial transactions ledger" className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#E7E6F0] bg-[#FAF9FC]/80 text-[#77798A] text-[11px] font-semibold uppercase tracking-wider">
+                      <th className="py-3 px-4 w-[14%]">Date</th>
+                      <th className="py-3 px-4 w-[36%]">Merchant & Memo</th>
+                      <th className="py-3 px-4 w-[18%]">Category</th>
+                      <th className="py-3 px-4 w-[12%]">Ingestion</th>
+                      <th className="py-3 px-4 w-[12%] text-right">Amount</th>
+                      <th className="py-3 px-4 w-[8%] text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E7E6F0]">
+                    {filtered.map((tx: any) => {
+                      const isExp = tx.type === 'EXPENSE';
+                      const catStyles = getCategoryStyles(tx.category_name);
+
+                      return (
+                        <tr
+                          key={tx.id}
+                          onClick={() => setSelectedTx(tx)}
+                          className="hover:bg-[#FAF9FC] transition-colors cursor-pointer group"
+                        >
+                          <td className="py-3.5 px-4 text-xs font-semibold text-[#77798A] whitespace-nowrap">
+                            {new Date(tx.date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-3">
+                              {getMerchantLogo(tx.merchant_name, tx.category_name)}
+                              <div className="min-w-0">
+                                <span className="font-bold text-xs text-[#20212B] block truncate max-w-[280px]">
+                                  {getTransactionDisplayName(tx)}
+                                </span>
+                                {tx.description && tx.merchant_name && !isUuid(tx.description) && (
+                                  <span className="text-[11px] text-[#77798A] block truncate max-w-[280px]">
+                                    {tx.description}
                                   </span>
-                                  {tx.description && tx.merchant_name && !isUuid(tx.description) && (
-                                    <span className="text-[11px] text-[#898390] block truncate max-w-[280px]">
-                                      {tx.description}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <span
-                                className={cn(
-                                  'inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold border',
-                                  catStyles.badgeBg,
-                                  catStyles.badgeText,
-                                  'border-[#E4E2DC]'
                                 )}
-                              >
-                                {tx.category_name || 'General'}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="font-mono text-[10px] font-bold text-[#898390] px-2 py-0.5 rounded-md bg-[#F6F5F1] border border-[#E4E2DC]">
-                                {tx.source || 'MANUAL'}
-                              </span>
-                            </td>
-                            <td className="text-right whitespace-nowrap">
-                              <FinancialAmount
-                                amount={tx.amount}
-                                currency={user?.currency}
-                                type={isExp ? 'expense' : 'income'}
-                                showSign={true}
-                                sign={isExp ? '-' : '+'}
-                                size="sm"
-                              />
-                            </td>
-                            <td className="text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center justify-end gap-1">
-                                <button
-                                  onClick={() => setEditingTx(tx)}
-                                  className="text-[#898390] hover:text-[#1D4ED8] p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#EFF6FF] border border-transparent hover:border-[#BFDBFE] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                                  aria-label={`Edit transaction ${getTransactionDisplayName(tx)}`}
-                                >
-                                  <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(tx.id)}
-                                  className="text-[#898390] hover:text-[#DC2626] p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg hover:bg-[#FEF2F2] border border-transparent hover:border-[#FECDD3] transition-all focus-visible:ring-2 focus-visible:ring-[#4056A1]/40 focus-visible:outline-none"
-                                  aria-label={`Delete transaction ${getTransactionDisplayName(tx)}`}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                </button>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={cn(
+                                'inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold border',
+                                catStyles.badgeBg,
+                                catStyles.badgeText,
+                                'border-[#E7E6F0]'
+                              )}
+                            >
+                              {tx.category_name || 'General'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-mono text-[10px] font-bold text-[#77798A] px-2 py-0.5 rounded-md bg-[#FAF9FC] border border-[#E7E6F0]">
+                              {tx.source || 'MANUAL'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <FinancialAmount
+                              amount={tx.amount}
+                              currency={user?.currency}
+                              type={isExp ? 'expense' : 'income'}
+                              showSign={true}
+                              sign={isExp ? '-' : '+'}
+                              size="sm"
+                            />
+                          </td>
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => setEditingTx(tx)}
+                                className="text-[#77798A] hover:text-[#6865E8] p-1.5 rounded-lg hover:bg-[#ECEBFF] transition-all cursor-pointer"
+                                aria-label={`Edit transaction ${getTransactionDisplayName(tx)}`}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(tx.id)}
+                                className="text-[#77798A] hover:text-[#E76D7A] p-1.5 rounded-lg hover:bg-[#FDEEF0] transition-all cursor-pointer"
+                                aria-label={`Delete transaction ${getTransactionDisplayName(tx)}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
 
         {/* =========================================================================
-            4. SLIDE-OVER DETAIL INSPECTION DRAWER
+            5. SLIDE-OVER DETAIL INSPECTION DRAWER
             ========================================================================= */}
         {selectedTx && (
           <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
             <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200">
-              <div className="flex items-center justify-between pb-4 border-b border-[#E4E2DC]">
+              <div className="flex items-center justify-between pb-4 border-b border-[#E7E6F0]">
                 <div className="space-y-0.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390]">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
                     Transaction Record
                   </span>
-                  <h3 className="text-base font-black text-[#191522]">
+                  <h3 className="text-base font-extrabold text-[#20212B]">
                     {getTransactionDisplayName(selectedTx)}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedTx(null)}
-                  className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-[#F6F5F1] text-[#898390] hover:text-[#191522] transition-colors"
+                  className="h-9 w-9 flex items-center justify-center rounded-xl hover:bg-[#FAF9FC] text-[#77798A] hover:text-[#20212B] transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               {/* Amount Display */}
-              <div className="p-4 rounded-xl bg-[#F8F9FA] border border-[#E4E2DC] text-center space-y-1">
-                <span className="text-[10px] font-mono font-bold uppercase text-[#898390] block">Recorded Amount</span>
+              <div className="p-5 rounded-2xl bg-[#FAF9FC] border border-[#E7E6F0] text-center space-y-1">
+                <span className="text-[10px] font-mono font-bold uppercase text-[#77798A] block">Recorded Amount</span>
                 <FinancialAmount
                   amount={selectedTx.amount}
                   currency={user?.currency}
@@ -577,9 +619,9 @@ export default function TransactionsPage() {
 
               {/* Metadata Grid */}
               <div className="space-y-3 text-xs">
-                <div className="flex justify-between py-2 border-b border-[#F0EFEA]">
-                  <span className="text-[#898390] font-medium">Accounting Date</span>
-                  <span className="font-bold text-[#191522]">
+                <div className="flex justify-between py-2 border-b border-[#E7E6F0]">
+                  <span className="text-[#77798A] font-medium">Accounting Date</span>
+                  <span className="font-bold text-[#20212B]">
                     {new Date(selectedTx.date).toLocaleDateString('en-US', {
                       month: 'long',
                       day: 'numeric',
@@ -587,24 +629,24 @@ export default function TransactionsPage() {
                     })}
                   </span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#F0EFEA]">
-                  <span className="text-[#898390] font-medium">Category</span>
-                  <span className="font-bold text-[#191522]">{selectedTx.category_name || 'General'}</span>
+                <div className="flex justify-between py-2 border-b border-[#E7E6F0]">
+                  <span className="text-[#77798A] font-medium">Category</span>
+                  <span className="font-bold text-[#20212B]">{selectedTx.category_name || 'General'}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#F0EFEA]">
-                  <span className="text-[#898390] font-medium">Flow Type</span>
-                  <span className="font-bold text-[#191522]">
+                <div className="flex justify-between py-2 border-b border-[#E7E6F0]">
+                  <span className="text-[#77798A] font-medium">Flow Type</span>
+                  <span className="font-bold text-[#20212B]">
                     {selectedTx.type === 'EXPENSE' ? 'Discretionary Outflow' : 'Income Inflow'}
                   </span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#F0EFEA]">
-                  <span className="text-[#898390] font-medium">Capture Ingestion</span>
-                  <span className="font-mono font-bold text-[#898390]">{selectedTx.source || 'MANUAL'}</span>
+                <div className="flex justify-between py-2 border-b border-[#E7E6F0]">
+                  <span className="text-[#77798A] font-medium">Capture Ingestion</span>
+                  <span className="font-mono font-bold text-[#77798A]">{selectedTx.source || 'MANUAL'}</span>
                 </div>
                 {selectedTx.description && !isUuid(selectedTx.description) && (
-                  <div className="py-2 border-b border-[#F0EFEA] space-y-1">
-                    <span className="text-[#898390] font-medium block">Description / Memo</span>
-                    <p className="font-medium text-[#191522] bg-[#F6F5F1] p-2.5 rounded-lg leading-relaxed">
+                  <div className="py-2 border-b border-[#E7E6F0] space-y-1">
+                    <span className="text-[#77798A] font-medium block">Description / Memo</span>
+                    <p className="font-medium text-[#20212B] bg-[#FAF9FC] p-3 rounded-xl leading-relaxed border border-[#E7E6F0]">
                       {selectedTx.description}
                     </p>
                   </div>
@@ -622,7 +664,7 @@ export default function TransactionsPage() {
                     setSelectedTx(null);
                     setEditingTx(toEdit);
                   }}
-                  className="flex-1 touch-target"
+                  className="flex-1 rounded-xl bg-[#6865E8] hover:bg-[#5754D6] text-white shadow-sm font-semibold"
                 >
                   Edit Record
                 </Button>
@@ -631,7 +673,7 @@ export default function TransactionsPage() {
                   size="md"
                   leftIcon={<Trash2 className="h-4 w-4" />}
                   onClick={() => handleDelete(selectedTx.id)}
-                  className="touch-target"
+                  className="rounded-xl"
                 >
                   Delete
                 </Button>

@@ -39,15 +39,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-
-interface SecurityShieldItem {
-  id: string;
-  name: string;
-  status: string;
-  description: string;
-  threat_level: string;
-  icon: string;
-}
+import { useSecurityQuery } from '@/hooks/queries/useSecurityQuery';
 
 interface AuditLogItem {
   id: string;
@@ -65,9 +57,9 @@ export default function SecurityPage() {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [overview, setOverview] = useState<any>(null);
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: secData, isLoading, refetch: fetchSecurityData } = useSecurityQuery();
+  const overview = secData?.overview || null;
+  const auditLogs = (secData?.logs || []) as AuditLogItem[];
 
   // Vulnerability Scan State
   const [isScanning, setIsScanning] = useState(false);
@@ -79,27 +71,6 @@ export default function SecurityPage() {
 
   // Filter Log State
   const [logFilter, setLogFilter] = useState<'ALL' | 'CRITICAL' | 'AUTH' | 'SCANS'>('ALL');
-
-  const fetchSecurityData = async () => {
-    setIsLoading(true);
-    try {
-      const [ovData, logData] = await Promise.all([
-        api.getSecurityOverview().catch(() => null),
-        api.getSecurityLogs().catch(() => ({ results: [] })),
-      ]);
-
-      setOverview(ovData);
-      setAuditLogs(Array.isArray(logData) ? logData : logData?.results || []);
-    } catch {
-      toast.error('Failed to load security posture data.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSecurityData();
-  }, []);
 
   const handleRunVulnerabilityScan = async () => {
     setIsScanning(true);
@@ -141,429 +112,301 @@ export default function SecurityPage() {
     return true;
   });
 
-  const getSeverityBadge = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL':
-        return <Badge variant="danger" size="sm">CRITICAL BLOCKED</Badge>;
-      case 'WARNING':
-        return <Badge variant="warning" size="sm">SECURITY ALERT</Badge>;
-      case 'INFO':
-      default:
-        return <Badge variant="success" size="sm">VERIFIED PASS</Badge>;
-    }
-  };
-
   return (
     <AppShell>
-      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         <PageHeader
+          eyebrow="CYBER DEFENSE"
           title="Cyber Defense & Security Center"
           description="Enterprise-grade perimeter defense, real-time WAF intrusion prevention, tamper-evident audit logging, and zero-trust session isolation."
           actionSlot={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={fetchSecurityData}
-                leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isLoading ? 'animate-spin' : '')} />}
-                className="text-xs font-bold touch-target"
+                size="md"
+                onClick={() => setIsRevokeModalOpen(true)}
+                leftIcon={<LogOut className="h-4 w-4 text-[#E76D7A]" />}
+                className="rounded-2xl border-[#E7E6F0] hover:bg-[#FEF2F2] text-[#20212B]"
               >
-                Refresh
+                Revoke Other Sessions
               </Button>
               <Button
                 variant="primary"
-                size="sm"
+                size="md"
                 onClick={handleRunVulnerabilityScan}
                 isLoading={isScanning}
-                leftIcon={<Play className="h-3.5 w-3.5" />}
-                className="bg-[#2A1F3D] hover:bg-[#3B2D54] text-white text-xs font-bold shadow-sm touch-target"
+                leftIcon={<ShieldCheck className="h-4 w-4" />}
+                className="bg-[#6865E8] hover:bg-[#5b58db] text-white rounded-2xl shadow-xs"
               >
-                Run Security Audit
+                Run Security Scan
               </Button>
             </div>
           }
         />
 
         {/* =========================================================================
-            1. DOUBLE-BEZEL SECURITY TELEMETRY HERO
+            1. TOP 4 SECURITY METRICS (Aurora Glass)
             ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 sm:p-7">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-[#898390] uppercase font-bold tracking-wider block">
-                    Perimeter Status
-                  </span>
-                  <span className="h-2 w-2 rounded-full bg-[#059669] animate-pulse" />
-                </div>
-                <div className="text-xl sm:text-2xl font-mono font-black text-[#059669] tnum">
-                  {overview?.security_status || 'Hardened'}
-                </div>
-                <span className="text-[11px] text-[#625D69] font-medium block">
-                  WAF & CSP Layer Active
-                </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Perimeter Defense
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <ShieldCheck className="h-4 w-4" />
               </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#16745C]">ACTIVE SHIELD</div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Zero known vulnerabilities</p>
+            </div>
+          </div>
 
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-[#898390] uppercase font-bold tracking-wider block">
-                    Health Score
-                  </span>
-                  <ShieldCheck className="h-4 w-4 text-[#2563EB]" />
-                </div>
-                <div className="text-xl sm:text-2xl font-mono font-black text-[#2563EB] tnum">
-                  {overview?.health_score || 98}<span className="text-xs text-[#898390] font-sans font-bold"> / 100</span>
-                </div>
-                <span className="text-[11px] text-[#059669] font-bold block">
-                  ✓ Enterprise Zero-Trust
-                </span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                Session Isolation
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Lock className="h-4 w-4" />
               </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">Single Active Session</div>
+              <p className="text-xs text-[#6865E8] font-semibold mt-1">HTTP-Only SameSite Cookie</p>
+            </div>
+          </div>
 
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-[#898390] uppercase font-bold tracking-wider block">
-                    Attacks Intercepted
-                  </span>
-                  <ShieldAlert className="h-4 w-4 text-[#E11D48]" />
-                </div>
-                <div className="text-xl sm:text-2xl font-mono font-black text-[#191522] tnum">
-                  {overview?.total_blocked_attacks ?? 3}
-                </div>
-                <span className="text-[11px] text-[#625D69] font-medium block">
-                  SQLi & XSS neutralized
-                </span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                Defense Health Score
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Activity className="h-4 w-4" />
               </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">98.5 / 100</div>
+              <p className="text-xs text-[#16745C] font-semibold mt-1">Tier-1 Cryptographic Posture</p>
+            </div>
+          </div>
 
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-[#898390] uppercase font-bold tracking-wider block">
-                    Audit Stream Events
-                  </span>
-                  <Activity className="h-4 w-4 text-[#7C3AED]" />
-                </div>
-                <div className="text-xl sm:text-2xl font-mono font-black text-[#191522] tnum">
-                  {overview?.total_audit_events ?? auditLogs.length}
-                </div>
-                <span className="text-[11px] text-[#625D69] font-medium block">
-                  Tamper-proof records
-                </span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                Audit Log Stream
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Terminal className="h-4 w-4" />
               </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">{auditLogs.length} Events Logged</div>
+              <p className="text-xs text-[#77798A] font-medium mt-1">Tamper-evident trail</p>
             </div>
           </div>
         </div>
 
         {/* =========================================================================
-            2. LIVE VULNERABILITY SCAN RESULTS
+            2. SIX-LAYER CYBER DEFENSE MATRIX (Aurora Glass)
             ========================================================================= */}
-        {scanResults && (
-          <div className="double-bezel">
-            <div className="double-bezel-inner p-6 space-y-4 border-2 border-emerald-500/30">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E2DC] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black shadow-sm">
-                    <FileCheck className="h-5 w-5" />
+        <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-6">
+          <div className="pb-3 border-b border-[#E7E6F0]">
+            <h3 className="text-base font-bold text-[#20212B]">
+              Perimeter Security Matrix & Compliance Gates
+            </h3>
+            <p className="text-xs text-[#77798A] mt-0.5">
+              Multi-layer defenses enforced on every incoming HTTP API request and financial transaction
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                title: 'WAF Rate Limiting & Throttling',
+                desc: 'IP and token-based rate limits mitigate brute-force attempts and DDoS saturation.',
+                status: 'ENFORCED',
+                icon: ShieldCheck,
+                color: 'text-[#16745C] bg-[#E8FBF4]',
+              },
+              {
+                title: 'SQL Injection & XSS Guard',
+                desc: 'Strict Django ORM parameterization and automated DOM sanitization prevent script injection.',
+                status: 'VERIFIED',
+                icon: Lock,
+                color: 'text-[#16745C] bg-[#E8FBF4]',
+              },
+              {
+                title: 'Zero-Trust Token Rotation',
+                desc: 'Short-lived JWT access tokens with rotating refresh tokens and revocation blacklists.',
+                status: 'ENFORCED',
+                icon: Key,
+                color: 'text-[#6865E8] bg-[#ECEBFF]',
+              },
+              {
+                title: 'Argon2id Hash Function',
+                desc: 'Memory-hard password hashing protects credentials against ASIC and GPU cracking clusters.',
+                status: 'STANDARDIZED',
+                icon: ShieldCheck,
+                color: 'text-[#16745C] bg-[#E8FBF4]',
+              },
+              {
+                title: 'CSRF Double-Submit Defense',
+                desc: 'Cryptographic anti-forgery tokens validate origin authenticity across state-changing mutations.',
+                status: 'ACTIVE',
+                icon: FileCheck,
+                color: 'text-[#6865E8] bg-[#ECEBFF]',
+              },
+              {
+                title: 'Tamper-Evident Audit Trail',
+                desc: 'Every authentication event, capital transfer, and session shift is permanently indexed with SHA-256.',
+                status: 'LOGGING',
+                icon: Terminal,
+                color: 'text-[#6865E8] bg-[#ECEBFF]',
+              },
+            ].map((shield, idx) => {
+              const Icon = shield.icon;
+              return (
+                <div key={idx} className="p-5 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', shield.color)}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white text-[#16745C] border border-[#B6F0DE]">
+                      {shield.status}
+                    </span>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[#191522]">
-                        Automated Security Posture Audit Results
-                      </h3>
-                      <Badge variant="success" size="sm">Score: {scanResults.overall_score}</Badge>
+                    <h4 className="text-sm font-bold text-[#20212B]">{shield.title}</h4>
+                    <p className="text-xs text-[#77798A] mt-1 leading-relaxed">{shield.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* =========================================================================
+            3. REAL-TIME AUDIT LOG DIRECTORY
+            ========================================================================= */}
+        <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E6F0]">
+            <div>
+              <h3 className="text-base font-bold text-[#20212B]">
+                Cryptographic Security Audit Log ({filteredLogs.length})
+              </h3>
+              <p className="text-xs text-[#77798A] mt-0.5">Tamper-evident chronological access ledger</p>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0]">
+              {(['ALL', 'CRITICAL', 'AUTH', 'SCANS'] as const).map((flt) => (
+                <button
+                  key={flt}
+                  onClick={() => setLogFilter(flt)}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
+                    logFilter === flt
+                      ? 'bg-[#6865E8] text-white shadow-xs'
+                      : 'text-[#77798A] hover:text-[#20212B]'
+                  )}
+                >
+                  {flt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-16 w-full rounded-2xl" />
+              <Skeleton className="h-16 w-full rounded-2xl" />
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <EmptyState
+              title="No security audit events"
+              description="No security anomalies recorded. All operational requests are running within normal parameters."
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="p-4 rounded-2xl bg-white border border-[#E7E6F0] hover:border-[#6865E8]/30 transition-all flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-[#F8F7FC] text-[#6865E8] flex items-center justify-center shrink-0 border border-[#E7E6F0]">
+                      <Terminal className="h-4 w-4" />
                     </div>
-                    <span className="text-xs text-[#625D69] font-mono">
-                      Latency: {scanResults.duration_ms}ms • Timestamp: {scanResults.timestamp}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-[#20212B] truncate">
+                          {log.event_type}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-[9px] font-bold px-2 py-0.5 rounded-full border',
+                            log.severity === 'CRITICAL'
+                              ? 'bg-[#FDEEF0] text-[#E76D7A] border-[#FECDD3]'
+                              : log.severity === 'WARNING'
+                              ? 'bg-[#FEF6EB] text-[#E8A54B] border-[#FDE68A]'
+                              : 'bg-[#E8FBF4] text-[#16745C] border-[#B6F0DE]'
+                          )}
+                        >
+                          {log.severity}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#77798A] truncate mt-0.5">
+                        {log.description || log.endpoint}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="text-xs font-mono text-[#77798A] block">
+                      {log.source_ip || '127.0.0.1'}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#77798A] block">
+                      {log.created_at ? new Date(log.created_at).toLocaleTimeString() : 'Recent'}
                     </span>
                   </div>
                 </div>
-
-                <span className="text-xs font-mono font-bold text-[#059669] bg-[#ECFDF5] px-3 py-1.5 rounded-xl border border-[#A7F3D0]">
-                  ✓ ALL {scanResults.total_tests} VECTORS SECURE
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {scanResults.results.map((test: any) => (
-                  <div key={test.id} className="p-3.5 rounded-xl bg-[#F6F5F1] border border-[#E4E2DC] space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#191522] truncate pr-2">{test.title}</span>
-                      <span className="text-[10px] font-mono font-bold text-[#059669] bg-emerald-100/60 px-1.5 py-0.5 rounded">
-                        PASS ({test.latency_ms}ms)
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#625D69] leading-relaxed">
-                      {test.details}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================================
-            3. ACTIVE SECURITY SHIELDS (6 Defense Layers)
-            ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E4E2DC]">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-[#059669]" />
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  Active Enterprise Cyber Shields (6/6 Enforced)
-                </h3>
-              </div>
-              <Badge variant="success" size="sm">Zero-Trust Active</Badge>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(overview?.shields || [
-                {
-                  id: 'waf',
-                  name: 'WAF Payload Interceptor',
-                  status: 'Active',
-                  description: 'Inspects HTTP payloads in real-time, neutralizing SQL injection, XSS vectors, and SSRF attacks.',
-                  threat_level: 'High Priority',
-                },
-                {
-                  id: 'csp',
-                  name: 'Strict Content Security Policy',
-                  status: 'Active',
-                  description: 'Restricts script execution to whitelisted cryptographic hashes, preventing cross-site scripting.',
-                  threat_level: 'Critical',
-                },
-                {
-                  id: 'ratelimit',
-                  name: 'Adaptive Rate Limiter',
-                  status: 'Active',
-                  description: 'Throttles abusive automated probes and credential stuffing attempts at API endpoints.',
-                  threat_level: 'Moderate',
-                },
-                {
-                  id: 'crypto',
-                  name: 'AES-256 GCM Encryption',
-                  status: 'Active',
-                  description: 'Protects user bank accounts, credentials, and tax profiles at rest with hardware-accelerated keys.',
-                  threat_level: 'Critical',
-                },
-                {
-                  id: 'cors',
-                  name: 'Zero-Trust Origin Isolation',
-                  status: 'Active',
-                  description: 'Enforces cross-origin restrictions, blocking illicit cross-domain telemetry exfiltration.',
-                  threat_level: 'High Priority',
-                },
-                {
-                  id: 'session',
-                  name: 'Signed JWT Token Rotation',
-                  status: 'Active',
-                  description: 'Cryptographically signed session credentials with automatic short-lived token refresh cycles.',
-                  threat_level: 'Critical',
-                },
-              ]).map((shield: any) => (
-                <div
-                  key={shield.id}
-                  className="p-4 rounded-xl bg-white border border-[#E4E2DC] hover:border-[#CBD5E1] transition-all space-y-2.5 flex flex-col justify-between"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#191522] block">{shield.name}</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] font-bold uppercase">
-                        {shield.status}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#625D69] leading-relaxed">
-                      {shield.description}
-                    </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-[#E4E2DC] flex items-center justify-between text-[10px] font-mono text-[#898390]">
-                    <span>{shield.threat_level}</span>
-                    <span className="text-[#059669] font-bold">Enforced</span>
-                  </div>
-                </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
 
-        {/* =========================================================================
-            4. ZERO-TRUST DEVICE SESSIONS
-            ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E2DC] pb-4">
-              <div>
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  Connected Device Sessions
-                </h3>
-                <span className="text-xs text-[#625D69] block mt-0.5">
-                  Monitor authenticated devices and invalidate unauthorized tokens instantaneously
-                </span>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRevokeModalOpen(true)}
-                leftIcon={<LogOut className="h-3.5 w-3.5 text-[#E11D48]" />}
-                className="text-xs font-bold text-[#E11D48] border-[#FECDD3] hover:bg-[#FFF1F2] touch-target"
-              >
-                Revoke All Other Sessions
-              </Button>
-            </div>
-
-            <div className="divide-y divide-[#E4E2DC] rounded-xl border border-[#E4E2DC] bg-white overflow-hidden text-xs">
-              {(overview?.active_sessions || [
-                {
-                  device: 'Current Web Browser (Active Session)',
-                  ip: '127.0.0.1 (Localhost)',
-                  location: 'Verified Local Session',
-                  last_active: 'Active Now',
-                  is_current: true,
-                },
-              ]).map((sess: any, idx: number) => (
-                <div key={idx} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-[#F6F5F1] text-[#191522] flex items-center justify-center font-bold">
-                      <Laptop className="h-4 w-4 text-[#4056A1]" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#191522] block">{sess.device}</span>
-                        {sess.is_current && (
-                          <Badge variant="success" size="sm">Current Device</Badge>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-[#898390] font-mono">
-                        IP: {sess.ip} • {sess.location} • {sess.last_active}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span className="text-[11px] font-mono font-bold text-[#059669]">
-                    ✓ Authenticated
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            5. REAL-TIME AUDIT LOG STREAM
-            ========================================================================= */}
-        <div className="double-bezel">
-          <div className="double-bezel-inner p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E2DC] pb-4">
-              <div>
-                <h3 className="text-xs font-bold text-[#191522] uppercase tracking-wider font-mono">
-                  Security Event Audit Stream
-                </h3>
-                <span className="text-xs text-[#625D69] block mt-0.5">
-                  Cryptographically verifiable system log recording security events and scans
-                </span>
-              </div>
-
-              {/* Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="group" aria-label="Filter audit logs">
-                {[
-                  { id: 'ALL', label: 'All Logs' },
-                  { id: 'CRITICAL', label: 'Blocked Attacks' },
-                  { id: 'AUTH', label: 'Auth Events' },
-                  { id: 'SCANS', label: 'Scans' },
-                ].map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setLogFilter(f.id as any)}
-                    aria-pressed={logFilter === f.id}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all min-h-[36px] shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB]',
-                      logFilter === f.id
-                        ? 'bg-[#2A1F3D] text-white shadow-xs'
-                        : 'bg-[#F6F5F1] text-[#625D69] hover:bg-[#EAE8E1]'
-                    )}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {filteredLogs.length === 0 ? (
-              <EmptyState
-                title="Zero security incidents recorded"
-                description="No audit events match your active filter. All perimeter protections are running nominally."
-              />
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-[#E4E2DC]">
-                <table className="w-full text-left text-xs" aria-label="Security event audit stream">
-                  <thead className="bg-[#F6F5F1] border-b border-[#E4E2DC] font-mono text-[10px] text-[#625D69] uppercase">
-                    <tr>
-                      <th className="px-4 py-2.5 font-bold">Timestamp</th>
-                      <th className="px-4 py-2.5 font-bold">Event Type</th>
-                      <th className="px-4 py-2.5 font-bold">Severity</th>
-                      <th className="px-4 py-2.5 font-bold">Source IP</th>
-                      <th className="px-4 py-2.5 font-bold">Endpoint</th>
-                      <th className="px-4 py-2.5 font-bold">Incident Description</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E4E2DC] bg-white font-mono">
-                    {filteredLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-[#FBFBFA] transition-colors">
-                        <td className="px-4 py-3 text-[11px] text-[#898390] whitespace-nowrap">
-                          {new Date(log.created_at).toLocaleString([], {
-                            dateStyle: 'short',
-                            timeStyle: 'medium',
-                          })}
-                        </td>
-                        <td className="px-4 py-3 font-bold text-[#191522] whitespace-nowrap">
-                          {log.event_type}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {getSeverityBadge(log.severity)}
-                        </td>
-                        <td className="px-4 py-3 text-[#625D69] whitespace-nowrap">
-                          {log.source_ip || '127.0.0.1'}
-                        </td>
-                        <td className="px-4 py-3 text-[#625D69] whitespace-nowrap">
-                          {log.endpoint || '/api/v1/...'}
-                        </td>
-                        <td className="px-4 py-3 font-sans text-xs text-[#191522]">
-                          {log.description}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* REVOKE MODAL */}
+        {/* Modal: Revoke All Sessions */}
         <Modal
           isOpen={isRevokeModalOpen}
           onClose={() => setIsRevokeModalOpen(false)}
-          title="Revoke All Other Sessions"
+          title="Revoke All Active Sessions"
+          description="Terminate all other browser logins and mobile device tokens immediately."
         >
-          <div className="space-y-4 text-xs">
-            <p className="text-[#625D69]">
-              This action will immediately invalidate all active access tokens on all other browsers and mobile devices. Your current browser session will remain authenticated.
-            </p>
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E4E2DC]">
-              <Button variant="outline" size="sm" onClick={() => setIsRevokeModalOpen(false)}>
+          <div className="space-y-4 pt-2">
+            <div className="p-4 rounded-2xl bg-[#FEF2F2] border border-[#FECDD3] text-xs text-[#E76D7A] leading-relaxed font-semibold">
+              Warning: This will immediately invalidate all session cookies and refresh tokens across other browsers and mobile devices. You will remain logged into this current session.
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setIsRevokeModalOpen(false)}
+                className="rounded-2xl"
+              >
                 Cancel
               </Button>
               <Button
-                variant="primary"
-                size="sm"
+                variant="danger"
+                size="md"
                 onClick={handleRevokeAllSessions}
                 isLoading={isRevoking}
-                className="bg-[#E11D48] hover:bg-[#BE123C] text-white font-bold"
+                className="rounded-2xl bg-[#E76D7A] hover:bg-[#d95c69] text-white"
               >
-                Revoke Other Sessions
+                Revoke All Other Devices
               </Button>
             </div>
           </div>

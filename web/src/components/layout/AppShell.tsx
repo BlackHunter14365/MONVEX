@@ -22,12 +22,35 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const pathname = usePathname();
   const isAIPage = pathname === '/ai';
   const { isAuthenticated, isLoading, refreshUser } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    setIsMounted(true);
+  }, []);
+
+  const PUBLIC_PATHS = [
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/privacy-policy',
+    '/terms-of-service',
+    '/cookie-policy',
+    '/financial-disclaimer',
+    '/security-overview',
+    '/about',
+    '/help',
+    '/contact',
+    '/not-found',
+  ];
+
+  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || (p !== '/' && pathname?.startsWith(p)));
+
+  useEffect(() => {
+    if (isMounted && !isLoading && !isAuthenticated && !isPublicPath) {
       router.replace('/login');
     }
     const handleOpenModal = () => setIsAddTxOpen(true);
@@ -52,12 +75,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       window.removeEventListener('monvex:open-mobile-drawer', handleOpenMobileDrawer);
       window.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [isLoading, isAuthenticated, router]);
+  }, [isMounted, isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
+  if (!isMounted || isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 space-y-3">
-        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-xs border border-[#E4E2DC] bg-white p-1 animate-pulse">
+        <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-xs border border-[#E7E6F0] bg-white p-1 animate-pulse">
           <img src="/logo.png" alt="MONVEX" className="h-full w-full object-contain" />
         </div>
         <div className="w-40 space-y-2">
@@ -73,7 +96,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       {/* Keyboard Accessibility Skip Link (WCAG 2.2 AA) */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-[#2A1F3D] focus:text-white focus:rounded-xl focus:shadow-xl focus:font-bold focus:text-xs focus:ring-2 focus:ring-offset-2 focus:ring-[#4056A1]"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-[#6865E8] focus:text-white focus:rounded-xl focus:shadow-xl focus:font-bold focus:text-xs focus:ring-2 focus:ring-offset-2 focus:ring-[#6865E8]"
       >
         Skip to main content
       </a>
@@ -104,33 +127,39 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       </div>
 
       {/* Mobile Navigation Drawer */}
-      <MobileDrawer
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        onOpenAddTransaction={() => setIsAddTxOpen(true)}
-      />
+      {isMobileDrawerOpen && (
+        <MobileDrawer
+          isOpen={isMobileDrawerOpen}
+          onClose={() => setIsMobileDrawerOpen(false)}
+          onOpenAddTransaction={() => setIsAddTxOpen(true)}
+        />
+      )}
 
       {/* Mobile Navigation */}
       <MobileNav onOpenAddTransaction={() => setIsAddTxOpen(true)} />
 
       {/* Universal Command Center (Ctrl+K) */}
-      <CommandCenter
-        isOpen={isCommandCenterOpen}
-        onClose={() => setIsCommandCenterOpen(false)}
-        onOpenAddTransaction={() => setIsAddTxOpen(true)}
-      />
+      {isCommandCenterOpen && (
+        <CommandCenter
+          isOpen={isCommandCenterOpen}
+          onClose={() => setIsCommandCenterOpen(false)}
+          onOpenAddTransaction={() => setIsAddTxOpen(true)}
+        />
+      )}
 
       {/* Modal Transaction Entry */}
-      <AddTransactionModal
-        isOpen={isAddTxOpen}
-        onClose={() => setIsAddTxOpen(false)}
-        onSuccess={() => {
-          refreshUser();
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('monvex:transaction-added'));
-          }
-        }}
-      />
+      {isAddTxOpen && (
+        <AddTransactionModal
+          isOpen={isAddTxOpen}
+          onClose={() => setIsAddTxOpen(false)}
+          onSuccess={() => {
+            refreshUser();
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('monvex:transaction-added'));
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   BarChart3,
@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -32,19 +33,23 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  AreaChart,
-  Area,
-  CartesianGrid,
   PieChart,
   Pie,
   Cell,
+  CartesianGrid,
 } from 'recharts';
 import { useAnalyticsQuery } from '@/hooks/queries/useAnalyticsQuery';
 
-const CATEGORY_COLORS = ['#2563EB', '#059669', '#D97706', '#E11D48', '#7C3AED', '#06B6D4', '#64748B'];
+const CATEGORY_COLORS = ['#6865E8', '#75DCC0', '#E8A54B', '#E76D7A', '#8B5CF6', '#3B82F6', '#64748B'];
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const { data: analyticsData, isLoading, isError, refetch } = useAnalyticsQuery();
 
   const summary = analyticsData?.summary || null;
@@ -92,62 +97,93 @@ export default function AnalyticsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-[1600px] mx-auto w-full">
+      <div className="space-y-6 max-w-[1600px] mx-auto w-full pb-16">
         {/* =========================================================================
-            1. HEADER & ANALYTICAL NARRATIVE STRIP
+            1. HEADER & OVERVIEW
             ========================================================================= */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#E4E2DC]">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#191522] tracking-tight">
-              Financial Intelligence & Analytics
-            </h1>
-            <p className="text-xs text-[#625D69] font-medium mt-0.5">
-              Deterministic capital telemetry: spending distribution, burn velocity, and health diagnostics.
-            </p>
+        <PageHeader
+          eyebrow="FINANCIAL INTELLIGENCE"
+          title="Telemetry & Deep Analytics"
+          description="Deterministic capital telemetry: category spending allocation, cashflow burn velocity, and financial health diagnostics."
+          actionSlot={
+            <Link href="/forecast">
+              <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#6865E8] hover:bg-[#5b58db] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer">
+                <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                <span>90-Day Forecast Runway &rarr;</span>
+              </button>
+            </Link>
+          }
+        />
+
+        {/* =========================================================================
+            2. SUMMARY STAT CARDS (Aurora Glass 4-Metric Strip)
+            ========================================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#16745C]">
+                Net Inflows
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E8FBF4] text-[#16745C]">
+                <ArrowDownRight className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalIncome} currency={user?.currency} size="2xl" type="income" />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Total monthly revenue</p>
+            </div>
           </div>
 
-          <Link href="/forecast">
-            <button className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-xl bg-white hover:bg-[#F6F5F1] text-[#191522] border border-[#E4E2DC] text-xs font-bold shadow-2xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-1">
-              <TrendingUp className="h-3.5 w-3.5 text-[#2563EB]" aria-hidden="true" />
-              <span>90-Day Forecast Runway &rarr;</span>
-            </button>
-          </Link>
-        </div>
-
-        {/* NARRATIVE SUMMARY CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669] block">
-              Net Inflows
-            </span>
-            <FinancialAmount amount={totalIncome} currency={user?.currency} size="xl" type="income" />
-            <span className="text-[10px] text-[#625D69] block">Total monthly revenue</span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#E76D7A]">
+                Net Outflows
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDEEF0] text-[#E76D7A]">
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={totalExpense} currency={user?.currency} size="2xl" type="expense" />
+              <p className="text-xs text-[#77798A] font-medium mt-1">Total monthly expenditure</p>
+            </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E11D48] block">
-              Net Outflows
-            </span>
-            <FinancialAmount amount={totalExpense} currency={user?.currency} size="xl" type="expense" />
-            <span className="text-[10px] text-[#625D69] block">Total monthly expenditure</span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#77798A]">
+                Retained Capital
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <FinancialAmount amount={netSavings} currency={user?.currency} size="2xl" type="neutral" />
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#E8FBF4] text-[#16745C]">
+                  {savingsRate}%
+                </span>
+                <span className="text-xs text-[#77798A]">savings rate</span>
+              </div>
+            </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#898390] block">
-              Retained Capital
-            </span>
-            <FinancialAmount amount={netSavings} currency={user?.currency} size="xl" type="neutral" />
-            <span className="text-[10px] text-[#059669] font-bold block">{savingsRate}% savings rate</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white border border-[#E4E2DC] shadow-2xs space-y-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#4056A1] block">
-              Health Diagnostics
-            </span>
-            <div className="text-xl font-mono font-black text-[#191522]">{healthScore} / 100</div>
-            <span className="text-[10px] text-[#625D69] block">
-              {healthScore >= 75 ? 'Optimal Capital Shield' : 'Active Optimization Needed'}
-            </span>
+          <div className="rounded-3xl bg-white border border-[#E7E6F0] p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#6865E8]">
+                Health Diagnostics
+              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                <Activity className="h-4 w-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-mono font-bold text-[#20212B]">{healthScore} / 100</div>
+              <p className="text-xs text-[#16745C] font-semibold mt-1">
+                {healthScore >= 75 ? 'Optimal Capital Shield' : 'Active Optimization Needed'}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -159,30 +195,32 @@ export default function AnalyticsPage() {
           />
         ) : (
           /* =========================================================================
-              2. TWO-COLUMN ANALYTICAL NARRATIVE GRID
+              3. TWO-COLUMN ANALYTICAL NARRATIVE GRID
               ========================================================================= */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* SPENDING BREAKDOWN BY CATEGORY (5 COLS) */}
-            <div className="lg:col-span-5 double-bezel">
-              <div className="double-bezel-inner p-6 space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC]">
-                  <div>
-                    <h2 className="text-sm font-bold text-[#191522]">Where Money Went</h2>
-                    <p className="text-[11px] text-[#625D69]">Outflow allocation across normalized categories</p>
-                  </div>
-                  <PieIcon className="h-4 w-4 text-[#898390]" />
+            {/* SPENDING BREAKDOWN BY CATEGORY (5 COLS - Nexora Donut Style) */}
+            <div className="lg:col-span-5 rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+                <div>
+                  <h2 className="text-base font-bold text-[#20212B]">Expenses Breakdown</h2>
+                  <p className="text-xs text-[#77798A] mt-0.5">Outflow allocation across categories</p>
                 </div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                  <PieIcon className="h-4 w-4" />
+                </div>
+              </div>
 
-                {isLoading ? (
-                  <Skeleton className="h-64 w-full rounded-xl" />
-                ) : formattedCategoryData.length === 0 ? (
-                  <EmptyState
-                    title="No category spending recorded"
-                    description="Record transactions with categories to generate allocation donut telemetry."
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="h-56 w-full relative flex items-center justify-center">
+              {isLoading ? (
+                <Skeleton className="h-72 w-full rounded-2xl" />
+              ) : formattedCategoryData.length === 0 ? (
+                <EmptyState
+                  title="No category spending recorded"
+                  description="Record transactions with categories to generate allocation donut telemetry."
+                />
+              ) : (
+                <div className="space-y-5">
+                  <div className="h-60 w-full relative flex items-center justify-center">
+                    {isMounted ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -191,8 +229,8 @@ export default function AnalyticsPage() {
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            innerRadius={55}
-                            outerRadius={80}
+                            innerRadius={65}
+                            outerRadius={95}
                             paddingAngle={3}
                             onMouseEnter={(_, idx) => setActivePieIndex(idx)}
                             onMouseLeave={() => setActivePieIndex(null)}
@@ -209,138 +247,159 @@ export default function AnalyticsPage() {
                           <Tooltip
                             formatter={(val: any) => formatCurrency(val, user?.currency)}
                             contentStyle={{
-                              borderRadius: '12px',
+                              borderRadius: '16px',
                               backgroundColor: '#FFFFFF',
-                              border: '1px solid #E4E2DC',
-                              fontSize: '11px',
+                              border: '1px solid #E7E6F0',
+                              fontSize: '12px',
                               fontWeight: 700,
+                              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
                             }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
-                    </div>
+                    ) : (
+                      <div className="h-60 w-60 rounded-full border-8 border-[#ECEBFF] animate-pulse" />
+                    )}
 
-                    {/* Category List */}
-                    <div className="space-y-2 pt-2 border-t border-[#E4E2DC]">
-                      {formattedCategoryData.map((cat, idx) => (
-                        <div key={cat.name} className="flex items-center justify-between gap-2 text-xs font-semibold">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                            <span className="text-[#191522] truncate">{cat.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="font-mono text-[#898390] text-[11px] whitespace-nowrap">{cat.percentage}%</span>
-                            <span className="font-mono text-[#191522] font-bold whitespace-nowrap">
-                              {formatCurrency(cat.value, user?.currency)}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                    {/* Donut Center Metric */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-xl font-mono font-bold text-[#20212B]">
+                        {formattedCategoryData.length}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#77798A] uppercase tracking-wider">
+                        Categories
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Category Pills List */}
+                  <div className="space-y-2.5 pt-2 border-t border-[#E7E6F0]">
+                    {formattedCategoryData.map((cat) => (
+                      <div key={cat.name} className="flex items-center justify-between gap-2 text-xs font-semibold p-2 rounded-2xl hover:bg-[#F8F7FC] transition-colors">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                          <span className="text-[#20212B] truncate">{cat.name}</span>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="font-mono text-[#77798A] text-xs">{cat.percentage}%</span>
+                          <span className="font-mono text-[#20212B] font-bold">
+                            {formatCurrency(cat.value, user?.currency)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* HISTORICAL TRENDS & REVELATIONS (7 COLS) */}
             <div className="lg:col-span-7 space-y-6">
               {/* Cashflow Velocity History */}
-              <div className="double-bezel">
-                <div className="double-bezel-inner p-6 space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#E4E2DC]">
-                    <div>
-                      <h2 className="text-sm font-bold text-[#191522]">Cash Flow Velocity Over Time</h2>
-                      <p className="text-[11px] text-[#625D69]">Historical income vs expense progression</p>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold text-[#898390]">
-                      {trendDataset.length} Periods Analyzed
-                    </span>
+              <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+                  <div>
+                    <h2 className="text-base font-bold text-[#20212B]">Cash Flow Velocity Over Time</h2>
+                    <p className="text-xs text-[#77798A] mt-0.5">Historical monthly inflow vs outflow progression</p>
                   </div>
+                  <span className="text-[11px] font-mono font-bold text-[#6865E8] bg-[#ECEBFF] px-2.5 py-1 rounded-full">
+                    {trendDataset.length} Periods Analyzed
+                  </span>
+                </div>
 
-                  {isLoading ? (
-                    <Skeleton className="h-64 w-full rounded-xl" />
-                  ) : trendDataset.length < 2 ? (
-                    <div className="py-16 px-6 rounded-xl border border-dashed border-[#E4E2DC] text-center space-y-2 bg-[#FAF9F6]/50">
-                      <BarChart3 className="h-8 w-8 text-[#898390] mx-auto" />
-                      <h4 className="text-xs font-bold text-[#191522]">
-                        Insufficient data for velocity trend
-                      </h4>
-                      <p className="text-[11px] text-[#625D69] max-w-sm mx-auto">
-                        Historical charts strictly reflect verified past months. Log transactions across multiple billing periods to unlock velocity trends.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="h-64 w-full pt-2">
+                {isLoading ? (
+                  <Skeleton className="h-72 w-full rounded-2xl" />
+                ) : trendDataset.length < 2 ? (
+                  <div className="py-16 px-6 rounded-2xl border border-dashed border-[#E7E6F0] text-center space-y-2 bg-[#F8F7FC]">
+                    <BarChart3 className="h-10 w-10 text-[#77798A] mx-auto" />
+                    <h4 className="text-sm font-bold text-[#20212B]">
+                      Insufficient data for velocity trend
+                    </h4>
+                    <p className="text-xs text-[#77798A] max-w-sm mx-auto">
+                      Historical charts strictly reflect verified past months. Log transactions across multiple billing periods to unlock velocity trends.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="h-72 w-full pt-2">
+                    {isMounted ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={trendDataset} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#E4E2DC" vertical={false} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#F0EFFE" vertical={false} />
                           <XAxis
                             dataKey="month"
-                            stroke="#858D9A"
+                            stroke="#77798A"
                             fontSize={11}
                             fontWeight={600}
                             tickLine={false}
-                            axisLine={{ stroke: '#E4E2DC' }}
+                            axisLine={{ stroke: '#E7E6F0' }}
                           />
                           <YAxis
-                            stroke="#858D9A"
+                            stroke="#77798A"
                             fontSize={11}
                             fontWeight={600}
                             tickLine={false}
-                            axisLine={{ stroke: '#E4E2DC' }}
+                            axisLine={{ stroke: '#E7E6F0' }}
                             tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
                           />
                           <Tooltip
                             formatter={(val: any) => formatCurrency(val, user?.currency)}
                             contentStyle={{
-                              borderRadius: '12px',
+                              borderRadius: '16px',
                               backgroundColor: '#FFFFFF',
-                              border: '1px solid #E4E2DC',
-                              fontSize: '11px',
+                              border: '1px solid #E7E6F0',
+                              fontSize: '12px',
                               fontWeight: 700,
+                              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
                             }}
                           />
-                          <Bar dataKey="income" name="Inflow" fill="#059669" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="expense" name="Outflow" fill="#E11D48" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="income" name="Inflow" fill="#75DCC0" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="expense" name="Outflow" fill="#6865E8" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
+                    ) : (
+                      <div className="h-72 w-full animate-pulse bg-[#F8F7FC] rounded-2xl" />
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* ACTIONABLE RECOMMENDATIONS CARD */}
-              <div className="double-bezel">
-                <div className="double-bezel-inner p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#191522]">
-                    <Sparkles className="h-4 w-4 text-[#4056A1]" />
-                    <span>Prescriptive Financial Recommendations</span>
+              {/* Financial Health Diagnostics Card */}
+              <div className="rounded-3xl bg-white border border-[#E7E6F0] p-7 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E7E6F0]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#ECEBFF] text-[#6865E8]">
+                      <Sparkles className="h-3.5 w-3.5" />
+                    </div>
+                    <h3 className="text-sm font-bold text-[#20212B]">
+                      Capital Health Diagnostic Indicators
+                    </h3>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-[#16745C] bg-[#E8FBF4] px-2.5 py-0.5 rounded-full">
+                    Deterministic Score: {healthScore}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-1">
+                    <span className="text-[10px] font-mono text-[#77798A] uppercase font-bold block">Savings Retention</span>
+                    <div className="text-base font-mono font-bold text-[#20212B]">{savingsRate}%</div>
+                    <span className="text-[11px] text-[#16745C] font-semibold block">Target: &gt;20%</span>
                   </div>
 
-                  <div className="space-y-2.5 text-xs">
-                    <div className="p-3 rounded-xl bg-[#F8F9FA] border border-[#E4E2DC] space-y-1">
-                      <span className="font-bold text-[#191522] block">1. Maintain High-Yield Reserve</span>
-                      <p className="text-[11px] text-[#625D69] leading-relaxed">
-                        With net monthly savings of {formatCurrency(netSavings, user?.currency)}, ensure at least 3 months of emergency runway is parked in liquid capital instruments.
-                      </p>
+                  <div className="p-4 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-1">
+                    <span className="text-[10px] font-mono text-[#77798A] uppercase font-bold block">Discretionary Ratio</span>
+                    <div className="text-base font-mono font-bold text-[#20212B]">
+                      {totalIncome > 0 ? `${((totalExpense / totalIncome) * 100).toFixed(0)}%` : '0%'}
                     </div>
-
-                    <div className="p-3 rounded-xl bg-[#F8F9FA] border border-[#E4E2DC] space-y-1">
-                      <span className="font-bold text-[#191522] block">2. Category Acceleration Telemetry</span>
-                      <p className="text-[11px] text-[#625D69] leading-relaxed">
-                        Track discretionary spending daily to preserve positive cashflow before end-of-month reconciliation.
-                      </p>
-                    </div>
+                    <span className="text-[11px] text-[#77798A] font-medium block">Max Cap: &lt;50%</span>
                   </div>
 
-                  <div className="pt-2">
-                    <Link
-                      href="/ai"
-                      className="text-xs font-bold text-[#2563EB] hover:underline inline-flex items-center gap-1"
-                    >
-                      <span>Query AI Copilot for Personalized Plan</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
+                  <div className="p-4 rounded-2xl bg-[#F8F7FC] border border-[#E7E6F0] space-y-1">
+                    <span className="text-[10px] font-mono text-[#77798A] uppercase font-bold block">Cashflow Posture</span>
+                    <div className="text-base font-mono font-bold text-[#16745C]">
+                      {netSavings >= 0 ? 'Surplus Positive' : 'Deficit Risk'}
+                    </div>
+                    <span className="text-[11px] text-[#16745C] font-semibold block">Net capital gain</span>
                   </div>
                 </div>
               </div>

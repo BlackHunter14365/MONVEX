@@ -158,7 +158,7 @@ class RecurringPaymentListCreateView(generics.ListCreateAPIView):
     serializer_class = RecurringPaymentSerializer
 
     def get_queryset(self):
-        return RecurringPayment.objects.filter(user=self.request.user).select_related('category', 'merchant')
+        return RecurringPayment.objects.filter(user=self.request.user).select_related('category', 'merchant').order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -168,4 +168,4 @@ class RecurringPaymentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RecurringPaymentSerializer
 
     def get_queryset(self):
-        return RecurringPayment.objects.filter(user=self.request.user)
+        return RecurringPayment.objects.filter(user=self.request.user).order_by('-created_at')

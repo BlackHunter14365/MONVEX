@@ -6,9 +6,11 @@ export function useAnalyticsQuery() {
   return useQuery({
     queryKey: queryKeys.analytics.summary(),
     queryFn: async () => {
-      // Core financial summary must succeed; failures propagate to trigger isError
-      const summary = await api.getAnalyticsSummary();
-      const anomalies = await api.getAnomalies().catch(() => []);
+      // Parallelize summary and anomalies requests
+      const [summary, anomalies] = await Promise.all([
+        api.getAnalyticsSummary(),
+        api.getAnomalies().catch(() => []),
+      ]);
 
       const healthScore = summary?.health_score || null;
       const monthlyTrend = summary?.monthly_trends || summary?.monthly_trend || [];

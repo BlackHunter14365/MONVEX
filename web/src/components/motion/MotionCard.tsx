@@ -11,6 +11,8 @@ export type MotionCardSurfaceVariant =
   | 'lavender'
   | 'indigo'
   | 'cyan'
+  | 'mint'
+  | 'aurora-glass'
   | 'dark-brand'
   | 'dark-indigo'
   | 'dark-plum'
@@ -20,16 +22,18 @@ export type MotionCardSurfaceVariant =
 
 const surfaceVariantStyles: Record<MotionCardSurfaceVariant, string> = {
   default: '',
-  white: 'bg-white border border-[#E4E2DC] shadow-card hover:border-[#D6D4CD]',
-  lavender: 'bg-[#EEEAF7] border border-[#625477]/20 shadow-subtle',
-  indigo: 'bg-[#E9EDFA] border border-[#7184C4]/25 shadow-subtle',
-  cyan: 'bg-[#DDF7FA] border border-[#06B6D4]/25 shadow-subtle',
-  'dark-brand': 'bg-[#2A1F3D] border border-[#4A3A68] text-white shadow-elevated',
-  'dark-indigo': 'bg-[#26335F] border border-[#4056A1]/40 text-white shadow-elevated',
-  'dark-plum': 'bg-[#33264A] border border-[#625477]/40 text-white shadow-elevated',
-  positive: 'bg-[#E8F7F1] border border-[#A7F3D0] text-[#059669] shadow-subtle',
-  warning: 'bg-[#FFF4DF] border border-[#FDE68A] text-[#D97706] shadow-subtle',
-  negative: 'bg-[#FDECEF] border border-[#FECDD3] text-[#E11D48] shadow-subtle',
+  white: 'bg-white border border-[#E7E6F0] shadow-card hover:border-[#D5D3E3]',
+  lavender: 'bg-[#EEEDF8] border border-[#6865E8]/20 shadow-subtle',
+  indigo: 'bg-[#EDEBFB] border border-[#6865E8]/25 shadow-subtle',
+  cyan: 'bg-[#E6F9F5] border border-[#75DCC0]/30 shadow-subtle',
+  mint: 'bg-[#E6F9F5] border border-[#75DCC0]/35 text-[#16745C] shadow-subtle',
+  'aurora-glass': 'aurora-glass shadow-card',
+  'dark-brand': 'bg-[#20212B] border border-[#42415E] text-white shadow-elevated',
+  'dark-indigo': 'bg-[#252438] border border-[#6865E8]/40 text-white shadow-elevated',
+  'dark-plum': 'bg-[#28273D] border border-[#6865E8]/30 text-white shadow-elevated',
+  positive: 'bg-[#E6F9F5] border border-[#75DCC0] text-[#16745C] shadow-subtle',
+  warning: 'bg-[#FEF6EB] border border-[#FCD89E] text-[#E8A54B] shadow-subtle',
+  negative: 'bg-[#FDEEF0] border border-[#F8B4BD] text-[#E76D7A] shadow-subtle',
 };
 
 export interface MotionCardProps extends HTMLMotionProps<'div'> {

@@ -1,12 +1,39 @@
 from rest_framework import serializers
-from .models import ContactSubmission, SecurityAuditLog
+from .models import ContactSubmission, SecurityAuditLog, UserSession, SecurityScan
 from services.contact_service import ContactService
+
 
 class SecurityAuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SecurityAuditLog
-        fields = ['id', 'user', 'event_type', 'severity', 'source_ip', 'user_agent', 'endpoint', 'description', 'metadata', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = [
+            'id', 'user', 'event_type', 'severity', 'source_ip',
+            'user_agent', 'endpoint', 'description', 'metadata',
+            'prev_hash', 'hash', 'created_at'
+        ]
+        read_only_fields = ['id', 'prev_hash', 'hash', 'created_at']
+
+
+class UserSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSession
+        fields = [
+            'id', 'device_name', 'ip_address', 'is_active',
+            'created_at', 'last_activity', 'revoked_at'
+        ]
+        read_only_fields = fields
+
+
+class SecurityScanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SecurityScan
+        fields = [
+            'id', 'score', 'status', 'passed_count', 'failed_count',
+            'warning_count', 'unknown_count', 'duration_ms',
+            'results', 'created_at'
+        ]
+        read_only_fields = fields
+
 
 class ContactSubmissionSerializer(serializers.ModelSerializer):
     name = serializers.CharField(min_length=2, max_length=150, error_messages={
@@ -46,5 +73,3 @@ class ContactSubmissionSerializer(serializers.ModelSerializer):
         if not is_valid:
             raise serializers.ValidationError(errors)
         return sanitized
-
-

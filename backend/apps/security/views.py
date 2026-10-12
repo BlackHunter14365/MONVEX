@@ -1,123 +1,195 @@
 import time
+import logging
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-from django.db.models import Count, Q
+from django.db.models import Q
 
-from .models import SecurityAuditLog
-from .serializers import SecurityAuditLogSerializer
+from .models import SecurityAuditLog, UserSession, SecurityScan
+from .serializers import (
+    SecurityAuditLogSerializer,
+    UserSessionSerializer,
+    SecurityScanSerializer,
+    ContactSubmissionSerializer
+)
+from .scanner import SecurityScanner
+from .session_utils import (
+    get_client_ip,
+    resolve_current_session,
+    revoke_other_sessions
+)
 
-
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        return x_forwarded_for.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR', '127.0.0.1')
+logger = logging.getLogger('monvex.security')
 
 
 class SecurityOverviewView(APIView):
+    """
+    Authenticated Security Center Overview.
+    Aggregates authentic database session state, live scanner posture scores,
+    active WAF telemetry, and tamper-evident audit log records.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
         ip = get_client_ip(request)
 
-        # Calculate metrics
+        # 1. Resolve caller's current session & active sessions registry
+        current_session = resolve_current_session(request, user)
+        active_sessions_qs = UserSession.objects.filter(user=user, is_active=True)
+        active_sessions_list = []
+        for s in active_sessions_qs:
+            active_sessions_list.append({
+                "id": str(s.id),
+                "device": s.device_name,
+                "ip": s.ip_address,
+                "location": "Local / Verified Session",
+                "last_active": s.last_activity.strftime("%Y-%m-%d %H:%M:%S") if s.last_activity else "Just now",
+                "is_current": s.id == current_session.id
+            })
+
+        active_count = len(active_sessions_list)
+
+        # 2. Blocked attack telemetry and user audit counts
         total_blocked = SecurityAuditLog.objects.filter(
-            Q(event_type='INJECTION_BLOCKED') | Q(event_type='BRUTE_FORCE_ATTEMPT')
+            event_type__in=['INJECTION_BLOCKED', 'BRUTE_FORCE_ATTEMPT']
         ).count()
 
-        user_events_count = SecurityAuditLog.objects.filter(
-            Q(user=user) | Q(user__isnull=True)
-        ).count()
+        user_events_count = SecurityAuditLog.objects.filter(user=user).count()
+        recent_logs = SecurityAuditLog.objects.filter(user=user)[:6]
 
-        recent_logs = SecurityAuditLog.objects.filter(
+        # 3. Retrieve latest real security scan
+        latest_scan = SecurityScan.objects.filter(
             Q(user=user) | Q(user__isnull=True)
-        )[:6]
+        ).order_by('-created_at').first()
 
+        if latest_scan is None:
+            scan_data = SecurityScanner.run_scan(user=user, ip=ip)
+            health_score = scan_data['score']
+            passed_tests = scan_data['passed_tests']
+            total_tests = scan_data['total_tests']
+            last_scanned_at = scan_data['timestamp']
+        else:
+            health_score = latest_scan.score
+            passed_tests = latest_scan.passed_count
+            total_tests = (
+                latest_scan.passed_count +
+                latest_scan.failed_count +
+                latest_scan.warning_count +
+                latest_scan.unknown_count
+            )
+            last_scanned_at = latest_scan.created_at.isoformat()
+
+        # 4. Multi-layer security matrix controls
         shields = [
             {
-                "id": "waf",
-                "name": "Web Application Firewall (WAF)",
-                "status": "ACTIVE",
-                "description": "Real-time regex inspection for SQLi, XSS, Path Traversal & Command Injection",
+                "id": "rate_limiter",
+                "name": "WAF Rate Limiting & Throttling",
+                "title": "WAF Rate Limiting & Throttling",
+                "description": "IP and token-based rate limits mitigate brute-force attempts and DDoS saturation.",
+                "status": "ENFORCED",
                 "threat_level": "OPTIMAL",
-                "icon": "ShieldCheck"
+                "icon": "ShieldCheck",
+                "color": "text-[#16745C] bg-[#E8FBF4]"
+            },
+            {
+                "id": "sqli_xss",
+                "name": "SQL Injection & XSS Guard",
+                "title": "SQL Injection & XSS Guard",
+                "description": "Strict Django ORM parameterization and automated DOM sanitization prevent script injection.",
+                "status": "VERIFIED",
+                "threat_level": "OPTIMAL",
+                "icon": "Lock",
+                "color": "text-[#16745C] bg-[#E8FBF4]"
             },
             {
                 "id": "jwt_guard",
-                "name": "JWT Token Rotation & Blacklist",
-                "status": "ACTIVE",
-                "description": "60-min access token TTL with immediate refresh invalidation on rotation",
+                "name": "Zero-Trust Token Rotation",
+                "title": "Zero-Trust Token Rotation",
+                "description": "Short-lived JWT access tokens with rotating refresh tokens and revocation blacklists.",
+                "status": "ENFORCED",
                 "threat_level": "OPTIMAL",
-                "icon": "Key"
+                "icon": "Key",
+                "color": "text-[#6865E8] bg-[#ECEBFF]"
             },
             {
-                "id": "rate_limiter",
-                "name": "IP Rate Limiter & Anti-Brute Force",
-                "status": "ACTIVE",
-                "description": "Multi-tier IP throttling (120 req/min) with 5-attempt verification lockouts",
+                "id": "password_hash",
+                "name": "Argon2id Hash Function",
+                "title": "Argon2id Hash Function",
+                "description": "Memory-hard password hashing protects credentials against ASIC and GPU cracking clusters.",
+                "status": "STANDARDIZED",
                 "threat_level": "OPTIMAL",
-                "icon": "Zap"
+                "icon": "ShieldCheck",
+                "color": "text-[#16745C] bg-[#E8FBF4]"
             },
             {
-                "id": "csp_hsts",
-                "name": "Strict CSP & HSTS Enforcement",
+                "id": "csrf_defense",
+                "name": "CSRF Double-Submit Defense",
+                "title": "CSRF Double-Submit Defense",
+                "description": "Cryptographic anti-forgery tokens validate origin authenticity across state-changing mutations.",
                 "status": "ACTIVE",
-                "description": "Frame-ancestors DENY, Content-Security-Policy & max-age 31536000 HSTS headers",
                 "threat_level": "OPTIMAL",
-                "icon": "Lock"
+                "icon": "FileCheck",
+                "color": "text-[#6865E8] bg-[#ECEBFF]"
             },
             {
                 "id": "audit_engine",
-                "name": "Tamper-Proof Audit Logger",
-                "status": "ACTIVE",
-                "description": "Immutable security event trail recording IP, timestamp, and incident vector",
+                "name": "Tamper-Evident Audit Trail",
+                "title": "Tamper-Evident Audit Trail",
+                "description": "Every authentication event, capital transfer, and session shift is permanently indexed with SHA-256.",
+                "status": "LOGGING",
                 "threat_level": "OPTIMAL",
-                "icon": "Activity"
-            },
-            {
-                "id": "data_encryption",
-                "name": "256-Bit Cryptographic Ledger",
-                "status": "ACTIVE",
-                "description": "AES-256 at-rest protection and TLS 1.3 in-transit security boundary",
-                "threat_level": "OPTIMAL",
-                "icon": "ShieldAlert"
+                "icon": "Terminal",
+                "color": "text-[#6865E8] bg-[#ECEBFF]"
             }
         ]
 
-        active_sessions = [
-            {
-                "device": "Current Web Browser (Active)",
-                "ip": ip,
-                "location": "Local / Verified Session",
-                "last_active": "Just now",
-                "is_current": True
-            }
-        ]
+        # 5. Build structured overview payload
+        session_status = "Single Active Session" if active_count <= 1 else f"{active_count} Active Sessions"
+        session_desc = "HTTP-Only SameSite Cookie" if active_count <= 1 else "Multi-device footprint detected"
 
         return Response({
             "success": True,
-            "health_score": 98,
-            "security_status": "Enterprise Hardened",
+            "health_score": health_score,
+            "security_status": "Enterprise Hardened" if health_score >= 90 else "Active Defense",
+            "perimeter_defense": {
+                "status": "ACTIVE SHIELD" if health_score >= 80 else "ATTENTION REQUIRED",
+                "description": "Zero known vulnerabilities" if health_score >= 90 else f"Diagnostics flagged posture items",
+                "total_blocked": total_blocked
+            },
+            "session_isolation": {
+                "status": session_status,
+                "description": session_desc,
+                "active_count": active_count
+            },
+            "defense_health_score": {
+                "score": health_score,
+                "display_score": f"{health_score} / 100",
+                "subtitle": f"{passed_tests} of {total_tests} Verified Controls" if total_tests else "Tier-1 Cryptographic Posture",
+                "last_scanned_at": last_scanned_at
+            },
+            "audit_stream": {
+                "total_events": user_events_count,
+                "subtitle": "Tamper-evident trail (SHA-256 hash chained)"
+            },
             "total_blocked_attacks": total_blocked,
             "total_audit_events": user_events_count,
             "shields": shields,
-            "active_sessions": active_sessions,
+            "active_sessions": active_sessions_list,
             "recent_audit_logs": SecurityAuditLogSerializer(recent_logs, many=True).data
         })
 
 
 class SecurityAuditLogListView(generics.ListAPIView):
+    """
+    Paginated, strictly user-scoped list of cryptographic audit logs.
+    """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SecurityAuditLogSerializer
 
     def get_queryset(self):
         user = self.request.user
-        queryset = SecurityAuditLog.objects.filter(
-            Q(user=user) | Q(user__isnull=True)
-        )
+        queryset = SecurityAuditLog.objects.filter(user=user)
 
         event_type = self.request.query_params.get('event_type')
         if event_type:
@@ -131,115 +203,44 @@ class SecurityAuditLogListView(generics.ListAPIView):
 
 
 class SecurityVulnerabilityScanView(APIView):
+    """
+    Executes live multi-vector diagnostic scan against application security controls.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        start_time = time.time()
         user = request.user
         ip = get_client_ip(request)
-
-        # Perform live diagnostic self-audit
-        test_results = [
-            {
-                "id": "test_sqli",
-                "title": "SQL Injection & ORM Sanitization",
-                "status": "PASSED",
-                "latency_ms": 14,
-                "details": "All database queries parameterized via Django ORM. WAF regex filter active."
-            },
-            {
-                "id": "test_xss",
-                "title": "Cross-Site Scripting (XSS) & Input Escaping",
-                "status": "PASSED",
-                "latency_ms": 11,
-                "details": "React JSX virtual DOM auto-escaping active. WAF intercepting <script> and event handlers."
-            },
-            {
-                "id": "test_jwt",
-                "title": "JWT Signature & Token Lifecycle",
-                "status": "PASSED",
-                "latency_ms": 8,
-                "details": "HMAC-SHA256 signature verified. Access token TTL 60m, Blacklist on rotation enabled."
-            },
-            {
-                "id": "test_headers",
-                "title": "HTTP Security Headers & CSP Validation",
-                "status": "PASSED",
-                "latency_ms": 19,
-                "details": "X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin present."
-            },
-            {
-                "id": "test_rate_limits",
-                "title": "Rate Limiting & Anti-Brute Force",
-                "status": "PASSED",
-                "latency_ms": 16,
-                "details": "Throttling thresholds active. OTP verification locks after 5 failed attempts."
-            },
-            {
-                "id": "test_auth_isolation",
-                "title": "Tenant IDOR & Access Control Isolation",
-                "status": "PASSED",
-                "latency_ms": 12,
-                "details": "All queries scoped strictly to request.user. Zero cross-tenant data leakage."
-            }
-        ]
-
-        duration_ms = round((time.time() - start_time) * 1000 + 45)
-
-        # Log scan event
-        SecurityAuditLog.objects.create(
-            user=user,
-            event_type='VULNERABILITY_SCAN',
-            severity='INFO',
-            source_ip=ip,
-            user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
-            endpoint='/api/v1/security/scan/',
-            description="Automated security posture vulnerability self-audit completed with 100% pass score."
-        )
-
-        return Response({
-            "success": True,
-            "passed": True,
-            "total_tests": len(test_results),
-            "passed_tests": len(test_results),
-            "failed_tests": 0,
-            "overall_score": "100%",
-            "duration_ms": duration_ms,
-            "results": test_results,
-            "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-        })
+        scan_results = SecurityScanner.run_scan(user=user, ip=ip)
+        return Response(scan_results, status=status.HTTP_200_OK)
 
 
 class RevokeAllSessionsView(APIView):
+    """
+    Revokes all active device sessions belonging to the authenticated user
+    EXCEPT the current session.
+    - Blacklists other outstanding refresh tokens.
+    - Marks other UserSession records inactive.
+    - Leaves current session valid and authorized.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         user = request.user
-        ip = get_client_ip(request)
+        current_session = resolve_current_session(request, user)
+        revoked_count = revoke_other_sessions(user=user, current_session=current_session, request=request)
 
-        # Blacklist all outstanding tokens for this user
-        tokens = OutstandingToken.objects.filter(user=user)
-        revoked_count = 0
-        for token in tokens:
-            _, created = BlacklistedToken.objects.get_or_create(token=token)
-            if created:
-                revoked_count += 1
-
-        SecurityAuditLog.objects.create(
-            user=user,
-            event_type='SESSION_REVOKED',
-            severity='WARNING',
-            source_ip=ip,
-            user_agent=request.META.get('HTTP_USER_AGENT', '')[:255],
-            endpoint='/api/v1/security/revoke-sessions/',
-            description=f"User triggered instant panic switch: revoked {revoked_count} active device sessions & tokens."
-        )
+        if revoked_count == 0:
+            message = "No other active sessions were found to revoke."
+        else:
+            message = f"Successfully revoked {revoked_count} other active device session(s) and invalidated tokens."
 
         return Response({
             "success": True,
-            "message": f"Successfully revoked {revoked_count} active sessions and invalidated authentication tokens.",
-            "revoked_tokens": revoked_count
-        })
+            "message": message,
+            "revoked_count": revoked_count,
+            "current_session_id": str(current_session.id)
+        }, status=status.HTTP_200_OK)
 
 
 class ContactSubmissionView(APIView):
@@ -251,13 +252,12 @@ class ContactSubmissionView(APIView):
 
     def post(self, request):
         ip = get_client_ip(request)
-        user = request.user if request.user.is_authenticated else None
+        user = request.user if getattr(request, 'user', None) and request.user.is_authenticated else None
 
         # 1. Rate Limiting: Max 5 submissions per IP in the last 15 minutes
-        from datetime import datetime, timedelta
+        from datetime import timedelta
         from django.utils import timezone
         from .models import ContactSubmission
-        from .serializers import ContactSubmissionSerializer
         from services.contact_service import ContactService
 
         window_start = timezone.now() - timedelta(minutes=15)
@@ -307,4 +307,3 @@ class ContactSubmissionView(APIView):
             "message": "Message sent successfully. Thanks for reaching out. I'll get back to you soon.",
             "submission_id": str(submission.id)
         }, status=status.HTTP_201_CREATED)
-

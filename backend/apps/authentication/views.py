@@ -102,6 +102,15 @@ class CookieTokenRefreshView(BaseTokenRefreshView):
             new_refresh = response.data.get('refresh') or cookie_refresh
             if new_refresh:
                 set_refresh_token_cookie(response, new_refresh)
+                try:
+                    from apps.security.models import UserSession
+                    parsed = RefreshToken(new_refresh)
+                    sid = parsed.payload.get('session_id')
+                    jti = parsed.payload.get('jti')
+                    if sid and jti:
+                        UserSession.objects.filter(id=sid).update(refresh_jti=jti)
+                except Exception:
+                    pass
 
         return response
 
@@ -116,11 +125,12 @@ class RegisterView(APIView):
         try:
             with transaction.atomic():
                 user = serializer.save()
-                refresh = RefreshToken.for_user(user)
+                from apps.security.session_utils import issue_session_tokens
+                session, refresh, access = issue_session_tokens(user, request=request)
                 response = Response({
                     "success": True,
                     "message": "Account created successfully.",
-                    "access": str(refresh.access_token),
+                    "access": str(access),
                     "refresh": str(refresh),
                     "user": UserSerializer(user).data
                 }, status=status.HTTP_201_CREATED)
@@ -188,10 +198,11 @@ class CustomLoginView(APIView):
                 "message": "Two-Factor Authentication code required."
             }, status=status.HTTP_200_OK)
 
-        refresh = RefreshToken.for_user(user)
+        from apps.security.session_utils import issue_session_tokens
+        session, refresh, access = issue_session_tokens(user, request=request)
         response = Response({
             "success": True,
-            "access": str(refresh.access_token),
+            "access": str(access),
             "refresh": str(refresh),
             "user": UserSerializer(user).data
         }, status=status.HTTP_200_OK)
@@ -208,6 +219,9 @@ class LogoutView(APIView):
             try:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
+                from apps.security.models import UserSession
+                from django.utils import timezone
+                UserSession.objects.filter(refresh_jti=token.get('jti', '')).update(is_active=False, revoked_at=timezone.now())
             except Exception:
                 pass
         response = Response({
@@ -635,10 +649,11 @@ class MFALoginCompleteView(APIView):
                 "message": "Invalid authentication code."
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        refresh = RefreshToken.for_user(user)
+        from apps.security.session_utils import issue_session_tokens
+        session, refresh, access = issue_session_tokens(user, request=request)
         response = Response({
             "success": True,
-            "access": str(refresh.access_token),
+            "access": str(access),
             "refresh": str(refresh),
             "user": UserSerializer(user).data
         }, status=status.HTTP_200_OK)
